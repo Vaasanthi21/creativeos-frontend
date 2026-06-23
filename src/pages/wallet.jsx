@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Loader2, Wallet, Zap, CheckCircle2, Sparkles } from "lucide-react";
 import { apiClient, tokenStorage } from "@/api/apiClient";
-
+import { toast } from "@/components/ui/use-toast";
 const PRICING_TIERS = [
   {
     id: "starter",
@@ -61,24 +61,28 @@ export default function WalletPage() {
   const creditBalance = walletData?.credits ?? walletData?.balance ?? 0;
 
   const handleBuy = async (tier) => {
-    if (loadingTierId) return;
-    setLoadingTierId(tier.id);
-    try {
-      const response = await apiClient.post("/wallet/recharge", {
+  if (loadingTierId) return;
+  setLoadingTierId(tier.id);
+  try {
+    const response = await apiClient.post("/wallet/recharge", {
       tier_id: tier.id,
       amount: tier.price,
       credits: tier.credits,
     }, token);
-      if (response?.checkout_url || response?.url) {
-        window.location.href = response.checkout_url || response.url;
-      }
-    } catch (error) {
-      console.error("Recharge failed:", error);
-    } finally {
-      setLoadingTierId(null);
+    if (response?.checkout_url || response?.url) {
+      window.location.href = response.checkout_url || response.url;
+    } else {
+      toast({
+        title: "Request submitted successfully",
+        description: "Payment gateway integration is coming soon.",
+      });
     }
-  };
-
+  } catch (error) {
+    console.error("Recharge failed:", error);
+  } finally {
+    setLoadingTierId(null);
+  }
+};
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
       {/* Header */}
