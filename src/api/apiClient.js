@@ -132,50 +132,9 @@ export const apiClient = {
 
   get: (path, token) => request(path, { headers: buildAuthHeaders(token) }),
   post: (path, body, token) => request(path, { method: 'POST', body: body instanceof FormData ? body : JSON.stringify(body), headers: buildAuthHeaders(token) }),
+  put: (path, body, token) => request(path, { method: 'PUT', body: body instanceof FormData ? body : JSON.stringify(body), headers: buildAuthHeaders(token) }),
   patch: (path, body, token) => request(path, { method: 'PATCH', body: JSON.stringify(body || {}), headers: buildAuthHeaders(token) }),
   delete: (path, token) => request(path, { method: 'DELETE', headers: buildAuthHeaders(token) }),
   upload: (path, body, token, onUploadProgress) => xhrRequest(path, { method: 'POST', body, headers: buildAuthHeaders(token), onUploadProgress }),
 
-  get: (path, token) =>
-    request(path, {
-      headers: token
-        ? { Authorization: `Bearer ${token}`, 'X-Auth-Token': token }
-        : {},
-    }),
-
-  post: (path, body, token) =>
-    request(path, {
-      method: 'POST',
-      body: body instanceof FormData ? body : JSON.stringify(body),
-      headers: token
-        ? { Authorization: `Bearer ${token}`, 'X-Auth-Token': token }
-        : {},
-    }),
-
-  patch: (path, body, token) =>
-    request(path, {
-      method: 'PATCH',
-      body: JSON.stringify(body || {}),
-      headers: token
-        ? { Authorization: `Bearer ${token}`, 'X-Auth-Token': token }
-        : {},
-    }),
-
-  delete: (path, token) =>
-    request(path, {
-      method: 'DELETE',
-      headers: token
-        ? { Authorization: `Bearer ${token}`, 'X-Auth-Token': token }
-        : {},
-    }),
-
-  upload: (path, body, token, onUploadProgress) =>
-    xhrRequest(path, {
-      method: 'POST',
-      body,
-      headers: token
-        ? { Authorization: `Bearer ${token}`, 'X-Auth-Token': token }
-        : {},
-      onUploadProgress,
-    }),
 };

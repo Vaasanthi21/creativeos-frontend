@@ -33,10 +33,10 @@ export default function ContactPage() {
     setIsSubmitting(true);
     setError("");
     try {
-      await apiClient.post("/contact", token, {
-        subject: resolvedSubject,
-        message: message.trim(),
-      });
+      await apiClient.post("/contact", {
+      subject: resolvedSubject,
+      message: message.trim(),
+    }, token);
       setSubmitted(true);
     } catch (err) {
       setError("Something went wrong. Please try again or email us directly.");

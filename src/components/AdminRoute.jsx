@@ -4,8 +4,6 @@ import { useAuth } from "@/lib/AuthContext";
 export default function AdminRoute() {
   const { user, isAuthenticated, isLoadingAuth, authChecked } = useAuth();
 
-  console.log("user:", user);
-  console.log("role:", user?.role);
 
   if (isLoadingAuth || !authChecked) {
     return (
@@ -15,7 +13,7 @@ export default function AdminRoute() {
     );
   }
 
-  if (!isAuthenticated || user?.role !== "admin") {
+  if (!isAuthenticated || (user?.role !== "admin" && user?.role !== "superadmin")) {
     return <Navigate to="/" replace />;
   }
 

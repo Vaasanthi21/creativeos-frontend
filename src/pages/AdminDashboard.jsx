@@ -14,8 +14,20 @@ import {
   ChevronUp,
   Search,
   ShieldCheck,
+  Wallet,
+  Ticket,
 } from "lucide-react";
 import { apiClient, tokenStorage } from "@/api/apiClient";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function initialsOf(email) {
+  if (!email) return "?";
+  const name = email.split("@")[0];
+  const parts = name.split(/[._-]/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
 
 // ─── Credits Modal ────────────────────────────────────────────────────────────
 
@@ -30,10 +42,10 @@ function CreditsModal({ user, onClose }) {
     mutationFn: async () => {
       const parsed = parseInt(amount, 10);
       if (!parsed || parsed <= 0) throw new Error("Enter a valid amount.");
-      return apiClient.put(`/admin/users/${user.id}/credits`, token, {
+      return apiClient.put(`/admin/users/${user.id}/credits`, {
         action: mode,
         amount: parsed,
-      });
+      }, token);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["admin-users"]);
@@ -57,24 +69,29 @@ function CreditsModal({ user, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
       <div className="w-full max-w-md rounded-3xl border border-border/70 bg-card p-6 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.85)]">
         <div className="mb-5 flex items-start justify-between">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-              Adjust Credits
-            </p>
-            <h2 className="mt-1 text-lg font-semibold text-foreground">
-              {user.email}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Current balance:{" "}
-              <span className="font-medium text-foreground">
-                {(user.credits ?? user.credit_balance ?? 0).toLocaleString()} credits
-              </span>
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-sm font-semibold text-primary">
+              {initialsOf(user.email)}
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
+                Adjust Credits
+              </p>
+              <h2 className="mt-0.5 text-base font-semibold text-foreground">
+                {user.email}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Current balance:{" "}
+                <span className="font-medium text-foreground">
+                  {(user.credits ?? user.credit_balance ?? 0).toLocaleString()} credits
+                </span>
+              </p>
+            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -162,6 +179,26 @@ function CreditsModal({ user, onClose }) {
   );
 }
 
+// ─── Stat Card ────────────────────────────────────────────────────────────────
+
+function StatCard({ icon: Icon, label, value }) {
+  return (
+    <div className="rounded-3xl border border-border/70 bg-card/95 p-5 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.85)]">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+            {label}
+          </p>
+          <p className="mt-0.5 text-2xl font-bold text-foreground">{value}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Users Table ──────────────────────────────────────────────────────────────
 
 function UsersTab() {
@@ -201,6 +238,9 @@ function UsersTab() {
       return 0;
     });
 
+  const totalCredits = users.reduce((sum, u) => sum + (u.credits ?? u.credit_balance ?? 0), 0);
+  const adminCount = users.filter((u) => u.role === "admin" || u.role === "superadmin").length;
+
   const SortIcon = ({ field }) => {
     if (sortField !== field) return null;
     return sortDir === "asc" ? (
@@ -215,6 +255,13 @@ function UsersTab() {
       {selectedUser && (
         <CreditsModal user={selectedUser} onClose={() => setSelectedUser(null)} />
       )}
+
+      {/* Stat cards */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <StatCard icon={Users} label="Total users" value={users.length.toLocaleString()} />
+        <StatCard icon={Wallet} label="Total credits in circulation" value={totalCredits.toLocaleString()} />
+        <StatCard icon={ShieldCheck} label="Admins" value={adminCount.toLocaleString()} />
+      </div>
 
       <div className="mb-4 flex items-center gap-3">
         <div className="relative flex-1">
@@ -240,7 +287,7 @@ function UsersTab() {
                 onClick={() => handleSort("email")}
               >
                 <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                  Email <SortIcon field="email" />
+                  User <SortIcon field="email" />
                 </span>
               </th>
               <th
@@ -284,8 +331,13 @@ function UsersTab() {
                     i === filtered.length - 1 ? "border-b-0" : ""
                   }`}
                 >
-                  <td className="px-5 py-4 font-medium text-foreground">
-                    {user.email}
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-semibold text-primary">
+                        {initialsOf(user.email)}
+                      </div>
+                      <span className="font-medium text-foreground">{user.email}</span>
+                    </div>
                   </td>
                   <td className="px-5 py-4 text-foreground">
                     {(user.credits ?? user.credit_balance ?? 0).toLocaleString()}
@@ -293,7 +345,7 @@ function UsersTab() {
                   <td className="px-5 py-4">
                     <span
                       className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${
-                        user.role === "admin"
+                        user.role === "admin" || user.role === "superadmin"
                           ? "bg-primary/10 text-primary"
                           : "bg-muted text-muted-foreground"
                       }`}
@@ -340,71 +392,88 @@ function InboxTab() {
     pending: "bg-yellow-500/10 text-yellow-600",
   };
 
+  const openCount = tickets.filter((t) => (t.status || "open") === "open").length;
+  const pendingCount = tickets.filter((t) => t.status === "pending").length;
+
   return (
-    <div className="space-y-3">
-      {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </div>
-      ) : tickets.length === 0 ? (
-        <div className="rounded-3xl border border-border/70 bg-muted/20 py-16 text-center text-sm text-muted-foreground">
-          No support tickets yet.
-        </div>
-      ) : (
-        tickets.map((ticket) => {
-          const isOpen = expanded === ticket.id;
-          const status = ticket.status || "open";
-          return (
-            <div
-              key={ticket.id}
-              className="overflow-hidden rounded-3xl border border-border/70 bg-card/95"
-            >
-              <button
-                type="button"
-                onClick={() => setExpanded(isOpen ? null : ticket.id)}
-                className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/20"
+    <div className="space-y-6">
+      {/* Stat cards */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard icon={Inbox} label="Total tickets" value={tickets.length.toLocaleString()} />
+        <StatCard icon={Ticket} label="Open" value={openCount.toLocaleString()} />
+        <StatCard icon={Loader2} label="Pending" value={pendingCount.toLocaleString()} />
+      </div>
+
+      <div className="space-y-3">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : tickets.length === 0 ? (
+          <div className="rounded-3xl border border-border/70 bg-muted/20 py-16 text-center text-sm text-muted-foreground">
+            No support tickets yet.
+          </div>
+        ) : (
+          tickets.map((ticket) => {
+            const isOpen = expanded === ticket.id;
+            const status = ticket.status || "open";
+            return (
+              <div
+                key={ticket.id}
+                className="overflow-hidden rounded-3xl border border-border/70 bg-card/95"
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${
-                        statusColors[status] || statusColors.open
-                      }`}
-                    >
-                      {status}
-                    </span>
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {ticket.subject || "No subject"}
+                <button
+                  type="button"
+                  onClick={() => setExpanded(isOpen ? null : ticket.id)}
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/20"
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-semibold text-primary">
+                      {initialsOf(ticket.email || ticket.user_email)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${
+                            statusColors[status] || statusColors.open
+                          }`}
+                        >
+                          {status}
+                        </span>
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {ticket.subject || "No subject"}
+                        </p>
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {ticket.email || ticket.user_email} ·{" "}
+                        {ticket.created_at
+                          ? new Date(ticket.created_at).toLocaleDateString()
+                          : ""}
+                      </p>
+                    </div>
+                  </div>
+                  {isOpen ? (
+                    <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  )}
+                </button>
+
+                {isOpen && (
+                  <div className="border-t border-border/50 px-5 py-4">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                      Message
+                    </p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm text-foreground/90">
+                      {ticket.message || "No message content."}
                     </p>
                   </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {ticket.email || ticket.user_email} ·{" "}
-                    {ticket.created_at
-                      ? new Date(ticket.created_at).toLocaleDateString()
-                      : ""}
-                  </p>
-                </div>
-                {isOpen ? (
-                  <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                 )}
-              </button>
-
-              {isOpen && (
-                <div className="border-t border-border/50 px-5 py-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                    Message
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-foreground/90">
-                    {ticket.message || "No message content."}
-                  </p>
-                </div>
-              )}
-            </div>
-          );
-        })
-      )}
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
