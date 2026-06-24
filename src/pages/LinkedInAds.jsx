@@ -29,6 +29,7 @@ import {
   Eye, ArrowUpRight, ArrowDownRight, Minus, ChevronDown, ChevronUp,
   Image as ImageIcon, Bell, Download, Settings, LogOut,
   Calendar, Loader2, WifiOff, ExternalLink,
+  ThumbsUp, MessageSquare, Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiClient, tokenStorage } from "@/api/apiClient";
@@ -56,6 +57,40 @@ const WHATSAPP_SAMPLE = {
     { week: "W1", leads: 28, spend: 1800 }, { week: "W2", leads: 34, spend: 2100 },
     { week: "W3", leads: 31, spend: 2000 }, { week: "W4", leads: 41, spend: 2300 },
   ],
+};
+
+const getClientMockOrganicPosts = (range) => {
+  let days = 30;
+  if (range === '7d') days = 7;
+  else if (range === '90d') days = 90;
+
+  const pool = [
+    "🚀 We are thrilled to launch Uden AI! Our new AI-driven marketing platform is designed to help growth managers scale campaigns effortlessly. Check out our website to learn more! #AI #Marketing #Growth",
+    "📊 5 Tips to Optimize your Paid Ad Campaigns: \n1. Refine target audience demographics\n2. Run dynamic A/B creatives\n3. Set automated budget alerts\n4. Benchmark CPC vs CPL\n5. Iterate weekly.\nRead more on our blog! #PaidAds #MarketingTips #Performance",
+    "🤝 Celebrating our new partnership with Creative Studio! Together, we're building the future of automated creative generation. Exciting features dropping next week! #CreativeOS #AI #BusinessDevelopment",
+    "💡 Why keeping a close eye on your Cost Per Lead (CPL) is crucial for startup growth. Read our latest thought leadership piece on how scaling companies manage ad spends without breaking the bank. #Startup #CPL #Finance",
+    "🏆 We are proud to be named one of the Top 10 Growth Marketing Tools of 2026! A huge thank you to our team and our amazing customers. We couldn't have done it without you! #Milestone #ThankYou #TeamUden"
+  ];
+  const posts = [];
+  const now = new Date();
+  const count = range === '7d' ? 2 : (range === '90d' ? 12 : 5);
+  for (let i = 0; i < count; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - Math.floor((days / count) * i));
+    const likes = Math.floor(80 + Math.random() * 150);
+    const comments = Math.floor(10 + Math.random() * 40);
+    const shares = Math.floor(5 + Math.random() * 25);
+    const impressions = Math.floor(2000 + Math.random() * 8000);
+    const engs = likes + comments + shares;
+    posts.push({
+      id: `m_org_${i}`,
+      text: pool[i % pool.length],
+      date: d.toISOString().slice(0, 10),
+      likes, comments, shares, impressions,
+      engagementRate: parseFloat(((engs / impressions) * 100).toFixed(2))
+    });
+  }
+  return posts;
 };
 
 // ─── CSV parsing (fallback when API scope not approved) ───────────────────────
@@ -432,7 +467,7 @@ function ApiPermissionError({ onUploadCSV }) {
 }
 
 // ─── Connect screen (pre-data) ────────────────────────────────────────────────
-function ConnectScreen({ onFile, error, loading, linkedinConnected, checkingStatus, linkedinStatus }) {
+function ConnectScreen({ onFile, error, loading, linkedinConnected, checkingStatus, linkedinStatus, onSimulate }) {
   const inputRef = useRef(null);
   const handleDrop = (e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) onFile(f); };
 
@@ -445,12 +480,13 @@ function ConnectScreen({ onFile, error, loading, linkedinConnected, checkingStat
       if (!userId) { alert("Could not retrieve session. Please log in again."); return; }
       const clientId    = import.meta.env.VITE_LINKEDIN_CLIENT_ID;
       const redirectUri = import.meta.env.VITE_LINKEDIN_REDIRECT_URI;
+      const scopes      = import.meta.env.VITE_LINKEDIN_SCOPES || "openid profile email r_ads r_ads_reporting";
       window.location.href =
         `https://www.linkedin.com/oauth/v2/authorization` +
         `?response_type=code` +
         `&client_id=${encodeURIComponent(clientId)}` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&scope=${encodeURIComponent("openid profile email r_ads r_ads_reporting")}` +
+        `&scope=${encodeURIComponent(scopes)}` +
         `&state=${encodeURIComponent(userId)}`;
     } catch (err) {
       console.error("LinkedIn connect error:", err);
@@ -483,10 +519,16 @@ function ConnectScreen({ onFile, error, loading, linkedinConnected, checkingStat
                 )}
               </div>
             ) : (
-              <button onClick={handleConnect}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#0077B5] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#006097] transition-colors">
-                <Linkedin className="h-4 w-4" />Connect LinkedIn Ads
-              </button>
+              <div className="flex flex-col items-center gap-2">
+                <button onClick={handleConnect}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#0077B5] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#006097] transition-colors">
+                  <Linkedin className="h-4 w-4" />Connect LinkedIn Ads
+                </button>
+                <button onClick={onSimulate}
+                  className="text-xs text-muted-foreground hover:text-foreground underline transition-colors">
+                  Simulate Connection (Developer Mode)
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -553,6 +595,9 @@ export default function LinkedInAds() {
   const [liveError,     setLiveError]     = useState(null);
   const [liveData,      setLiveData]      = useState(null); // { rows, totals, cplAlerts }
   const [liveCreatives, setLiveCreatives] = useState([]);
+  const [organicData,   setOrganicData]   = useState(null);
+  const [organicLoading, setOrganicLoading] = useState(false);
+  const [organicError,  setOrganicError]  = useState(null);
   const [dateRange,     setDateRange]     = useState("30d");
   const [lastRefreshed, setLastRefreshed] = useState(null);
 
@@ -571,6 +616,13 @@ export default function LinkedInAds() {
   const [editThreshold,   setEditThreshold]   = useState(false);
   const [thresholdInput,  setThresholdInput]  = useState(String(DEFAULT_CPL_THRESHOLD));
   const [showDisconnect,  setShowDisconnect]  = useState(false);
+  const [postText,        setPostText]        = useState("");
+  const [publishingPost,  setPublishingPost]  = useState(false);
+  const [publishError,    setPublishError]    = useState(null);
+  const [editingPostId,   setEditingPostId]   = useState(null);
+  const [editLikes,       setEditLikes]       = useState(0);
+  const [editComments,    setEditComments]    = useState(0);
+  const [editImpressions, setEditImpressions] = useState(1);
 
   const location = useLocation();
 
@@ -609,11 +661,14 @@ export default function LinkedInAds() {
 
     setLiveLoading(true);
     setLiveError(null);
+    setOrganicLoading(true);
+    setOrganicError(null);
 
     try {
-      const [analyticsRes, creativesRes] = await Promise.allSettled([
+      const [analyticsRes, creativesRes, organicRes] = await Promise.allSettled([
         apiClient.get(`/linkedin/analytics?range=${range}`, token),
         apiClient.get(`/linkedin/creatives?range=${range}`, token),
+        apiClient.get(`/linkedin/organic-posts?range=${range}`, token),
       ]);
 
       if (analyticsRes.status === "fulfilled") {
@@ -626,6 +681,12 @@ export default function LinkedInAds() {
       if (creativesRes.status === "fulfilled") {
         setLiveCreatives(creativesRes.value.creatives || []);
       }
+
+      if (organicRes.status === "fulfilled") {
+        setOrganicData(organicRes.value);
+      } else {
+        console.warn("Failed to fetch organic posts:", organicRes.reason);
+      }
     } catch (err) {
       const code = err?.response?.data?.code || err?.code || "";
       setLiveError({
@@ -635,6 +696,7 @@ export default function LinkedInAds() {
       });
     } finally {
       setLiveLoading(false);
+      setOrganicLoading(false);
     }
   }, [dateRange]);
 
@@ -670,6 +732,7 @@ export default function LinkedInAds() {
   const handleReset = () => {
     setCsvRows(null); setCsvFileName(null); setCsvError(null);
     setLiveData(null); setLiveError(null); setLiveCreatives([]);
+    setOrganicData(null); setOrganicError(null);
     setDataMode(null); setAlertDismissed(false);
   };
 
@@ -679,9 +742,59 @@ export default function LinkedInAds() {
       const token = tokenStorage.getUserToken();
       await apiClient.post("/linkedin/disconnect", {}, token);
       setLinkedinConnected(false); setLinkedinStatus(null);
-      setDataMode(null); setLiveData(null); setShowDisconnect(false);
+      setDataMode(null); setLiveData(null); setOrganicData(null); setShowDisconnect(false);
     } catch (err) {
       console.error("Disconnect failed:", err);
+    }
+  };
+
+  const handleSimulateConnect = async () => {
+    try {
+      const token = tokenStorage.getUserToken();
+      if (!token) { alert("Please log in first."); return; }
+      const data = await apiClient.post("/linkedin/simulate-connect", {}, token);
+      setLinkedinStatus(data);
+      setLinkedinConnected(true);
+      setDataMode("live");
+    } catch (err) {
+      console.error("Simulation failed:", err);
+      alert(err.message || "Failed to simulate connection");
+    }
+  };
+
+  const handlePublishPost = async () => {
+    if (!postText.trim()) return;
+    setPublishingPost(true);
+    setPublishError(null);
+    try {
+      const token = tokenStorage.getUserToken();
+      if (!token) throw new Error("Please log in first.");
+      await apiClient.post("/linkedin/share", { text: postText }, token);
+      setPostText("");
+      await fetchLiveData(dateRange);
+    } catch (err) {
+      console.error("Failed to post to LinkedIn:", err);
+      setPublishError(err?.response?.data?.message || err?.message || "Failed to publish post");
+    } finally {
+      setPublishingPost(false);
+    }
+  };
+
+  const handleSavePostStats = async (postId) => {
+    try {
+      const token = tokenStorage.getUserToken();
+      if (!token) return;
+      await apiClient.post("/linkedin/post/stats", {
+        postId,
+        likes: editLikes,
+        comments: editComments,
+        impressions: editImpressions
+      }, token);
+      setEditingPostId(null);
+      await fetchLiveData(dateRange);
+    } catch (err) {
+      console.error("Failed to save post stats:", err);
+      alert(err?.response?.data?.message || err?.message || "Failed to update stats");
     }
   };
 
@@ -716,6 +829,7 @@ export default function LinkedInAds() {
   const TABS = [
     { id: "overview",  label: "Overview",        icon: BarChart3    },
     { id: "compare",   label: "Channel Compare", icon: Target       },
+    { id: "organic",   label: "Organic Posts",   icon: TrendingUp   },
     { id: "creatives", label: "Creatives",        icon: Award        },
     { id: "campaigns", label: "Campaigns",        icon: FileText     },
   ];
@@ -764,6 +878,7 @@ export default function LinkedInAds() {
           onFile={handleFile} error={csvError} loading={csvLoading}
           linkedinConnected={linkedinConnected} checkingStatus={checkingStatus}
           linkedinStatus={linkedinStatus}
+          onSimulate={handleSimulateConnect}
         />
       </div>
     );
@@ -1052,6 +1167,197 @@ export default function LinkedInAds() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+          )}
+
+          {/* ══════════════ TAB: ORGANIC POSTS ══════════════ */}
+          {activeTab === "organic" && (
+            <div className="space-y-6">
+              {/* Overall stats cards */}
+              {(() => {
+                const posts = organicData?.posts || getClientMockOrganicPosts(dateRange);
+                const totals = organicData?.totals || (() => {
+                  const t = posts.reduce((acc, p) => {
+                    acc.likes += p.likes;
+                    acc.comments += p.comments;
+                    acc.shares += p.shares;
+                    acc.impressions += p.impressions;
+                    return acc;
+                  }, { likes: 0, comments: 0, shares: 0, impressions: 0 });
+                  const eng = t.likes + t.comments + t.shares;
+                  t.engagementRate = t.impressions > 0 ? parseFloat(((eng / t.impressions) * 100).toFixed(2)) : 0;
+                  return t;
+                })();
+
+                 return (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                      <MetricCard icon={FileText} label="Total Posts" value={posts.length} color="#10b981" />
+                      <MetricCard icon={ThumbsUp} label="Total Likes" value={totals.likes.toLocaleString()} color="#10b981" />
+                      <MetricCard icon={MessageSquare} label="Total Comments" value={totals.comments.toLocaleString()} color="#10b981" />
+                      <MetricCard icon={Share2} label="Total Shares" value={totals.shares.toLocaleString()} color="#10b981" />
+                      <MetricCard icon={TrendingUp} label="Avg Engagement" value={`${totals.engagementRate}%`} color="#10b981" />
+                    </div>
+
+                    {/* Publish to LinkedIn Form */}
+                    {isLive && (
+                      <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-[#10b981]" />
+                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Publish to LinkedIn</p>
+                        </div>
+                        <div className="space-y-2">
+                          <textarea
+                            value={postText}
+                            onChange={(e) => setPostText(e.target.value)}
+                            placeholder="What do you want to share on LinkedIn? (Will post live to your connected profile)"
+                            className="w-full min-h-[100px] rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[#10b981] placeholder:text-muted-foreground/60 resize-y"
+                            disabled={publishingPost}
+                          />
+                          {publishError && (
+                            <p className="text-xs text-destructive">{publishError}</p>
+                          )}
+                          <div className="flex justify-end">
+                            <Button
+                              onClick={handlePublishPost}
+                              disabled={publishingPost || !postText.trim()}
+                              className="rounded-xl px-5 py-2.5 text-xs font-medium text-white bg-[#10b981] hover:bg-[#0e9f6e] disabled:opacity-50 disabled:pointer-events-none transition-colors gap-1.5"
+                            >
+                              {publishingPost ? (
+                                <>
+                                  <Spinner size={3} />
+                                  Posting…
+                                </>
+                              ) : (
+                                <>
+                                  <Share2 className="h-3.5 w-3.5" />
+                                  Post to LinkedIn
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Engagement Trend Chart */}
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Post Engagement Trends</p>
+                      <ResponsiveContainer width="100%" height={240}>
+                        <ComposedChart data={[...posts].reverse()} margin={{ top: 0, right: 0, left: -16, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                          <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+                          <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                          <Tooltip content={<ChartTooltip />} />
+                          <Legend wrapperStyle={{ fontSize: 11 }} />
+                          <Bar yAxisId="left" dataKey="likes" name="Likes" fill="#10b981" radius={[4,4,0,0]} opacity={0.8} />
+                          <Bar yAxisId="left" dataKey="comments" name="Comments" fill="#3b82f6" radius={[4,4,0,0]} opacity={0.8} />
+                          <Line yAxisId="right" dataKey="engagementRate" name="Engagement Rate (%)" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Posts feed */}
+                    <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Organic Posts Feed</p>
+                      <div className="divide-y divide-border/60">
+                        {posts.length === 0 ? (
+                          <div className="py-12 text-center text-muted-foreground text-xs space-y-1">
+                            <WifiOff className="mx-auto h-8 w-8 text-muted-foreground/30 mb-2" />
+                            <p className="font-medium text-foreground">No posts published yet</p>
+                            <p className="text-[10px] text-muted-foreground/80">Use the form above to share your first live update to LinkedIn!</p>
+                          </div>
+                        ) : (
+                          posts.map((post, idx) => (
+                            <div key={post.id || idx} className="py-4 first:pt-0 last:pb-0 space-y-3">
+                              <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {post.date}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  {post.isReal && (
+                                    <a
+                                      href={`https://www.linkedin.com/feed/update/${post.id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-medium text-[#0077B5] hover:underline flex items-center gap-0.5"
+                                    >
+                                      View on LinkedIn
+                                      <ExternalLink className="h-2.5 w-2.5" />
+                                    </a>
+                                  )}
+                                  <span className="font-semibold text-[#10b981] bg-[#10b981]/15 px-2 py-0.5 rounded-full">
+                                    {post.engagementRate}% Engagement
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{post.text}</p>
+                              {editingPostId === post.id ? (
+                                <div className="flex flex-wrap items-center gap-3 bg-muted/20 p-3 rounded-xl border border-border/60 text-xs">
+                                  <div className="flex items-center gap-1.5">
+                                    <span>Likes:</span>
+                                    <input type="number" value={editLikes} onChange={(e) => setEditLikes(parseInt(e.target.value, 10) || 0)}
+                                      className="w-14 rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground" />
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span>Comments:</span>
+                                    <input type="number" value={editComments} onChange={(e) => setEditComments(parseInt(e.target.value, 10) || 0)}
+                                      className="w-14 rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground" />
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span>Impressions:</span>
+                                    <input type="number" value={editImpressions} onChange={(e) => setEditImpressions(parseInt(e.target.value, 10) || 1)}
+                                      className="w-16 rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground" />
+                                  </div>
+                                  <div className="flex items-center gap-1.5 ml-auto">
+                                    <button onClick={() => handleSavePostStats(post.id)}
+                                      className="rounded-lg bg-[#10b981] px-2.5 py-1 text-[10px] font-semibold text-white hover:opacity-90">Save</button>
+                                    <button onClick={() => setEditingPostId(null)}
+                                      className="rounded-lg border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground bg-background">Cancel</button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex gap-5 text-xs text-muted-foreground pt-1">
+                                  <span className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                                    <ThumbsUp className="h-3.5 w-3.5" />
+                                    {post.likes.toLocaleString()}
+                                  </span>
+                                  <span className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                                    <MessageSquare className="h-3.5 w-3.5" />
+                                    {post.comments.toLocaleString()}
+                                  </span>
+                                  <span className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                                    <Share2 className="h-3.5 w-3.5" />
+                                    {post.shares.toLocaleString()}
+                                  </span>
+                                  <span className="flex items-center gap-1.5">
+                                    <Eye className="h-3.5 w-3.5" />
+                                    {post.impressions.toLocaleString()} Impressions
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      setEditingPostId(post.id);
+                                      setEditLikes(post.likes);
+                                      setEditComments(post.comments);
+                                      setEditImpressions(post.impressions);
+                                    }}
+                                    className="flex items-center gap-1 ml-auto text-[10px] text-muted-foreground hover:text-[#0077B5] transition-colors"
+                                  >
+                                    <Settings className="h-3 w-3" />
+                                    Sync Stats
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 
