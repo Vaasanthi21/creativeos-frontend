@@ -19,12 +19,12 @@ import {
   LifeBuoy,
   Video,
   Wallet,
-  Mail,
 } from "lucide-react";
 import { getPersonaById } from "@/lib/personas";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/AuthContext";
 
+// Consolidated navigation items - removed duplicate Contact Us per spec
 const navItems = [
   { icon: Sparkles, label: "Generate", path: "/" },
   { icon: Building2, label: "Company Personas", path: "/personas" },
@@ -34,7 +34,6 @@ const navItems = [
   { icon: Wallet, label: "Wallet", path: "/wallet" },
   { icon: Settings, label: "Settings", path: "/settings" },
   { icon: LifeBuoy, label: "Support Center", path: "/support" },
-  { icon: Mail, label: "Contact Us", path: "/contact" },
 ];
 
 export default function Sidebar({
