@@ -28,18 +28,35 @@ export default function ContactPage() {
   const isValid = resolvedSubject.length > 0 && message.trim().length > 0;
   const charCount = message.length;
 
+  const mapSubjectToType = (subjectOption) => {
+    switch (subjectOption) {
+      case "Billing & Credits":
+        return "credit_request";
+      case "Bug Report":
+        return "bug_report";
+      case "Feature Request":
+        return "feature_request";
+      case "Account Issue":
+      case "Content Generation Help":
+      case "Other":
+      default:
+        return "general_support";
+    }
+  };
+
   const handleSubmit = async () => {
     if (!isValid || isSubmitting) return;
     setIsSubmitting(true);
     setError("");
     try {
-      await apiClient.post("/contact", {
-      subject: resolvedSubject,
-      message: message.trim(),
-    }, token);
+      await apiClient.post("/support-requests", {
+        type: mapSubjectToType(subject),
+        subject: resolvedSubject,
+        message: message.trim(),
+      }, token);
       setSubmitted(true);
     } catch (err) {
-      setError("Something went wrong. Please try again or email us directly.");
+      setError(err?.message || "Something went wrong. Please try again or email us directly.");
     } finally {
       setIsSubmitting(false);
     }

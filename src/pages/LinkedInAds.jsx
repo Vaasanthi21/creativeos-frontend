@@ -581,7 +581,7 @@ function ConnectScreen({ onFile, error, loading, linkedinConnected, checkingStat
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function LinkedInAds() {
+export default function LinkedInAds({ isEmbedded = false }) {
   // Connection state
   const [linkedinConnected, setLinkedinConnected] = useState(false);
   const [linkedinStatus,    setLinkedinStatus]    = useState(null);
@@ -837,11 +837,13 @@ export default function LinkedInAds() {
   // ── No data yet ───────────────────────────────────────────────────────────────
   if (dataMode === null) {
     return (
-      <div className="p-4 md:p-6 max-w-3xl mx-auto">
-        <div className="mb-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Growth OS · Integrations</p>
-          <h1 className="mt-1 text-xl font-semibold text-foreground">LinkedIn Campaign Tracker</h1>
-        </div>
+      <div className={isEmbedded ? "space-y-5" : "p-4 md:p-6 max-w-3xl mx-auto"}>
+        {!isEmbedded && (
+          <div className="mb-5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Growth OS · Integrations</p>
+            <h1 className="mt-1 text-xl font-semibold text-foreground">LinkedIn Campaign Tracker</h1>
+          </div>
+        )}
 
         {oauthError && (
           <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 flex items-start gap-2">
@@ -884,119 +886,225 @@ export default function LinkedInAds() {
     );
   }
 
-  // ── Dashboard ─────────────────────────────────────────────────────────────────
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
+    <div className={isEmbedded ? "space-y-6" : "p-4 md:p-6 max-w-6xl mx-auto space-y-6"}>
 
       {/* ── Header ── */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Growth OS · Integrations</p>
-          <h1 className="mt-1 text-xl font-semibold text-foreground">LinkedIn Campaign Tracker</h1>
-          <div className="mt-1.5 flex flex-wrap items-center gap-3">
-            {isLive ? (
-              <span className="flex items-center gap-1.5 text-xs font-medium text-green-600">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Live · {linkedinStatus?.adAccountName || linkedinStatus?.accountName || "LinkedIn Ads"}
-              </span>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">{csvFileName}</p>
+      {!isEmbedded ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Growth OS · Integrations</p>
+            <h1 className="mt-1 text-xl font-semibold text-foreground">LinkedIn Campaign Tracker</h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-3">
+              {isLive ? (
+                <span className="flex items-center gap-1.5 text-xs font-medium text-green-600">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Live · {linkedinStatus?.adAccountName || linkedinStatus?.accountName || "LinkedIn Ads"}
+                </span>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">{csvFileName}</p>
+                </div>
+              )}
+              {lastRefreshed && (
+                <span className="text-[10px] text-muted-foreground">
+                  Updated {lastRefreshed.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Date range — only for live */}
+            {isLive && (
+              <div className="flex rounded-xl border border-border bg-muted/20 p-0.5 gap-0.5">
+                {DATE_RANGES.map((r) => (
+                  <button key={r.id} onClick={() => setDateRange(r.id)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all
+                      ${dateRange === r.id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                    {r.label}
+                  </button>
+                ))}
               </div>
             )}
-            {lastRefreshed && (
-              <span className="text-[10px] text-muted-foreground">
-                Updated {lastRefreshed.toLocaleTimeString()}
-              </span>
+
+            {/* Refresh */}
+            {isLive && (
+              <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1.5 text-xs"
+                onClick={() => fetchLiveData(dateRange)} disabled={liveLoading}>
+                {liveLoading ? <Spinner size={3} /> : <RefreshCw className="h-3.5 w-3.5" />}
+                {liveLoading ? "Syncing…" : "Refresh"}
+              </Button>
             )}
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Date range — only for live */}
-          {isLive && (
-            <div className="flex rounded-xl border border-border bg-muted/20 p-0.5 gap-0.5">
-              {DATE_RANGES.map((r) => (
-                <button key={r.id} onClick={() => setDateRange(r.id)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all
-                    ${dateRange === r.id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                  {r.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Refresh */}
-          {isLive && (
-            <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1.5 text-xs"
-              onClick={() => fetchLiveData(dateRange)} disabled={liveLoading}>
-              {liveLoading ? <Spinner size={3} /> : <RefreshCw className="h-3.5 w-3.5" />}
-              {liveLoading ? "Syncing…" : "Refresh"}
-            </Button>
-          )}
-
-          {/* CPL threshold */}
-          {editThreshold ? (
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs text-muted-foreground">Alert at ₹</span>
-              <input type="number" value={thresholdInput} onChange={(e) => setThresholdInput(e.target.value)}
-                className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+            {/* CPL threshold */}
+            {editThreshold ? (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground">Alert at ₹</span>
+                <input type="number" value={thresholdInput} onChange={(e) => setThresholdInput(e.target.value)}
+                  className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const v = parseInt(thresholdInput, 10);
+                      if (v > 0) { setCplThreshold(v); setAlertDismissed(false); }
+                      setEditThreshold(false);
+                    }
+                    if (e.key === "Escape") setEditThreshold(false);
+                  }} autoFocus />
+                <button onClick={() => {
                     const v = parseInt(thresholdInput, 10);
                     if (v > 0) { setCplThreshold(v); setAlertDismissed(false); }
                     setEditThreshold(false);
-                  }
-                  if (e.key === "Escape") setEditThreshold(false);
-                }} autoFocus />
-              <button onClick={() => {
-                  const v = parseInt(thresholdInput, 10);
-                  if (v > 0) { setCplThreshold(v); setAlertDismissed(false); }
-                  setEditThreshold(false);
-                }}
-                className="rounded-lg bg-primary px-2 py-1 text-[10px] font-medium text-primary-foreground">Set</button>
-            </div>
-          ) : (
-            <button onClick={() => setEditThreshold(true)}
-              className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs transition-colors
-                ${hasCplAlerts && !alertDismissed ? "border-amber-500/40 bg-amber-500/10 text-amber-600" : "border-border text-muted-foreground hover:text-foreground"}`}>
-              <Bell className="h-3.5 w-3.5" />₹{cplThreshold}
-            </button>
-          )}
-
-          {/* Export */}
-          {campaigns.length > 0 && (
-            <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1.5 text-xs"
-              onClick={() => exportToCSV(campaigns, csvFileName?.replace(".csv", "") || "linkedin-campaigns")}>
-              <Download className="h-3.5 w-3.5" />Export
-            </Button>
-          )}
-
-          {/* New report */}
-          <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1.5 text-xs" onClick={handleReset}>
-            <RefreshCw className="h-3.5 w-3.5" />Reset
-          </Button>
-
-          {/* Disconnect */}
-          {linkedinConnected && (
-            <div className="relative">
-              <button onClick={() => setShowDisconnect(!showDisconnect)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground hover:text-foreground transition-colors">
-                <Settings className="h-4 w-4" />
+                  }}
+                  className="rounded-lg bg-primary px-2 py-1 text-[10px] font-medium text-primary-foreground">Set</button>
+              </div>
+            ) : (
+              <button onClick={() => setEditThreshold(true)}
+                className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs transition-colors
+                  ${hasCplAlerts && !alertDismissed ? "border-amber-500/40 bg-amber-500/10 text-amber-600" : "border-border text-muted-foreground hover:text-foreground"}`}>
+                <Bell className="h-3.5 w-3.5" />₹{cplThreshold}
               </button>
-              {showDisconnect && (
-                <div className="absolute right-0 top-10 z-20 w-48 rounded-xl border border-border bg-card shadow-lg">
-                  <button onClick={handleDisconnect}
-                    className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-xs text-red-500 hover:bg-red-500/5 transition-colors">
-                    <LogOut className="h-3.5 w-3.5" />Disconnect LinkedIn
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+            )}
+
+            {/* Export */}
+            {campaigns.length > 0 && (
+              <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1.5 text-xs"
+                onClick={() => exportToCSV(campaigns, csvFileName?.replace(".csv", "") || "linkedin-campaigns")}>
+                <Download className="h-3.5 w-3.5" />Export
+              </Button>
+            )}
+
+            {/* New report */}
+            <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1.5 text-xs" onClick={handleReset}>
+              <RefreshCw className="h-3.5 w-3.5" />Reset
+            </Button>
+
+            {/* Disconnect */}
+            {linkedinConnected && (
+              <div className="relative">
+                <button onClick={() => setShowDisconnect(!showDisconnect)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground hover:text-foreground transition-colors">
+                  <Settings className="h-4 w-4" />
+                </button>
+                {showDisconnect && (
+                  <div className="absolute right-0 top-10 z-20 w-48 rounded-xl border border-border bg-card shadow-lg">
+                    <button onClick={handleDisconnect}
+                      className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-xs text-red-500 hover:bg-red-500/5 transition-colors">
+                      <LogOut className="h-3.5 w-3.5" />Disconnect LinkedIn
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-border/40">
+          <div className="flex items-center gap-2 flex-wrap">
+            {isLive ? (
+              <span className="flex items-center gap-1.5 text-xs font-medium text-green-600 font-display">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Live · {linkedinStatus?.adAccountName || linkedinStatus?.accountName || "Connected"}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-display">
+                <FileText className="h-3.5 w-3.5" />
+                CSV: {csvFileName}
+              </span>
+            )}
+            {lastRefreshed && (
+              <span className="text-[10px] text-muted-foreground font-mono">
+                · Synced {lastRefreshed.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Date range — only for live */}
+            {isLive && (
+              <div className="flex rounded-xl border border-border bg-muted/20 p-0.5 gap-0.5">
+                {DATE_RANGES.map((r) => (
+                  <button key={r.id} onClick={() => setDateRange(r.id)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all
+                      ${dateRange === r.id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Refresh */}
+            {isLive && (
+              <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs px-2.5"
+                onClick={() => fetchLiveData(dateRange)} disabled={liveLoading}>
+                {liveLoading ? <Spinner size={3} /> : <RefreshCw className="h-3 w-3" />}
+                {liveLoading ? "Syncing…" : "Refresh"}
+              </Button>
+            )}
+
+            {/* CPL threshold */}
+            {editThreshold ? (
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">₹</span>
+                <input type="number" value={thresholdInput} onChange={(e) => setThresholdInput(e.target.value)}
+                  className="w-16 rounded-md border border-border bg-background px-1.5 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[#0077B5]"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const v = parseInt(thresholdInput, 10);
+                      if (v > 0) { setCplThreshold(v); setAlertDismissed(false); }
+                      setEditThreshold(false);
+                    }
+                    if (e.key === "Escape") setEditThreshold(false);
+                  }} autoFocus />
+                <button onClick={() => {
+                    const v = parseInt(thresholdInput, 10);
+                    if (v > 0) { setCplThreshold(v); setAlertDismissed(false); }
+                    setEditThreshold(false);
+                  }}
+                  className="rounded bg-primary px-1.5 py-0.5 text-[9px] font-medium text-primary-foreground hover:opacity-90">Set</button>
+              </div>
+            ) : (
+              <button onClick={() => setEditThreshold(true)}
+                className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs transition-colors
+                  ${hasCplAlerts && !alertDismissed ? "border-amber-500/40 bg-amber-500/10 text-amber-600 animate-pulse" : "border-border text-muted-foreground hover:text-foreground"}`}>
+                <Bell className="h-3 w-3" />₹{cplThreshold}
+              </button>
+            )}
+
+            {/* Export */}
+            {campaigns.length > 0 && (
+              <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs px-2.5"
+                onClick={() => exportToCSV(campaigns, csvFileName?.replace(".csv", "") || "linkedin-campaigns")}>
+                <Download className="h-3 w-3" />Export
+              </Button>
+            )}
+
+            {/* New report */}
+            <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs px-2.5" onClick={handleReset}>
+              <RefreshCw className="h-3 w-3" />Reset
+            </Button>
+
+            {/* Disconnect */}
+            {linkedinConnected && (
+              <div className="relative">
+                <button onClick={() => setShowDisconnect(!showDisconnect)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors">
+                  <Settings className="h-3.5 w-3.5" />
+                </button>
+                {showDisconnect && (
+                  <div className="absolute right-0 top-9 z-20 w-48 rounded-xl border border-border bg-card shadow-lg">
+                    <button onClick={handleDisconnect}
+                      className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-xs text-red-500 hover:bg-red-500/5 transition-colors">
+                      <LogOut className="h-3.5 w-3.5" />Disconnect LinkedIn
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Live loading skeleton ── */}
       {liveLoading && !liveData && (

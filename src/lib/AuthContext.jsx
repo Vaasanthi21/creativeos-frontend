@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
     checkUserAuth();
   }, []);
 
-  const signUp = async (email, password, fullName, company) => {
+  const signUp = async (email, password, fullName, company, phone) => {
     try {
       setAuthError(null);
       const data = await apiClient.post('/auth/register', {
@@ -67,6 +67,7 @@ export const AuthProvider = ({ children }) => {
         password,
         fullName,
         company,
+        phone,
       });
 
       applyAuthenticatedUser(data.user, data.token);

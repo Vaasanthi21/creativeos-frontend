@@ -10,6 +10,7 @@ export default function Register() {
   const [form, setForm] = useState({
     full_name: "",
     email: "",
+    phone: "",
     company: "",
     password: "",
     confirm_password: "",
@@ -22,6 +23,7 @@ export default function Register() {
     const submitted = {
       full_name: String(formData.get('full_name') || '').trim(),
       email: String(formData.get('email') || '').trim(),
+      phone: String(formData.get('phone') || '').trim(),
       company: String(formData.get('company') || '').trim(),
       password: String(formData.get('password') || ''),
       confirm_password: String(formData.get('confirm_password') || ''),
@@ -48,7 +50,7 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      await signUp(submitted.email, submitted.password, submitted.full_name, submitted.company);
+      await signUp(submitted.email, submitted.password, submitted.full_name, submitted.company, submitted.phone);
       toast({ 
         title: "Account created!", 
         description: "Your account is ready and visible in super admin",
@@ -117,6 +119,21 @@ export default function Register() {
                   placeholder="you@company.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  required
+                  className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="+1 (555) 000-0000"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   required
                   className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
