@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { startAsyncImageGeneration, pollImageStatus, createGenerationPoller } from '@/services/generationPollingService';
+import { startAsyncImageGeneration, createGenerationPoller } from '@/services/generationPollingService';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Sparkles, Download, RefreshCw, Camera } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addHistoryEntry } from '@/services/aiService';
+import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 
 // Aspect ratio options - using Azure image sizes
 const ASPECT_RATIOS = [
@@ -37,17 +38,16 @@ export default function ImageStudio() {
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStatus, setPollingStatus] = useState(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   // Image generation mutation
   const generateMutation = useMutation({
     mutationFn: async (params) => {
-      // Start async generation with correct parameters
       const response = await startAsyncImageGeneration({
         topic: params.prompt,
         aspectRatio: params.aspectRatio,
         style: params.style,
       });
-      
       return response;
     },
     onSuccess: (response) => {
@@ -63,20 +63,16 @@ export default function ImageStudio() {
       setPollingStatus('queued');
       
       // Start polling
-      const poller = createGenerationPoller(
+      createGenerationPoller(
         jobId,
         'image',
         (status) => {
-          // Extract status from the payload
           const statusCode = status.status || pollingStatus;
           setPollingStatus(statusCode);
           
-          // Check if completed and extract image URL from result
           if (statusCode === 'completed' && status.result) {
             const imageUrl = status.result.image_url || status.result.imageUrl;
             if (imageUrl) {
-              
-              // Save to history
               const imageEntry = {
                 topic: prompt,
                 content_type: "Image",
@@ -117,17 +113,20 @@ export default function ImageStudio() {
     },
   });
 
-  const handleGenerate = () => {
-    if (!prompt.trim()) {
-      alert('Please enter a prompt');
-      return;
-    }
-
+  const submitGeneration = useCallback(() => {
     generateMutation.mutate({
       prompt: prompt.trim(),
       aspectRatio: aspectRatio,
       style: style,
     });
+  }, [prompt, aspectRatio, style, generateMutation]);
+
+  const handleGenerateClick = () => {
+    if (!prompt.trim()) {
+      alert('Please enter a prompt');
+      return;
+    }
+    setShowConfirmDialog(true);
   };
 
   const handleDownload = async () => {
@@ -223,7 +222,7 @@ export default function ImageStudio() {
 
               {/* Generate Button */}
               <Button
-                onClick={handleGenerate}
+                onClick={handleGenerateClick}
                 disabled={generateMutation.isPending || isPolling || !prompt.trim()}
                 className="w-full"
                 size="lg"
@@ -241,25 +240,24 @@ export default function ImageStudio() {
                 )}
               </Button>
 
-              {/* Polling Status */}
-              {isPolling && pollingStatus && (
-                <div className="text-center space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Status: <span className="font-medium">{pollingStatus}</span>
-                  </p>
-                  {pollingStatus === 'completed' && (
-                    <p className="text-sm text-primary">Image generated successfully!</p>
-                  )}
-                  {pollingStatus === 'failed' && (
-                    <p className="text-sm text-red-500">Generation failed. Please try again.</p>
+              {/* Polling Status UI */}
+              {(generateMutation.isPending || isPolling) && pollingStatus && (
+                <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span>Status: <span className="capitalize text-primary">{pollingStatus}</span></span>
+                  </div>
+                  {pollingStatus === 'queued' && (
+                    <p className="text-xs text-muted-foreground">Queued in system. Preparing image engine context...</p>
                   )}
                   {pollingStatus === 'processing' && (
-                    <p className="text-sm text-muted-foreground">Processing your image...</p>
-                  )}
-                  {pollingStatus === 'queued' && (
-                    <p className="text-sm text-muted-foreground">Queued for generation...</p>
+                    <p className="text-xs text-muted-foreground">The AI engine is rendering asset fragments. Please hold on...</p>
                   )}
                 </div>
+              )}
+              
+              {pollingStatus === 'failed' && (
+                <p className="text-sm text-center text-red-500 font-medium">Generation failed. Please try a different prompt structure.</p>
               )}
             </CardContent>
           </Card>
@@ -275,7 +273,7 @@ export default function ImageStudio() {
                   <div className="relative rounded-lg overflow-hidden border">
                     <img
                       src={generatedImage}
-                      alt="Generated image"
+                      alt="Generated asset outcome"
                       className="w-full h-auto object-contain"
                       style={{ minHeight: '300px', maxHeight: '500px' }}
                     />
@@ -295,10 +293,10 @@ export default function ImageStudio() {
                 <div className="flex items-center justify-center h-[400px] border rounded-lg bg-muted/20">
                   <div className="text-center space-y-2">
                     <Camera className="w-12 h-12 text-muted-foreground mx-auto" />
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground px-4">
                       {generateMutation.isPending || isPolling
-                        ? 'Your image is being generated...'
-                        : 'Enter a prompt and click Generate to create your image'}
+                        ? 'Image synthesis workspace initializing...'
+                        : 'Enter a creative prompt brief and select layout parameters to begin.'}
                     </p>
                   </div>
                 </div>
@@ -307,6 +305,18 @@ export default function ImageStudio() {
           </Card>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={() => {
+          setShowConfirmDialog(false);
+          submitGeneration();
+        }}
+        title="Confirm image generation"
+        description="High-resolution workspace creation and stylistic painting cycles may take up to 2-3 minutes. Please stay on this tab until assets finalize."
+        confirmLabel="Continue Generation"
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,7 @@ import { Loader2, Sparkles, Download, RefreshCw, Video, Play, Pause, Volume2 } f
 import { Textarea } from '@/components/ui/textarea';
 import { apiClient, tokenStorage } from '@/api/apiClient';
 import { addHistoryEntry } from '@/services/aiService';
+import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 
 const PLATFORMS = [
   { value: 'instagram', label: 'Instagram' },
@@ -49,6 +50,7 @@ export default function VideoStudio() {
   const [motionStrength, setMotionStrength] = useState(5);
   
   const [showCameraModal, setShowCameraModal] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
@@ -65,6 +67,10 @@ export default function VideoStudio() {
         topic: params.prompt,
         platform: params.platform,
         contentType: params.style,
+        aspectRatio: params.aspectRatio,
+        cameraPan: params.pan,
+        cameraZoom: params.zoom,
+        motionStrength: params.motionStrength,
         async: true,
       }, token);
 
@@ -95,9 +101,7 @@ export default function VideoStudio() {
           );
 
           console.log('Video status update:', statusResponse);
-
           const statusCode = statusResponse.status;
-
           setPollingStatus(statusCode);
 
           if (statusCode === 'completed') {
@@ -107,7 +111,6 @@ export default function VideoStudio() {
             if (statusResponse.video_url) {
               setGeneratedVideo(statusResponse.video_url);
               
-              // Save to history
               const videoEntry = {
                 topic: statusResponse.prompt || prompt,
                 content_type: "Video",
@@ -142,6 +145,18 @@ export default function VideoStudio() {
     },
   });
 
+  const submitGeneration = useCallback(() => {
+    generateMutation.mutate({
+      prompt: prompt.trim(),
+      platform: platform,
+      style: style,
+      aspectRatio: aspectRatio,
+      pan: pan,
+      zoom: zoom,
+      motionStrength: motionStrength
+    });
+  }, [prompt, platform, style, aspectRatio, pan, zoom, motionStrength, generateMutation]);
+
   const handleAnimate = () => {
     if (!prompt.trim()) {
       alert('Please enter a prompt first');
@@ -150,17 +165,13 @@ export default function VideoStudio() {
     setShowCameraModal(true);
   };
 
-  const handleGenerateVideo = () => {
+  const handleGenerateClick = () => {
     if (!prompt.trim()) {
       alert('Please enter a prompt');
       return;
     }
     setErrorMessage(null);
-    generateMutation.mutate({
-      prompt: prompt.trim(),
-      platform: platform,
-      style: style,
-    });
+    setShowConfirmDialog(true);
   };
 
   const handleDownload = async () => {
@@ -200,8 +211,7 @@ export default function VideoStudio() {
     if (videoRef.current) videoRef.current.volume = value;
   };
 
-  // Check if button should be disabled
-  const isButtonDisabled = !prompt.trim();
+  const isButtonDisabled = !prompt.trim() || generateMutation.isPending || isPolling;
 
   return (
     <div className="min-h-screen bg-background">
@@ -261,17 +271,17 @@ export default function VideoStudio() {
                 </Select>
               </div>
 
-              <Button onClick={handleAnimate} disabled={!prompt.trim()} className="w-full" variant="outline">
+              <Button onClick={handleAnimate} disabled={!prompt.trim() || generateMutation.isPending || isPolling} className="w-full" variant="outline">
                 <Sparkles className="w-4 h-4 mr-2" /> Animate with Camera Control
               </Button>
 
               <Button 
-                onClick={handleGenerateVideo} 
+                onClick={handleGenerateClick} 
                 disabled={isButtonDisabled} 
                 className="w-full" 
                 size="lg"
               >
-                {generateMutation.isPending ? (
+                {generateMutation.isPending || isPolling ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
                 ) : (
                   <><Video className="w-4 h-4 mr-2" /> Generate Video</>
@@ -280,18 +290,25 @@ export default function VideoStudio() {
 
               {errorMessage && (
                 <div className="text-center p-3 bg-red-500/10 border border-red-500 rounded">
-                  <p className="text-sm text-red-500">⚠️ {errorMessage}</p>
+                  <p className="text-sm text-red-500"> {errorMessage}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Please add credits to your account to generate videos
                   </p>
                 </div>
               )}
 
-              {isPolling && pollingStatus && !errorMessage && (
-                <div className="text-center space-y-2">
-                  <p className="text-sm font-medium">Status: <span className="text-primary">{pollingStatus}</span></p>
-                  {pollingStatus === 'completed' && <p className="text-sm text-primary">✓ Video generated!</p>}
-                  {pollingStatus === 'failed' && <p className="text-sm text-red-500">✗ Failed.</p>}
+              {(generateMutation.isPending || isPolling) && pollingStatus && !errorMessage && (
+                <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span>Status: <span className="capitalize text-primary">{pollingStatus}</span></span>
+                  </div>
+                  {pollingStatus === 'queued' && (
+                    <p className="text-xs text-muted-foreground">Queued in frame sequencer pipeline. Preparing simulation context...</p>
+                  )}
+                  {pollingStatus === 'processing' && (
+                    <p className="text-xs text-muted-foreground">The AI core is rendering frame sequences and textures. Please wait...</p>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -321,9 +338,13 @@ export default function VideoStudio() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-[400px] border rounded-lg bg-muted/20">
-                  <div className="text-center">
+                  <div className="text-center space-y-2">
                     <Video className="w-12 h-12 text-muted-foreground mx-auto" />
-                    <p className="text-muted-foreground">{isPolling ? 'Generating...' : 'Enter a prompt and click Generate'}</p>
+                    <p className="text-muted-foreground px-4">
+                      {generateMutation.isPending || isPolling 
+                        ? 'Video timeline compilation initializing...' 
+                        : 'Enter a creative prompt scenario to render video motion assets.'}
+                    </p>
                   </div>
                 </div>
               )}
@@ -352,11 +373,23 @@ export default function VideoStudio() {
             </div>
             <div className="p-6 border-t flex gap-2 justify-end">
               <Button onClick={() => setShowCameraModal(false)} variant="outline">Close</Button>
-              <Button onClick={() => { setShowCameraModal(false); handleGenerateVideo(); }}><Sparkles className="w-4 h-4 mr-2" /> Generate</Button>
+              <Button onClick={() => { setShowCameraModal(false); handleGenerateClick(); }}><Sparkles className="w-4 h-4 mr-2" /> Generate</Button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={() => {
+          setShowConfirmDialog(false);
+          submitGeneration();
+        }}
+        title="Confirm video generation"
+        description="Complex camera projection trajectories and high-fidelity video processing models can take up to 3-5 minutes to bake. Please leave this dashboard active until it finishes."
+        confirmLabel="Continue Generation"
+      />
     </div>
   );
 }

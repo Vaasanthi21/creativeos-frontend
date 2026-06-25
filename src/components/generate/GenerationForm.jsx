@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,9 +39,6 @@ const buildSanitizedPersonaAnalysis = (persona) => {
       : null,
     persona.tuning_prompt
       ? `Style instructions: ${persona.tuning_prompt}.`
-      : null,
-    persona.learning_summary
-      ? `Learned style preferences from prior generations: ${persona.learning_summary}.`
       : null,
   ].filter(Boolean);
 
@@ -132,9 +129,10 @@ export default function GenerationForm({
 }) {
   const navigate = useNavigate();
   const [mode, setMode] = useState("single");
-  const [selectedBatchPlatforms, setSelectedBatchPlatforms] = useState(() => [
-    platforms[0]?.id,
-  ]);
+  // Batch generation now uses the active platform selected from the top platform cards.
+  // const [selectedBatchPlatforms, setSelectedBatchPlatforms] = useState(() => [
+  //   platforms[0]?.id,
+  // ]);
   const [topic, setTopic] = useState("");
   const [batchTopics, setBatchTopics] = useState("");
   const [tone, setTone] = useState([50]);
@@ -259,7 +257,7 @@ export default function GenerationForm({
       mode,
       topic: topic.trim(),
       topics: batchLines,
-      platforms: selectedBatchPlatforms,
+      platforms: [activePlatform?.id].filter(Boolean),
       contentType,
       tone: tone[0],
       length: length[0],
@@ -276,7 +274,6 @@ export default function GenerationForm({
     logoPlacement,
     mode,
     onGenerate,
-    selectedBatchPlatforms,
     selectedCompanyPersona,
     tone,
     topic,
@@ -554,11 +551,13 @@ export default function GenerationForm({
                   className="min-h-40 rounded-2xl border-border/70 bg-muted/30 text-sm placeholder:text-muted-foreground"
                 />
 
+                {/* Temporarily hidden: batch generation now uses the active platform selected from the top platform cards
                 <div className="space-y-3 rounded-2xl border border-border/70 bg-background/50 p-4">
                   <div className="flex items-center justify-between">
                     <Label className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                       Platforms
                     </Label>
+
                     <button
                       type="button"
                       onClick={() =>
@@ -603,6 +602,8 @@ export default function GenerationForm({
                     })}
                   </div>
                 </div>
+
+                */}
 
                 {batchOverLimit && (
                   <p className="text-xs text-destructive">
