@@ -10,15 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { addHistoryEntry } from '@/services/aiService';
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 
-// Aspect ratio options - using Azure image sizes
-const ASPECT_RATIOS = [
-  { value: '1024x1024', label: '1:1 (Square) - 1024x1024' },
-  { value: '1024x768', label: '4:3 (Classic) - 1024x768' },
-  { value: '768x1024', label: '3:4 (Portrait) - 768x1024' },
-  { value: '1024x576', label: '16:9 (Landscape) - 1024x576' },
-  { value: '576x1024', label: '9:16 (Portrait) - 576x1024' },
-];
-
 // Style options
 const IMAGE_STYLES = [
   { value: 'realistic', label: 'Realistic' },
@@ -33,7 +24,6 @@ const IMAGE_STYLES = [
 
 export default function ImageStudio() {
   const [prompt, setPrompt] = useState('');
-  const [aspectRatio, setAspectRatio] = useState('1024x1024');
   const [style, setStyle] = useState('realistic');
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
@@ -45,7 +35,6 @@ export default function ImageStudio() {
     mutationFn: async (params) => {
       const response = await startAsyncImageGeneration({
         topic: params.prompt,
-        aspectRatio: params.aspectRatio,
         style: params.style,
       });
       return response;
@@ -62,7 +51,6 @@ export default function ImageStudio() {
       setIsPolling(true);
       setPollingStatus('queued');
       
-      // Start polling
       createGenerationPoller(
         jobId,
         'image',
@@ -116,10 +104,9 @@ export default function ImageStudio() {
   const submitGeneration = useCallback(() => {
     generateMutation.mutate({
       prompt: prompt.trim(),
-      aspectRatio: aspectRatio,
       style: style,
     });
-  }, [prompt, aspectRatio, style, generateMutation]);
+  }, [prompt, style, generateMutation]);
 
   const handleGenerateClick = () => {
     if (!prompt.trim()) {
@@ -133,17 +120,28 @@ export default function ImageStudio() {
     if (!generatedImage) return;
     
     try {
-      const response = await fetch(generatedImage);
+      // Fetch data via cross-origin blob stream to trigger native save-file action dialog
+      const response = await fetch(generatedImage, { mode: 'cors' });
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `generated-image-${Date.now()}.png`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `creativeos-image-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error('Download failed:', error);
-      alert('Download failed. Please try again.');
+      console.error('Blob download failed, falling back to direct tab link:', error);
+      const link = document.createElement('a');
+      link.href = generatedImage;
+      link.target = '_blank';
+      link.setAttribute('download', `generated-image-${Date.now()}.png`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -163,7 +161,7 @@ export default function ImageStudio() {
             Image Studio
           </h1>
           <p className="text-muted-foreground mt-2">
-            Generate stunning AI-powered images with custom styles and aspect ratios
+            Generate stunning AI-powered images with custom studio styles
           </p>
         </div>
 
@@ -182,25 +180,8 @@ export default function ImageStudio() {
                   placeholder="Describe the image you want to generate..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[120px]"
+                  className="min-h-[140px]"
                 />
-              </div>
-
-              {/* Aspect Ratio */}
-              <div className="space-y-2">
-                <Label htmlFor="aspectRatio">Aspect Ratio</Label>
-                <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select aspect ratio" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ASPECT_RATIOS.map((ratio) => (
-                      <SelectItem key={ratio.value} value={ratio.value}>
-                        {ratio.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               {/* Style */}
@@ -274,7 +255,7 @@ export default function ImageStudio() {
                     <img
                       src={generatedImage}
                       alt="Generated asset outcome"
-                      className="w-full h-auto object-contain"
+                      className="w-full h-auto object-contain mx-auto"
                       style={{ minHeight: '300px', maxHeight: '500px' }}
                     />
                   </div>
@@ -296,7 +277,7 @@ export default function ImageStudio() {
                     <p className="text-muted-foreground px-4">
                       {generateMutation.isPending || isPolling
                         ? 'Image synthesis workspace initializing...'
-                        : 'Enter a creative prompt brief and select layout parameters to begin.'}
+                        : 'Enter a creative prompt brief and click generate to begin.'}
                     </p>
                   </div>
                 </div>
