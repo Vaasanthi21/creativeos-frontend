@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
-import { tokenStorage } from '@/api/apiClient';
+import { apiClient, tokenStorage } from '@/api/apiClient';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function Login() {
@@ -11,13 +11,14 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const data = await signIn(email, password);
+      const data = await signIn(normalizedEmail, password);
 
       if (data.user?.role === 'superadmin') {
         tokenStorage.setSuperAdminToken(data.token);
@@ -40,7 +41,7 @@ export default function Login() {
     } catch (error) {
       toast({
         title: "Login failed",
-        description: error.message || "Invalid email or password.",
+        description: error.message || "Check your email and password, then try again.",
         variant: "destructive",
       });
     } finally {
@@ -52,6 +53,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
       <div className="max-w-md w-full">
         <div className="text-center space-y-6">
+          {/* Logo */}
           <div className="flex items-center justify-center gap-2 mb-2">
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,6 +63,7 @@ export default function Login() {
             <span className="font-display text-2xl font-bold text-foreground">Creative Studio OS</span>
           </div>
 
+          {/* Login Form */}
           <div className="bg-card border border-border rounded-lg p-8 space-y-6">
             <div className="space-y-2">
               <h1 className="text-2xl font-display font-semibold text-foreground">
@@ -68,6 +71,9 @@ export default function Login() {
               </h1>
               <p className="text-sm text-muted-foreground">
                 Company users and super admins can sign in using their registered credentials.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Use the same work email you registered with.
               </p>
             </div>
 
@@ -134,12 +140,6 @@ export default function Login() {
                   Sign up
                 </Link>
               </p>
-
-
-              <p className="text-xs text-muted-foreground">
-                Company Users and Super Admins can sign in using their registered credentials.
-              </p>
-
             </div>
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Menu, LogOut, Wallet } from "lucide-react";
@@ -46,12 +45,18 @@ export default function TopNav({ onToggleSidebar }) {
 
   const getPageTitle = () => {
     switch (location.pathname) {
-      case "/": return "Content Generation";
-      case "/history": return "Content History";
-      case "/refine": return "Refine Content";
-      case "/settings": return "Settings";
-      case "/personas": return "Choose Persona";
-      default: return "Creative Studio OS";
+      case "/":
+        return "Content Generation";
+      case "/history":
+        return "Content History";
+      case "/refine":
+        return "Refine Content";
+      case "/settings":
+        return "Settings";
+      case "/personas":
+        return "Choose Persona";
+      default:
+        return "Creative Studio OS";
     }
   };
 
@@ -85,19 +90,17 @@ export default function TopNav({ onToggleSidebar }) {
             </div>
           )}
         </div>
-
       </div>
 
       <div className="flex items-center gap-2">
-
         <div className="flex items-center gap-2 rounded-xl border border-orange-500/60 bg-orange-500/5 px-4 py-2">
           <Wallet className="h-4 w-4 text-orange-500" />
 
-          {!isMobile && (
-            <span className="text-sm font-medium text-orange-500">
-              Credits: {Number(creditBalance?.balance || 0).toLocaleString()}
-            </span>
-          )}
+          <span className="text-sm font-medium text-orange-500">
+            {isMobile
+              ? Number(creditBalance?.balance || 0).toLocaleString()
+              : `Credits: ${Number(creditBalance?.balance || 0).toLocaleString()}`}
+          </span>
         </div>
 
         {/* Logout */}

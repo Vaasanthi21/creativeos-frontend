@@ -131,6 +131,11 @@ export default function Settings() {
                 <p className="text-xs text-muted-foreground">
                   {user?.email || ""}
                 </p>
+                {user?.phone && (
+                  <p className="text-xs text-muted-foreground">
+                    {user.phone}
+                  </p>
+                )}
               </div>
             </div>
             <Badge className="text-[10px]">Owner</Badge>
@@ -236,7 +241,7 @@ export default function Settings() {
               Upload a transparent PNG logo for your brand
             </p>
           </div>
-          
+
           <div className="flex items-center gap-3">
             {userMetrics?.brandLogoUrl ? (
               <img
@@ -249,7 +254,7 @@ export default function Settings() {
                 <Upload className="h-5 w-5" />
               </div>
             )}
-            
+
             <Button
               variant="outline"
               size="sm"

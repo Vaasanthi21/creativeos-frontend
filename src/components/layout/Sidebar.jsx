@@ -16,8 +16,9 @@ import {
   Github,
   Twitter,
   MessageCircle,
+  LifeBuoy,
   Video,
-  Wallet,  
+  Wallet,
   Mail,
 } from "lucide-react";
 import { getPersonaById } from "@/lib/personas";
@@ -30,9 +31,10 @@ const navItems = [
   { icon: Clock, label: "History", path: "/history" },
   { icon: Camera, label: "Image Studio", path: "/image-studio" },
   { icon: Video, label: "Video Studio", path: "/video-studio" },
-  { icon: Wallet,     label: "Wallet",             path: "/wallet" },
+  { icon: Wallet, label: "Wallet", path: "/wallet" },
   { icon: Settings, label: "Settings", path: "/settings" },
-  { icon: Mail,       label: "Contact Us",         path: "/contact" },
+  { icon: LifeBuoy, label: "Support Center", path: "/support" },
+  { icon: Mail, label: "Contact Us", path: "/contact" },
 ];
 
 export default function Sidebar({
@@ -152,7 +154,7 @@ export default function Sidebar({
                 {collapsed && (
                   <TooltipContent
                     side="right"
-                    className="px-2 py-1"
+                    className="border border-primary/40 bg-card text-primary"
                   >
                     {item.label}
                   </TooltipContent>
@@ -163,15 +165,29 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-2 border-t border-border">
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] text-secondary-foreground hover:bg-muted hover:text-foreground w-full"
-        >
-          <LogOut className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>Logout</span>}
-        </button>
+      {/* Sign Out */}
+      <div className="px-2 py-3 border-t border-border">
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] w-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              >
+                <LogOut className="w-4 h-4 shrink-0" />
+                {!collapsed && <span>Sign Out</span>}
+              </button>
+            </TooltipTrigger>
+            {collapsed && (
+              <TooltipContent
+                side="right"
+                className="border border-primary/40 bg-card text-primary"
+              >
+                Sign Out
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </aside>
   );

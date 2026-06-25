@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, Loader2, Layers3, Wand2, Building2 } from "lucide-react";
+import { Sparkles, Loader2, Layers3, Wand2, Building2, Plus } from "lucide-react";
 import { platforms } from "@/lib/personas";
 import { apiClient, tokenStorage } from "@/api/apiClient";
 import { getThemeColorName } from "@/lib/themeColors";
@@ -130,8 +130,8 @@ export default function GenerationForm({
   user,
   planName,
 }) {
-  const [mode, setMode] = useState("single");
   const navigate = useNavigate();
+  const [mode, setMode] = useState("single");
   const [selectedBatchPlatforms, setSelectedBatchPlatforms] = useState(() => [
     platforms[0]?.id,
   ]);
@@ -283,13 +283,15 @@ export default function GenerationForm({
     useOriginalLogo,
   ]);
 
+  const hasPersona = Boolean(selectedCompanyPersona);
+
   const isValid =
-    mode === "single"
+    hasPersona &&
+    (mode === "single"
       ? topic.trim().length > 0 && Boolean(contentType)
       : batchLines.length > 0 &&
         !batchOverLimit &&
-        selectedBatchPlatforms.length > 0 &&
-        Boolean(contentType);
+        Boolean(contentType));
 
   const personaLimit = user?.companyPersonaLimit || undefined;
 
@@ -371,7 +373,6 @@ export default function GenerationForm({
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          {/* LEFT COLUMN */}
           <div className="space-y-6 rounded-3xl border border-border/70 bg-background/40 p-5">
             <div className="rounded-3xl border border-border/70 bg-muted/20 p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -406,15 +407,9 @@ export default function GenerationForm({
                     </SelectTrigger>
                     <SelectContent>
                       {companyPersonas.length === 0 ? (
-                        <div className="px-2 py-3">
-                          <Button
-                            variant="outline"
-                            className="w-full h-10 rounded-2xl"
-                            onClick={() => navigate("/personas")}
-                          >
-                            Create your first persona
-                          </Button>
-                        </div>
+                        <SelectItem value="__empty" disabled>
+                          Create your first persona
+                        </SelectItem>
                       ) : (
                         companyPersonas.map((persona) => (
                           <SelectItem key={persona.id} value={persona.id}>
@@ -424,6 +419,23 @@ export default function GenerationForm({
                       )}
                     </SelectContent>
                   </Select>
+                  {companyPersonas.length === 0 && (
+                    <div className="rounded-2xl border border-dashed border-border/70 bg-background/60 p-4">
+                      <p className="text-sm font-medium text-foreground">
+                        No Company Persona Found
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 gap-2"
+                        onClick={() => navigate("/personas")}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Persona
+                      </Button>
+                    </div>
+                  )}
                   {selectedCompanyPersona && (
                     <div className="rounded-2xl border border-border/70 bg-background/70 p-4 text-sm text-muted-foreground">
                       <div className="flex items-start justify-between gap-3">
@@ -547,7 +559,6 @@ export default function GenerationForm({
                     <Label className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                       Platforms
                     </Label>
-
                     <button
                       type="button"
                       onClick={() =>
@@ -693,72 +704,47 @@ export default function GenerationForm({
               </div>
             </div>
 
-            <div className="space-y-4">
-            <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
-              <label className="flex items-start gap-2 text-sm text-foreground">
-                <input
-                  type="checkbox"
-                  checked={logoPlacement !== "none"}
-                  onChange={(event) => {
-                    if (event.target.checked && logoPlacement === "none") {
-                      setLogoPlacement("bottom-right");
-                    } else if (!event.target.checked && logoPlacement !== "none") {
-                      setLogoPlacement("none");
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                  Logo placement
+                </Label>
+                <Select value={logoPlacement} onValueChange={setLogoPlacement}>
+                  <SelectTrigger className="h-11 rounded-2xl border-border/70 bg-muted/30 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOGO_PLACEMENT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                  Logo integrity
+                </p>
+                <label className="mt-2 flex items-start gap-2 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={useOriginalLogo}
+                    onChange={(event) =>
+                      setUseOriginalLogo(event.target.checked)
                     }
-                  }}
-                  className="mt-0.5 h-4 w-4"
-                />
-                <span className="font-medium">Add Brand Logo</span>
-              </label>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Include your brand logo in generated content
-              </p>
-            </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                    Logo placement
-                  </Label>
-                  <Select value={logoPlacement} onValueChange={setLogoPlacement}>
-                    <SelectTrigger className="h-11 rounded-2xl border-border/70 bg-muted/30 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LOGO_PLACEMENT_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                    Logo integrity
-                  </p>
-                  <label className="mt-2 flex items-start gap-2 text-sm text-foreground">
-                    <input
-                      type="checkbox"
-                      checked={useOriginalLogo}
-                      onChange={(event) =>
-                        setUseOriginalLogo(event.target.checked)
-                      }
-                      className="mt-0.5"
-                    />
-                    <span>
-                      Use the exact uploaded logo with no redesign or changes when
-                      a logo is placed.
-                    </span>
-                  </label>
-                </div>
+                    className="mt-0.5"
+                  />
+                  <span>
+                    Use the exact uploaded logo with no redesign or changes when
+                    a logo is placed.
+                  </span>
+                </label>
               </div>
             </div>
           </div>
-          {/* END LEFT COLUMN */}
 
-          {/* RIGHT COLUMN */}
           <div className="space-y-6 rounded-3xl border border-border/70 bg-background/40 p-5">
             <div>
               <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-foreground">
@@ -843,8 +829,12 @@ export default function GenerationForm({
                 </>
               )}
             </Button>
+            {!hasPersona && (
+              <p className="text-center text-xs text-muted-foreground">
+                Create a Company Persona first to enable content generation.
+              </p>
+            )}
           </div>
-          {/* END RIGHT COLUMN */}
         </div>
       </div>
       <ConfirmDialog

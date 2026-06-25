@@ -10,6 +10,7 @@ import PersonaSelect from './pages/PersonaSelect';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import RefineContent from './pages/RefineContent';
+import Support from './pages/Support';
 import LinkedInAds from "./pages/LinkedInAds";
 import ImageStudio from './pages/ImageStudio';
 import VideoStudio from './pages/VideoStudio';
@@ -18,7 +19,6 @@ import WalletPage from "@/pages/wallet";
 import ContactPage from "@/pages/contact";
 import AdminRoute from "@/components/AdminRoute";
 import AdminDashboard from "@/pages/AdminDashboard";
-
 import AmbassadorPortal from "./components/programs/AmbassadorPortal";
 import SuperAdminLogin from './pages/superadmin/SuperAdminLogin';
 import SuperAdminLayout from './components/superadmin/SuperAdminLayout';
@@ -26,6 +26,7 @@ import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard';
 import SuperAdminCompanies from './pages/superadmin/SuperAdminCompanies';
 import SuperAdminUsers from './pages/superadmin/SuperAdminUsers';
 import SuperAdminBilling from './pages/superadmin/SuperAdminBilling';
+import SuperAdminRequests from './pages/superadmin/SuperAdminRequests';
 import SuperAdminSettings from './pages/superadmin/SuperAdminSettings';
 import SuperAdminAnalytics from './pages/superadmin/SuperAdminAnalytics';
 import SuperAdminUsage from './pages/superadmin/SuperAdminUsage';
@@ -65,6 +66,7 @@ const AuthenticatedApp = () => {
           <Route path="/superadmin/usage" element={<SuperAdminUsage />} />
           <Route path="/superadmin/plans" element={<SuperAdminPlans />} />
           <Route path="/superadmin/billing" element={<SuperAdminBilling />} />
+          <Route path="/superadmin/requests" element={<SuperAdminRequests />} />
           <Route path="/superadmin/settings" element={<SuperAdminSettings />} />
         </Route>
         <Route path="*" element={<Login />} />
@@ -84,6 +86,7 @@ const AuthenticatedApp = () => {
         <Route path="/history" element={<History />} />
         <Route path="/refine" element={<RefineContent />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/support" element={<Support />} />
         <Route path="/linkedinads" element={<LinkedInAds />} />
         <Route path="/image-studio" element={<ImageStudio />} />
         <Route path="/video-studio" element={<VideoStudio />} />
@@ -93,7 +96,7 @@ const AuthenticatedApp = () => {
         <Route path="/wallet" element={<WalletPage />} />
         <Route path="/contact" element={<ContactPage />} />
       </Route>
-      
+
       <Route path="/register" element={<Register />} />
 
       <Route path="/superadmin/login" element={<SuperAdminLogin />} />
@@ -105,6 +108,7 @@ const AuthenticatedApp = () => {
         <Route path="/superadmin/usage" element={<SuperAdminUsage />} />
         <Route path="/superadmin/plans" element={<SuperAdminPlans />} />
         <Route path="/superadmin/billing" element={<SuperAdminBilling />} />
+        <Route path="/superadmin/requests" element={<SuperAdminRequests />} />
         <Route path="/superadmin/settings" element={<SuperAdminSettings />} />
       </Route>
 
