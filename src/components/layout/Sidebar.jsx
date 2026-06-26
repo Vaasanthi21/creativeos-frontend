@@ -31,7 +31,7 @@ const navItems = [
   { icon: Clock, label: "History", path: "/history" },
   { icon: Camera, label: "Image Studio", path: "/image-studio" },
   { icon: Video, label: "Video Studio", path: "/video-studio" },
-  { icon: Linkedin, label: "LinkedIn Tracker", path: "/linkedin-tracker" },
+  { icon: Linkedin, label: "LinkedIn Tracker", path: "/linkedinads" },
   { icon: Wallet, label: "Wallet", path: "/wallet" },
   { icon: Settings, label: "Settings", path: "/settings" },
   { icon: LifeBuoy, label: "Support Center", path: "/support" },
