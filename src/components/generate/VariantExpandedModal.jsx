@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Download, Share2, Zap } from "lucide-react";
+import { Download, Share2, Zap } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { tokenStorage } from "@/api/apiClient";
 
@@ -81,8 +81,6 @@ export default function VariantExpandedModal({
   onExport,
   fullEntry,
 }) {
-  const [copied, setCopied] = useState(false);
-
   if (!variant) return null;
 
   const hasText = Boolean(String(variant.content || "").trim());
@@ -185,43 +183,6 @@ export default function VariantExpandedModal({
     await downloadFile(resolvedVideoUrl, filename);
   };
 
-  const handleCopy = async () => {
-    if (!hasText) {
-      return;
-    }
-
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(variant.content);
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = variant.content;
-        document.body.appendChild(textArea);
-        textArea.select();
-        const copied = document.execCommand("copy");
-        document.body.removeChild(textArea);
-
-        if (!copied) {
-          throw new Error(
-            "Clipboard copy is not available in this environment",
-          );
-        }
-      }
-
-      setCopied(true);
-      toast({ title: "Copied to clipboard", duration: 1500 });
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error("Copy failed:", error);
-
-      toast({
-        title: "Copy failed",
-        description: "Unable to copy content.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -314,13 +275,12 @@ export default function VariantExpandedModal({
                 </div>
               )}
 
-              {/* Chat History - Always show if we have any data */}
+              {/* Chat History */}
               <div className="rounded-md border border-border bg-muted/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                   Chat History
                 </p>
                 <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                  {/* Show original prompt as first message if it exists */}
                   {fullEntry.original_prompt && (
                     <div className="text-xs rounded px-2 py-1 bg-muted/60 border-l-2 border-amber-500/50">
                       <p className="font-medium text-muted-foreground mb-1">
@@ -332,7 +292,6 @@ export default function VariantExpandedModal({
                     </div>
                   )}
 
-                  {/* Show generated response */}
                   <div className="text-xs rounded px-2 py-1 bg-muted/60 border-l-2 border-blue-500/50">
                     <p className="font-medium text-muted-foreground mb-1">
                       Generated:
@@ -344,7 +303,6 @@ export default function VariantExpandedModal({
                     </p>
                   </div>
 
-                  {/* Show refinement messages if they exist */}
                   {Array.isArray(fullEntry.refinement_messages) &&
                     fullEntry.refinement_messages.length > 0 &&
                     fullEntry.refinement_messages.map((msg, idx) => (
@@ -356,7 +314,6 @@ export default function VariantExpandedModal({
                           {msg.role === "user"
                             ? "Your Refinement:"
                             : "Generated:"}
-                          :
                         </p>
                         <p className="text-secondary-foreground whitespace-pre-wrap line-clamp-3">
                           {msg.content}
@@ -364,7 +321,6 @@ export default function VariantExpandedModal({
                       </div>
                     ))}
 
-                  {/* Show empty state if no original prompt */}
                   {!fullEntry.original_prompt &&
                     (!Array.isArray(fullEntry.refinement_messages) ||
                       fullEntry.refinement_messages.length === 0) && (
@@ -404,10 +360,6 @@ export default function VariantExpandedModal({
                 Share image
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handleCopy} disabled={!hasText}>
-              {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
-              {copied ? "Copied" : "Copy"}
-            </Button>
             {hasText && (
               <Button
                 variant="outline"
