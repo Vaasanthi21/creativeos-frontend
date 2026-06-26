@@ -157,9 +157,9 @@ export default function GenerationForm({
       const creditsMap = {
         "Text Only": 1,
         Image: 3,
-        Video: 10,
+        Video: 69,
         "Text + Image": 4,
-        "Text + Video": 11,
+        "Text + Video": 70,
       };
 
       return {
