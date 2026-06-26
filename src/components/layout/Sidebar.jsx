@@ -16,9 +16,10 @@ import {
   Github,
   Twitter,
   MessageCircle,
+  LifeBuoy,
   Video,
-  Wallet,  
-  Mail,
+  Wallet,
+  X, // 🚀 Added close icon token
 } from "lucide-react";
 import { getPersonaById } from "@/lib/personas";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -30,9 +31,9 @@ const navItems = [
   { icon: Clock, label: "History", path: "/history" },
   { icon: Camera, label: "Image Studio", path: "/image-studio" },
   { icon: Video, label: "Video Studio", path: "/video-studio" },
-  { icon: Wallet,     label: "Wallet",             path: "/wallet" },
+  { icon: Wallet, label: "Wallet", path: "/wallet" },
   { icon: Settings, label: "Settings", path: "/settings" },
-  { icon: Mail,       label: "Contact Us",         path: "/contact" },
+  { icon: LifeBuoy, label: "Support Center", path: "/support" },
 ];
 
 export default function Sidebar({
@@ -40,6 +41,7 @@ export default function Sidebar({
   onPersonaChange,
   collapsed,
   onToggleCollapse,
+  onCloseMobile, // 🚀 Extracted the responsive drawer close callback
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -67,6 +69,7 @@ export default function Sidebar({
       : persona.color;
 
   const handleLogout = async () => {
+    if (onCloseMobile) onCloseMobile();
     await signOut();
     navigate('/login');
   };
@@ -79,32 +82,45 @@ export default function Sidebar({
     >
       {/* Persona badge */}
       <div
-        className={`h-16 border-b border-border flex items-center ${
-          collapsed
-            ? "justify-between px-2 py-3"
-            : "gap-2.5 px-3 py-3"
+        className={`h-16 border-b border-border flex items-center justify-between ${
+          collapsed ? "px-2 py-3" : "px-3 py-3"
         }`}
       >
-        <div
-          className="w-8 h-8 rounded-md flex items-center justify-center text-xs font-display font-bold shrink-0"
-          style={{
-            background: `${persona.color}1f`,
-            border: `1px solid ${persona.color}`,
-            color: sidebarIconColor,
-          }}
-        >
-          <PlatformIcon className="w-4 h-4 text-current" />
-        </div>
-        {!collapsed && (
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-display font-semibold text-foreground truncate">
-              {persona.label}
-            </p>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Active Platform
-            </p>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            className="w-8 h-8 rounded-md flex items-center justify-center text-xs font-display font-bold shrink-0"
+            style={{
+              background: `${persona.color}1f`,
+              border: `1px solid ${persona.color}`,
+              color: sidebarIconColor,
+            }}
+          >
+            <PlatformIcon className="w-4 h-4 text-current" />
           </div>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-display font-semibold text-foreground truncate">
+                {persona.label}
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Active Platform
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ✕ Explicit Close Button for Mobile viewports */}
+        {onCloseMobile && (
+          <button
+            type="button"
+            onClick={onCloseMobile}
+            className="flex lg:hidden items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
         )}
+
+        {/* Desktop Collapse Controls */}
         {!collapsed && (
           <button
             type="button"
@@ -139,6 +155,9 @@ export default function Sidebar({
                 <TooltipTrigger asChild>
                   <Link
                     to={item.path}
+                    onClick={() => {
+                      if (onCloseMobile) onCloseMobile(); // 🚀 Force mobile auto-close on navigate click
+                    }}
                     className={`flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] transition-colors ${
                       isActive
                         ? "bg-primary/10 text-primary"
@@ -152,7 +171,7 @@ export default function Sidebar({
                 {collapsed && (
                   <TooltipContent
                     side="right"
-                    className="px-2 py-1"
+                    className="border border-primary/40 bg-card text-primary"
                   >
                     {item.label}
                   </TooltipContent>
@@ -163,15 +182,29 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-2 border-t border-border">
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] text-secondary-foreground hover:bg-muted hover:text-foreground w-full"
-        >
-          <LogOut className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>Logout</span>}
-        </button>
+      {/* Sign Out */}
+      <div className="px-2 py-3 border-t border-border">
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] w-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              >
+                <LogOut className="w-4 h-4 shrink-0" />
+                {!collapsed && <span>Sign Out</span>}
+              </button>
+            </TooltipTrigger>
+            {collapsed && (
+              <TooltipContent
+                side="right"
+                className="border border-primary/40 bg-card text-primary"
+              >
+                Sign Out
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </aside>
   );

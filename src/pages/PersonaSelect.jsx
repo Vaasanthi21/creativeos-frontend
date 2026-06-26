@@ -124,6 +124,12 @@ export default function PersonaSelect() {
       preserve_original_logo: personaDraft.preserveOriginalLogo,
     }, token),
     onSuccess: (created) => {
+      queryClient.setQueryData(["company-personas"], (old) => {
+        if (!old) return [created];
+        const exists = old.find(p => p.id === created.id);
+        if (exists) return old.map(p => p.id === created.id ? created : p);
+        return [...old, created];
+      });
       queryClient.invalidateQueries({ queryKey: ["company-personas"] });
       queryClient.invalidateQueries({ queryKey: ["user-metrics"] });
       setSelectedPersonaId(created.id);
@@ -243,9 +249,14 @@ export default function PersonaSelect() {
         fileData,
       }, token);
 
+      const uploadedLogoUrl = response?.logoUrl || response?.logo_url || response?.url || "";
+      if (!uploadedLogoUrl) {
+        throw new Error("Logo upload succeeded but no logo URL was returned.");
+      }
+
       setPersonaDraft((current) => ({
         ...current,
-        logoUrl: response.logoUrl,
+        logoUrl: uploadedLogoUrl,
       }));
       toast({ title: "Logo uploaded", duration: 1500 });
     } catch (error) {
@@ -287,7 +298,11 @@ export default function PersonaSelect() {
           <div className="grid gap-3">
             {companyPersonas.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border/70 bg-background/40 p-6 text-sm text-muted-foreground">
-                No company personas yet. Create your first one from the form on the right.
+                <p>No company personas yet. Create your first one from the form on the right.</p>
+                <Button type="button" className="mt-4 rounded-2xl" onClick={resetDraft} disabled={!canCreateMorePersonas}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add your first persona
+                </Button>
               </div>
             ) : (
               companyPersonas.map((persona) => {

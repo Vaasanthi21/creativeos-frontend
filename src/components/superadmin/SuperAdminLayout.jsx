@@ -5,6 +5,8 @@ import {
   Building2,
   Users,
   CreditCard,
+
+  Inbox,
   Settings,
   ShieldCheck,
   LogOut,
@@ -24,6 +26,7 @@ const NAV = [
   { label: "Usage", icon: Zap, path: "/superadmin/usage" },
   { label: "Plans", icon: Layers, path: "/superadmin/plans" },
   { label: "Billing", icon: CreditCard, path: "/superadmin/billing" },
+  { label: "Requests", icon: Inbox, path: "/superadmin/requests" },
   { label: "Settings", icon: Settings, path: "/superadmin/settings" },
 ];
 

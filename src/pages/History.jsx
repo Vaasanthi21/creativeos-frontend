@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { fetchHistory, deleteHistoryEntry } from "@/services/aiService";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -52,36 +56,53 @@ export default function History() {
               tagline: entry.company_tagline,
               logoUrl: entry.company_logo_url,
               notes: entry.company_persona_notes,
-              visualStyleInstructions: entry.company_persona_visual_style_instructions,
+              visualStyleInstructions:
+                entry.company_persona_visual_style_instructions,
               tuningPrompt: entry.company_persona_tuning_prompt,
               learningSummary: entry.company_persona_learning_summary,
             }
           : null,
       },
       generatedContent: variant,
-      ragContext: entry.rag_context || '',
-      originalPrompt: entry.original_prompt || '',
-      messages: Array.isArray(entry.refinement_messages) && entry.refinement_messages.length > 0
-        ? entry.refinement_messages
-        : [
-            {
-              role: 'assistant',
-              content: variant?.content || '',
-              image_url: variant?.image_url || null,
-              image_base64: variant?.image_base64 || null,
-              image_prompt: variant?.image_prompt || null,
-              image_revised_prompt: variant?.image_revised_prompt || null,
-              title: variant?.title || null,
-            },
-          ],
+      ragContext: entry.rag_context || "",
+      originalPrompt: entry.original_prompt || "",
+      messages:
+        Array.isArray(entry.refinement_messages) &&
+        entry.refinement_messages.length > 0
+          ? entry.refinement_messages
+          : [
+              {
+                role: "assistant",
+                content: variant?.content || "",
+                image_url: variant?.image_url || null,
+                image_base64: variant?.image_base64 || null,
+                image_prompt: variant?.image_prompt || null,
+                image_revised_prompt: variant?.image_revised_prompt || null,
+                title: variant?.title || null,
+              },
+            ],
     };
 
     persistRefineSession(refineState);
-    navigate('/refine', { state: refineState });
+    navigate("/refine", { state: refineState });
   };
 
-  const platforms = ["LinkedIn", "Instagram", "Facebook", "X / Twitter", "YouTube", "GitHub", "Threads"];
-  const contentTypes = ["Post", "Article", "Caption", "Script", "Carousel", "Text Only", "Image", "Video", "Text + Image", "Text + Video"];
+  const platforms = [
+    "LinkedIn",
+    "Instagram",
+    "Facebook",
+    "X / Twitter",
+    "YouTube",
+    "GitHub",
+    "Threads",
+  ];
+  const contentTypes = [
+    { label: "Text Only", value: "text-only" },
+    { label: "Image", value: "image" },
+    { label: "Video", value: "video" },
+    { label: "Text + Image", value: "text-image" },
+    { label: "Text + Video", value: "text-video" },
+  ];
 
   const {
     data,
@@ -94,7 +115,7 @@ export default function History() {
     refetch,
   } = useInfiniteQuery({
     queryKey: ["contentHistory"],
-    initialPageParam: '',
+    initialPageParam: "",
     queryFn: ({ pageParam }) => fetchHistory(pageSize, pageParam),
     getNextPageParam: (lastPage) => lastPage?.nextCursor || undefined,
   });
@@ -104,17 +125,21 @@ export default function History() {
       (data?.pages || []).flatMap((page) =>
         (page?.items || []).map((entry) => ({
           ...entry,
-          topic: String(entry?.topic || '').trim(),
-          platform: entry?.platform || entry?.persona_label || entry?.persona || '',
-          content_type: entry?.content_type || entry?.contentType || '',
+          topic: String(entry?.topic || "").trim(),
+          platform:
+            entry?.platform || entry?.persona_label || entry?.persona || "",
+          content_type: entry?.content_type || entry?.contentType || "",
           variants: Array.isArray(entry?.variants) ? entry.variants : [],
-        }))
+        })),
       ),
-    [data]
+    [data],
   );
 
   useEffect(() => {
-    if (selectedEntry && !history.some((entry) => entry.id === selectedEntry.id)) {
+    if (
+      selectedEntry &&
+      !history.some((entry) => entry.id === selectedEntry.id)
+    ) {
       setSelectedEntry(null);
     }
   }, [history, selectedEntry]);
@@ -137,7 +162,7 @@ export default function History() {
         root: null,
         rootMargin: "0px 0px 240px 0px",
         threshold: 0,
-      }
+      },
     );
 
     observer.observe(node);
@@ -157,34 +182,65 @@ export default function History() {
   const filtered = history
     .filter((h) => h.status !== "deleted")
     .filter((h) =>
-      search ? h.topic.toLowerCase().includes(search.toLowerCase()) : true
+      search ? h.topic.toLowerCase().includes(search.toLowerCase()) : true,
     )
     .filter((h) => {
       if (platformFilter === "all") return true;
-      const hPlatform = String(h.platform || '').trim().toLowerCase();
-      const filterValue = String(platformFilter || '').trim().toLowerCase();
+      const hPlatform = String(h.platform || "")
+        .trim()
+        .toLowerCase();
+      const filterValue = String(platformFilter || "")
+        .trim()
+        .toLowerCase();
       return hPlatform === filterValue;
     })
     .filter((h) => {
       if (contentTypeFilter === "all") return true;
-      const hContentType = String(h.content_type || '').trim().toLowerCase();
-      const filterValue = String(contentTypeFilter || '').trim().toLowerCase();
-      return hContentType.includes(filterValue);
+      const hContentType = String(h.content_type || "")
+        .trim()
+        .toLowerCase();
+      const filterValue = String(contentTypeFilter || "")
+        .trim()
+        .toLowerCase();
+      return hContentType === filterValue;
     })
     .filter((h) => {
       if (dateFilter === "all") return true;
-      const entryDate = new Date(h.created_date);
-      const now = new Date();
-      
-      if (dateFilter === "today") {
-        return entryDate.toDateString() === now.toDateString();
-      } else if (dateFilter === "week") {
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        return entryDate >= weekAgo;
-      } else if (dateFilter === "month") {
-        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        return entryDate >= monthAgo;
+      const rawDate =
+        h.created_date ||
+        h.created_at ||
+        h.createdAt ||
+        h.updated_at ||
+        h.updatedAt;
+
+      const entryDate = new Date(rawDate);
+
+      if (!rawDate || Number.isNaN(entryDate.getTime())) {
+        return false;
       }
+      const now = new Date();
+
+      const startOfToday = new Date(now);
+      startOfToday.setHours(0, 0, 0, 0);
+
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      if (dateFilter === "today") {
+        return entryDate >= startOfToday;
+      }
+
+      if (dateFilter === "week") {
+        return entryDate >= startOfWeek;
+      }
+
+      if (dateFilter === "month") {
+        return entryDate >= startOfMonth;
+      }
+
       return true;
     });
 
@@ -192,8 +248,12 @@ export default function History() {
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-5">
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-lg font-display font-bold text-foreground">Content History</h2>
-          <p className="text-xs text-muted-foreground">Showing {filtered.length} loaded entries</p>
+          <h2 className="text-lg font-display font-bold text-foreground">
+            Content History
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Showing {filtered.length} loaded entries
+          </p>
         </div>
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -210,9 +270,11 @@ export default function History() {
       <div className="flex flex-wrap gap-3 items-center">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
-          <span className="text-xs font-medium text-muted-foreground">Filters:</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            Filters:
+          </span>
         </div>
-        
+
         <Select value={platformFilter} onValueChange={setPlatformFilter}>
           <SelectTrigger className="w-[140px] bg-muted border-border text-xs">
             <SelectValue placeholder="Platform" />
@@ -234,8 +296,8 @@ export default function History() {
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
             {contentTypes.map((ct) => (
-              <SelectItem key={ct} value={ct}>
-                {ct}
+              <SelectItem key={ct.value} value={ct.value}>
+                {ct.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -248,12 +310,14 @@ export default function History() {
           <SelectContent>
             <SelectItem value="all">All Time</SelectItem>
             <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="week">Past Week</SelectItem>
-            <SelectItem value="month">Past Month</SelectItem>
+            <SelectItem value="week">This Week</SelectItem>
+            <SelectItem value="month">This Month</SelectItem>
           </SelectContent>
         </Select>
 
-        {(platformFilter !== "all" || contentTypeFilter !== "all" || dateFilter !== "all") && (
+        {(platformFilter !== "all" ||
+          contentTypeFilter !== "all" ||
+          dateFilter !== "all") && (
           <Button
             variant="outline"
             size="sm"
@@ -276,9 +340,12 @@ export default function History() {
       ) : isError ? (
         <div className="bg-card border border-border rounded-lg p-12 text-center space-y-3">
           <Clock className="w-10 h-10 text-muted-foreground mx-auto" />
-          <p className="text-sm text-foreground">Unable to load content history.</p>
+          <p className="text-sm text-foreground">
+            Unable to load content history.
+          </p>
           <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            {error?.message || "The history request failed. Try again once the backend and session are available."}
+            {error?.message ||
+              "The history request failed. Try again once the backend and session are available."}
           </p>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             Retry
@@ -287,15 +354,18 @@ export default function History() {
       ) : filtered.length === 0 ? (
         <div className="bg-card border border-border rounded-lg p-12 text-center">
           <Clock className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">No content history yet.</p>
+          <p className="text-sm text-muted-foreground">
+            No content history yet.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map((entry) => {
-            const persona = getPersonaById(entry.persona) || getPersonaById(String(entry.platform || '').toLowerCase()) || {
-              color: '#64748b',
-              label: entry.platform || 'Unknown',
-            };
+            const persona = getPersonaById(entry.persona) ||
+              getPersonaById(String(entry.platform || "").toLowerCase()) || {
+                color: "#64748b",
+                label: entry.platform || "Unknown",
+              };
             return (
               <div
                 key={entry.id}
@@ -303,7 +373,9 @@ export default function History() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground truncate">{entry.topic}</p>
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {entry.topic}
+                    </p>
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       <Badge
                         variant="secondary"
@@ -325,7 +397,12 @@ export default function History() {
                         </Badge>
                       )}
                       <span className="text-[10px] text-muted-foreground">
-                        {entry.created_date ? format(new Date(entry.created_date), "MMM d, yyyy · h:mm a") : ""}
+                        {entry.created_date
+                          ? format(
+                              new Date(entry.created_date),
+                              "MMM d, yyyy · h:mm a",
+                            )
+                          : ""}
                       </span>
                     </div>
                   </div>
@@ -334,7 +411,11 @@ export default function History() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                      onClick={() => setSelectedEntry(selectedEntry?.id === entry.id ? null : entry)}
+                      onClick={() =>
+                        setSelectedEntry(
+                          selectedEntry?.id === entry.id ? null : entry,
+                        )
+                      }
                     >
                       <Eye className="w-3.5 h-3.5" />
                     </Button>
@@ -352,15 +433,17 @@ export default function History() {
                 {/* Expanded variants */}
                 {selectedEntry?.id === entry.id && entry.variants && (
                   <div className="mt-3 pt-3 border-t border-border space-y-2">
-                    
                     {entry.variants.map((v, i) => (
                       <div
                         key={i}
                         className="bg-muted rounded-md p-3 cursor-pointer hover:bg-muted/80 transition-colors"
-                        onClick={() => setExpandedVariant({ ...v, fullEntry: entry })}
+                        onClick={() =>
+                          setExpandedVariant({ ...v, fullEntry: entry })
+                        }
                       >
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                          Variant {i + 1}{v.title ? ` — ${v.title}` : ""}
+                          Variant {i + 1}
+                          {v.title ? ` — ${v.title}` : ""}
                         </p>
                         <p className="text-xs text-secondary-foreground line-clamp-2">
                           {v.content}
