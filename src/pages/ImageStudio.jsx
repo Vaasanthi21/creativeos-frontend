@@ -1,16 +1,16 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { startAsyncImageGeneration, createGenerationPoller } from '@/services/generationPollingService';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from "@/components/ui/progress";
 import { Loader2, Sparkles, Download, RefreshCw, Camera } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addHistoryEntry } from '@/services/aiService';
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 
-// Style options
 const IMAGE_STYLES = [
   { value: 'realistic', label: 'Realistic' },
   { value: 'illustration', label: 'Illustration' },
@@ -22,6 +22,16 @@ const IMAGE_STYLES = [
   { value: 'oil-painting', label: 'Oil Painting' },
 ];
 
+const ESTIMATED_TOTAL_MS = 180000; // 3 minutes total runtime estimate
+
+const formatRemainingTime = (milliseconds) => {
+  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`;
+};
+
 export default function ImageStudio() {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('realistic');
@@ -30,9 +40,34 @@ export default function ImageStudio() {
   const [pollingStatus, setPollingStatus] = useState(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-  // Image generation mutation
+  // Simulated live-progress counter parameters
+  const [stageStartedAt, setStageStartedAt] = useState(null);
+  const [stageElapsedMs, setStageElapsedMs] = useState(0);
+
+  useEffect(() => {
+    if (!isPolling || !stageStartedAt) {
+      setStageElapsedMs(0);
+      return undefined;
+    }
+
+    const updateElapsed = () => {
+      setStageElapsedMs(Date.now() - stageStartedAt);
+    };
+
+    updateElapsed();
+    const intervalId = window.setInterval(updateElapsed, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [isPolling, stageStartedAt]);
+
+  const displayProgressValue = isPolling
+    ? Math.min(96, Math.max(8, Math.round((stageElapsedMs / ESTIMATED_TOTAL_MS) * 100)))
+    : 0;
+
+  const displayRemainingMs = Math.max(0, ESTIMATED_TOTAL_MS - stageElapsedMs);
+
   const generateMutation = useMutation({
     mutationFn: async (params) => {
+      setPollingStatus('preparing');
       const response = await startAsyncImageGeneration({
         topic: params.prompt,
         style: params.style,
@@ -49,6 +84,7 @@ export default function ImageStudio() {
       }
       
       setIsPolling(true);
+      setStageStartedAt(Date.now());
       setPollingStatus('queued');
       
       createGenerationPoller(
@@ -79,6 +115,7 @@ export default function ImageStudio() {
         },
         (finalStatus) => {
           setIsPolling(false);
+          setStageStartedAt(null);
           const statusCode = finalStatus.status;
           
           if (statusCode === 'completed' && finalStatus.result) {
@@ -96,6 +133,7 @@ export default function ImageStudio() {
     },
     onError: (error) => {
       setIsPolling(false);
+      setStageStartedAt(null);
       setPollingStatus('failed');
       console.error('Image generation failed:', error);
     },
@@ -118,9 +156,7 @@ export default function ImageStudio() {
 
   const handleDownload = async () => {
     if (!generatedImage) return;
-    
     try {
-      // Fetch data via cross-origin blob stream to trigger native save-file action dialog
       const response = await fetch(generatedImage, { mode: 'cors' });
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
@@ -149,6 +185,7 @@ export default function ImageStudio() {
     setGeneratedImage(null);
     setPrompt('');
     setPollingStatus(null);
+    setStageStartedAt(null);
   };
 
   return (
@@ -172,7 +209,6 @@ export default function ImageStudio() {
               <CardTitle>Image Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Prompt */}
               <div className="space-y-2">
                 <Label htmlFor="prompt">Prompt</Label>
                 <Textarea
@@ -181,13 +217,13 @@ export default function ImageStudio() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   className="min-h-[140px]"
+                  disabled={generateMutation.isPending || isPolling}
                 />
               </div>
 
-              {/* Style */}
               <div className="space-y-2">
                 <Label htmlFor="style">Style</Label>
-                <Select value={style} onValueChange={setStyle}>
+                <Select value={style} onValueChange={setStyle} disabled={generateMutation.isPending || isPolling}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select style" />
                   </SelectTrigger>
@@ -201,7 +237,6 @@ export default function ImageStudio() {
                 </Select>
               </div>
 
-              {/* Generate Button */}
               <Button
                 onClick={handleGenerateClick}
                 disabled={generateMutation.isPending || isPolling || !prompt.trim()}
@@ -221,35 +256,75 @@ export default function ImageStudio() {
                 )}
               </Button>
 
-              {/* Polling Status UI */}
-              {(generateMutation.isPending || isPolling) && pollingStatus && (
-                <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 text-center space-y-2">
-                  <div className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span>Status: <span className="capitalize text-primary">{pollingStatus}</span></span>
-                  </div>
-                  {pollingStatus === 'queued' && (
-                    <p className="text-xs text-muted-foreground">Queued in system. Preparing image engine context...</p>
-                  )}
-                  {pollingStatus === 'processing' && (
-                    <p className="text-xs text-muted-foreground">The AI engine is rendering asset fragments. Please hold on...</p>
-                  )}
-                </div>
-              )}
-              
               {pollingStatus === 'failed' && (
                 <p className="text-sm text-center text-red-500 font-medium">Generation failed. Please try a different prompt structure.</p>
               )}
             </CardContent>
           </Card>
 
-          {/* Right Panel - Generated Image */}
+          {/* Right Panel - Progress Block or Generated Asset Rendering */}
           <Card>
             <CardHeader>
-              <CardTitle>Generated Image</CardTitle>
+              <CardTitle>Studio Output</CardTitle>
             </CardHeader>
             <CardContent>
-              {generatedImage ? (
+              {isPolling || generateMutation.isPending ? (
+                /* Dynamic Progress Component Layout cloned verbatim from Generation Layout in image_c860a5.png */
+                <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-center min-h-[400px] gap-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">
+                          Generating image
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {pollingStatus === 'queued' 
+                            ? 'Queued in system. Preparing image engine context...' 
+                            : 'Midjourney/Dall-E is rendering high-resolution asset matrices.'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-semibold tracking-tight text-foreground">
+                        {displayProgressValue}%
+                      </p>
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                        Estimated progress
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Progress value={displayProgressValue} className="h-2.5" />
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Elapsed: {formatRemainingTime(stageElapsedMs)}</span>
+                      <span>
+                        {displayRemainingMs > 0 
+                          ? `About ${formatRemainingTime(displayRemainingMs)} remaining` 
+                          : 'Finalizing layout view...'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4 grid-cols-3 mt-2">
+                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'preparing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 1</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Init Engine</p>
+                    </div>
+                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 2</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Render Media</p>
+                    </div>
+                    <div className={`rounded-xl border px-3 py-3 ${displayProgressValue >= 92 ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 3</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Finalize</p>
+                    </div>
+                  </div>
+                </div>
+              ) : generatedImage ? (
                 <div className="space-y-4">
                   <div className="relative rounded-lg overflow-hidden border">
                     <img
@@ -275,9 +350,7 @@ export default function ImageStudio() {
                   <div className="text-center space-y-2">
                     <Camera className="w-12 h-12 text-muted-foreground mx-auto" />
                     <p className="text-muted-foreground px-4">
-                      {generateMutation.isPending || isPolling
-                        ? 'Image synthesis workspace initializing...'
-                        : 'Enter a creative prompt brief and click generate to begin.'}
+                      Enter a creative prompt brief and click generate to begin.
                     </p>
                   </div>
                 </div>

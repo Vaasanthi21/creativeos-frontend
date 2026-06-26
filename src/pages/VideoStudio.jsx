@@ -1,9 +1,10 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from "@/components/ui/progress";
 import { Loader2, Sparkles, Download, RefreshCw, Video, Play, Pause, Volume2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { apiClient, tokenStorage } from '@/api/apiClient';
@@ -35,6 +36,16 @@ const VIDEO_ASPECT_RATIOS = [
   { value: '1080x1350', label: '4:5 (Portrait) - 1080x1350' },
 ];
 
+const ESTIMATED_TOTAL_MS = 600000; // 10 minutes total video processing allocation
+
+const formatRemainingTime = (milliseconds) => {
+  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`;
+};
+
 export default function VideoStudio() {
   const [prompt, setPrompt] = useState('');
   const [platform, setPlatform] = useState('instagram');
@@ -56,8 +67,34 @@ export default function VideoStudio() {
   const [volume, setVolume] = useState(1);
   const videoRef = useRef(null);
 
+  // Time tracker state variables
+  const [stageStartedAt, setStageStartedAt] = useState(null);
+  const [stageElapsedMs, setStageElapsedMs] = useState(0);
+
+  useEffect(() => {
+    if (!isPolling || !stageStartedAt) {
+      setStageElapsedMs(0);
+      return undefined;
+    }
+
+    const updateElapsed = () => {
+      setStageElapsedMs(Date.now() - stageStartedAt);
+    };
+
+    updateElapsed();
+    const intervalId = window.setInterval(updateElapsed, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [isPolling, stageStartedAt]);
+
+  const displayProgressValue = isPolling
+    ? Math.min(96, Math.max(8, Math.round((stageElapsedMs / ESTIMATED_TOTAL_MS) * 100)))
+    : 0;
+
+  const displayRemainingMs = Math.max(0, ESTIMATED_TOTAL_MS - stageElapsedMs);
+
   const generateMutation = useMutation({
     mutationFn: async (params) => {
+      setPollingStatus('preparing');
       const token = tokenStorage.getUserToken();
       if (!token) {
         throw new Error('User token not available');
@@ -89,6 +126,7 @@ export default function VideoStudio() {
       }
 
       setIsPolling(true);
+      setStageStartedAt(Date.now());
       setPollingStatus('queued');
       setErrorMessage(null);
 
@@ -107,6 +145,7 @@ export default function VideoStudio() {
           if (statusCode === 'completed') {
             clearInterval(pollInterval);
             setIsPolling(false);
+            setStageStartedAt(null);
             
             if (statusResponse.video_url) {
               setGeneratedVideo(statusResponse.video_url);
@@ -129,6 +168,7 @@ export default function VideoStudio() {
           } else if (statusCode === 'failed') {
             clearInterval(pollInterval);
             setIsPolling(false);
+            setStageStartedAt(null);
             setPollingStatus('failed');
             setErrorMessage(statusResponse.error || 'Video generation failed');
           }
@@ -140,6 +180,7 @@ export default function VideoStudio() {
     onError: (error) => {
       console.error('Video generation failed:', error);
       setIsPolling(false);
+      setStageStartedAt(null);
       setPollingStatus('failed');
       setErrorMessage(error.message || 'Video generation failed');
     },
@@ -196,6 +237,7 @@ export default function VideoStudio() {
     setPollingStatus(null);
     setIsPlaying(false);
     setErrorMessage(null);
+    setStageStartedAt(null);
   };
 
   const togglePlay = () => {
@@ -216,6 +258,7 @@ export default function VideoStudio() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             <Video className="w-8 h-8 text-primary" />
@@ -227,6 +270,7 @@ export default function VideoStudio() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Panel */}
           <Card>
             <CardHeader><CardTitle>Video Settings</CardTitle></CardHeader>
             <CardContent className="space-y-6">
@@ -238,12 +282,13 @@ export default function VideoStudio() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   className="min-h-[120px]"
+                  disabled={generateMutation.isPending || isPolling}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="platform">Platform</Label>
-                <Select value={platform} onValueChange={setPlatform}>
+                <Select value={platform} onValueChange={setPlatform} disabled={generateMutation.isPending || isPolling}>
                   <SelectTrigger><SelectValue placeholder="Select platform" /></SelectTrigger>
                   <SelectContent>
                     {PLATFORMS.map((p) => (<SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>))}
@@ -253,7 +298,7 @@ export default function VideoStudio() {
 
               <div className="space-y-2">
                 <Label htmlFor="style">Style</Label>
-                <Select value={style} onValueChange={setStyle}>
+                <Select value={style} onValueChange={setStyle} disabled={generateMutation.isPending || isPolling}>
                   <SelectTrigger><SelectValue placeholder="Select style" /></SelectTrigger>
                   <SelectContent>
                     {VIDEO_STYLES.map((s) => (<SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>))}
@@ -263,7 +308,7 @@ export default function VideoStudio() {
 
               <div className="space-y-2">
                 <Label htmlFor="aspectRatio">Aspect Ratio</Label>
-                <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={generateMutation.isPending || isPolling}>
                   <SelectTrigger><SelectValue placeholder="Select aspect ratio" /></SelectTrigger>
                   <SelectContent>
                     {VIDEO_ASPECT_RATIOS.map((r) => (<SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>))}
@@ -296,31 +341,73 @@ export default function VideoStudio() {
                   </p>
                 </div>
               )}
-
-              {(generateMutation.isPending || isPolling) && pollingStatus && !errorMessage && (
-                <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 text-center space-y-2">
-                  <div className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span>Status: <span className="capitalize text-primary">{pollingStatus}</span></span>
-                  </div>
-                  {pollingStatus === 'queued' && (
-                    <p className="text-xs text-muted-foreground">Queued in frame sequencer pipeline. Preparing simulation context...</p>
-                  )}
-                  {pollingStatus === 'processing' && (
-                    <p className="text-xs text-muted-foreground">The AI core is rendering frame sequences and textures. Please wait...</p>
-                  )}
-                </div>
-              )}
             </CardContent>
           </Card>
 
+          {/* Right Panel - Unified Process UI Card */}
           <Card>
-            <CardHeader><CardTitle>Generated Video</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Studio Output</CardTitle></CardHeader>
             <CardContent>
-              {generatedVideo ? (
+              {isPolling || generateMutation.isPending ? (
+                /* Dynamic Progress Layout Matrix Cloned explicitly from Generate Workspace */
+                <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-center min-h-[400px] gap-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">
+                          Generating video
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {pollingStatus === 'queued'
+                            ? 'Queued in frame sequencer pipeline. Preparing simulation context...'
+                            : 'Azure/Sora cluster is generating high-fidelity scene intervals.'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-semibold tracking-tight text-foreground">
+                        {displayProgressValue}%
+                      </p>
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                        Estimated progress
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Progress value={displayProgressValue} className="h-2.5" />
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Elapsed: {formatRemainingTime(stageElapsedMs)}</span>
+                      <span>
+                        {displayRemainingMs > 0
+                          ? `About ${formatRemainingTime(displayRemainingMs)} remaining`
+                          : 'Finalizing timeline encoding...'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4 grid-cols-3 mt-2">
+                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'preparing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 1</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Init Engine</p>
+                    </div>
+                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 2</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Bake Frames</p>
+                    </div>
+                    <div className={`rounded-xl border px-3 py-3 ${displayProgressValue >= 92 ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 3</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Finalize</p>
+                    </div>
+                  </div>
+                </div>
+              ) : generatedVideo ? (
                 <div className="space-y-4">
                   <div className="relative rounded-lg overflow-hidden border bg-black">
-                    <video ref={videoRef} src={generatedVideo} className="w-full h-auto" style={{ minHeight: '300px', maxHeight: '500px' }} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
+                    <video ref={videoRef} src={generatedVideo} controls className="w-full h-auto" style={{ minHeight: '300px', maxHeight: '500px' }} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
                     <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent flex items-center gap-3">
                       <Button onClick={togglePlay} size="sm" variant="ghost" className="text-white hover:bg-white/20">
                         {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
@@ -341,9 +428,7 @@ export default function VideoStudio() {
                   <div className="text-center space-y-2">
                     <Video className="w-12 h-12 text-muted-foreground mx-auto" />
                     <p className="text-muted-foreground px-4">
-                      {generateMutation.isPending || isPolling 
-                        ? 'Video timeline compilation initializing...' 
-                        : 'Enter a creative prompt scenario to render video motion assets.'}
+                      Enter a creative prompt scenario to render video motion assets.
                     </p>
                   </div>
                 </div>
