@@ -80,13 +80,32 @@ export default function ImageStudio() {
   const generateMutation = useMutation({
     mutationFn: async (params) => {
       setPollingStatus('preparing');
-      const finalBuiltPrompt = `${params.prompt}, ${params.style} style, ${params.lighting} lighting, ultra-detailed masterwork, --ar ${params.aspectRatio}`;
+      
+      // 🚀 Map the chosen human aspect ratio format to pixel bounds expected by backend models
+      let width = 1024;
+      let height = 1024;
+
+      if (params.aspectRatio === '16:9') {
+        width = 1024;
+        height = 576;
+      } else if (params.aspectRatio === '9:16') {
+        width = 576;
+        height = 1024;
+      } else if (params.aspectRatio === '4:5') {
+        width = 819;
+        height = 1024;
+      }
+
+      // Format clean, heavy prompt constraints
+      const finalBuiltPrompt = `${params.prompt}, ${params.style} style, ${params.lighting} lighting, ultra-detailed masterwork`;
       
       const response = await startAsyncImageGeneration({
         topic: finalBuiltPrompt,
         style: params.style,
         aspectRatio: params.aspectRatio,
         aspect_ratio: params.aspectRatio,
+        width: width,   // 🚀 Passed direct layout parameters
+        height: height, // 🚀 Passed direct layout parameters
       });
       return response;
     },
