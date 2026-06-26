@@ -29,13 +29,6 @@ const VIDEO_STYLES = [
   { value: 'minimalist', label: 'Minimalist' },
 ];
 
-const VIDEO_ASPECT_RATIOS = [
-  { value: '1080x1080', label: '1:1 (Square) - 1080x1080' },
-  { value: '1080x1920', label: '9:16 (Portrait) - 1080x1920' },
-  { value: '1920x1080', label: '16:9 (Landscape) - 1920x1080' },
-  { value: '1080x1350', label: '4:5 (Portrait) - 1080x1350' },
-];
-
 const ESTIMATED_TOTAL_MS = 600000; // 10 minutes total video processing allocation
 
 const formatRemainingTime = (milliseconds) => {
@@ -50,7 +43,6 @@ export default function VideoStudio() {
   const [prompt, setPrompt] = useState('');
   const [platform, setPlatform] = useState('instagram');
   const [style, setStyle] = useState('cinematic');
-  const [aspectRatio, setAspectRatio] = useState('1080x1080');
   const [generatedVideo, setGeneratedVideo] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStatus, setPollingStatus] = useState(null);
@@ -100,11 +92,11 @@ export default function VideoStudio() {
         throw new Error('User token not available');
       }
 
+      // ✂️ aspect ratio key removed from post data payload
       const response = await apiClient.post('/generate-video', {
         topic: params.prompt,
         platform: params.platform,
         contentType: params.style,
-        aspectRatio: params.aspectRatio,
         cameraPan: params.pan,
         cameraZoom: params.zoom,
         motionStrength: params.motionStrength,
@@ -191,12 +183,11 @@ export default function VideoStudio() {
       prompt: prompt.trim(),
       platform: platform,
       style: style,
-      aspectRatio: aspectRatio,
       pan: pan,
       zoom: zoom,
       motionStrength: motionStrength
     });
-  }, [prompt, platform, style, aspectRatio, pan, zoom, motionStrength, generateMutation]);
+  }, [prompt, platform, style, pan, zoom, motionStrength, generateMutation]);
 
   const handleAnimate = () => {
     if (!prompt.trim()) {
@@ -217,28 +208,20 @@ export default function VideoStudio() {
 
   const handleDownload = async () => {
     if (!generatedVideo) return;
-    
     try {
-      // Force an explicit cross-origin stream evaluation pass
       const response = await fetch(generatedVideo, { mode: 'cors' });
-      
       if (!response.ok) throw new Error("Network request rejected by file provider");
-      
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      
       const a = document.createElement('a');
       a.href = url;
       a.download = `creativeos-video-${Date.now()}.mp4`;
       document.body.appendChild(a);
       a.click();
-      
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.warn('CORS blob compilation restricted, triggering proxy or direct window download fallback:', error);
-      
-      // Fallback: Safely bypass cross-origin restrictions by forcing an indirect tab initialization pass
+      console.warn('CORS blob compilation restricted, triggering proxy window fallback:', error);
       const a = document.createElement('a');
       a.href = generatedVideo;
       a.target = '_blank';
@@ -300,7 +283,7 @@ export default function VideoStudio() {
                   placeholder="Describe the video you want to create..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[120px]"
+                  className="min-h-[140px]"
                   disabled={generateMutation.isPending || isPolling}
                 />
               </div>
@@ -321,16 +304,6 @@ export default function VideoStudio() {
                   <SelectTrigger><SelectValue placeholder="Select style" /></SelectTrigger>
                   <SelectContent>
                     {VIDEO_STYLES.map((s) => (<SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="aspectRatio">Aspect Ratio</Label>
-                <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={generateMutation.isPending || isPolling}>
-                  <SelectTrigger><SelectValue placeholder="Select aspect ratio" /></SelectTrigger>
-                  <SelectContent>
-                    {VIDEO_ASPECT_RATIOS.map((r) => (<SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>))}
                   </SelectContent>
                 </Select>
               </div>
@@ -363,12 +336,11 @@ export default function VideoStudio() {
             </CardContent>
           </Card>
 
-          {/* Right Panel - Unified Process UI Card */}
+          {/* Right Panel */}
           <Card>
             <CardHeader><CardTitle>Studio Output</CardTitle></CardHeader>
             <CardContent>
               {isPolling || generateMutation.isPending ? (
-                /* Dynamic Progress Layout Matrix Cloned explicitly from Generate Workspace */
                 <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-center min-h-[400px] gap-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
@@ -411,15 +383,15 @@ export default function VideoStudio() {
                   <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4 grid-cols-3 mt-2">
                     <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'preparing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 1</p>
-                      <p className="mt-1 text-xs font-medium text-foreground">Init Engine</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Prepare Prompt</p>
                     </div>
                     <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 2</p>
-                      <p className="mt-1 text-xs font-medium text-foreground">Bake Frames</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Generate Video</p>
                     </div>
                     <div className={`rounded-xl border px-3 py-3 ${displayProgressValue >= 92 ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 3</p>
-                      <p className="mt-1 text-xs font-medium text-foreground">Finalize</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Finalize Result</p>
                     </div>
                   </div>
                 </div>
