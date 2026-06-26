@@ -89,8 +89,12 @@ export default function VideoStudio() {
         throw new Error('User token not available');
       }
 
+      // 🛠️ FIX ARTISTIC DIRECTION: Enrich the topic prompt explicitly with style parameters so the model obeys it
+      const activeStyleLabel = VIDEO_STYLES.find(s => s.value === params.style)?.label || params.style;
+      const finalBuiltPrompt = `${params.prompt}, shot in a distinct ${activeStyleLabel} style environment`;
+
       const response = await apiClient.post('/generate-video', {
-        topic: params.prompt,
+        topic: finalBuiltPrompt, // 🚀 Passed enriched style parameters
         platform: params.platform,
         contentType: params.style,
         cameraPan: params.pan,
@@ -262,7 +266,7 @@ export default function VideoStudio() {
           </p>
         </div>
 
-        {/* 💡 Feature Differentiation Explainer Banner */}
+        {/* Feature Differentiation Explainer Banner */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 bg-muted/30 border border-border/70 rounded-xl p-4">
           <div className="flex items-start gap-3">
             <Sliders className="w-5 h-5 text-primary mt-0.5 shrink-0" />
@@ -367,29 +371,32 @@ export default function VideoStudio() {
             </CardHeader>
             <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[440px] bg-muted/10 rounded-b-xl p-6">
               {isPolling || generateMutation.isPending ? (
-                <div className="w-full bg-card border border-border rounded-xl p-6 flex flex-col justify-center min-h-[400px] gap-5">
+                /* Dynamic Progress Wrapper matched directly to the core dashboard workflow metrics */
+                <div className="w-full space-y-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
-                      <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5">
+                      <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5 relative">
                         <Loader2 className="h-5 w-5 animate-spin" />
+                        {/* 🚀 Added glowing, floating layout video asset animation micro-icon */}
+                        <span className="absolute inset-0 flex items-center justify-center animate-pulse text-[9px] font-bold">🎬</span>
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-foreground">Compiling Video Timeline</p>
+                        <p className="text-sm font-semibold text-foreground">Generating video</p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {pollingStatus === 'queued'
                             ? 'Queued in frame sequencer pipeline. Preparing simulation context...'
-                            : 'Neural cluster nodes are rendering high-resolution scene intervals.'}
+                            : 'Video generation is asynchronous. The preview will update automatically when the provider finishes processing.'}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-primary tracking-tight">{displayProgressValue}%</p>
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Estimated progress</p>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Estimated progress</p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Progress value={displayProgressValue} className="h-2" />
+                    <Progress value={displayProgressValue} className="h-2.5" />
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>Elapsed: {formatRemainingTime(stageElapsedMs)}</span>
                       <span>
@@ -400,12 +407,13 @@ export default function VideoStudio() {
                     </div>
                   </div>
 
+                  {/* 🟢 Synchronized 3-Step Pipeline Blocks */}
                   <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4 grid-cols-3 mt-2">
                     <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'preparing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 1</p>
                       <p className="mt-1 text-xs font-medium text-foreground">Prepare Prompt</p>
                     </div>
-                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' || isPolling ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 2</p>
                       <p className="mt-1 text-xs font-medium text-foreground">Generate Video</p>
                     </div>
@@ -463,7 +471,7 @@ export default function VideoStudio() {
                 <div className="flex justify-between text-[10px] text-muted-foreground"><span>← Pan Left</span><span>Center</span><span>Pan Right →</span></div>
               </div>
               <div className="space-y-2">
-                <div className="flex justify-between items-center"><Label>Focal Zoom Scale</Label><span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground font-bold">{zoom.toFixed(1)}x</span></div>
+                <div className="flex justify-between items-center"><Label>Focal Zoom Scale</Label><span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground font-bold">{zoom.toFixed(1) || '1.0'}x</span></div>
                 <input type="range" min="0.5" max="3" step="0.1" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} className="w-full accent-primary" />
                 <div className="flex justify-between text-[10px] text-muted-foreground"><span>Zoom Out</span><span>1.0x (Normal)</span><span>Zoom In</span></div>
               </div>

@@ -840,7 +840,7 @@ export default function LinkedInAds({ isEmbedded = false }) {
       <div className={isEmbedded ? "space-y-5" : "p-4 md:p-6 max-w-3xl mx-auto"}>
         {!isEmbedded && (
           <div className="mb-5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Growth OS · Integrations</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Creative OS · Integrations</p>
             <h1 className="mt-1 text-xl font-semibold text-foreground">LinkedIn Campaign Tracker</h1>
           </div>
         )}
@@ -893,7 +893,7 @@ export default function LinkedInAds({ isEmbedded = false }) {
       {!isEmbedded ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Growth OS · Integrations</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Creative OS · Integrations</p>
             <h1 className="mt-1 text-xl font-semibold text-foreground">LinkedIn Campaign Tracker</h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-3">
               {isLive ? (
