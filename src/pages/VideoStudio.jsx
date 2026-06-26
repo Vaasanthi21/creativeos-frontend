@@ -217,17 +217,36 @@ export default function VideoStudio() {
 
   const handleDownload = async () => {
     if (!generatedVideo) return;
+    
     try {
-      const response = await fetch(generatedVideo);
+      // Force an explicit cross-origin stream evaluation pass
+      const response = await fetch(generatedVideo, { mode: 'cors' });
+      
+      if (!response.ok) throw new Error("Network request rejected by file provider");
+      
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
+      
       const a = document.createElement('a');
       a.href = url;
-      a.download = `generated-video-${Date.now()}.mp4`;
+      a.download = `creativeos-video-${Date.now()}.mp4`;
+      document.body.appendChild(a);
       a.click();
+      
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      alert('Download failed.');
+      console.warn('CORS blob compilation restricted, triggering proxy or direct window download fallback:', error);
+      
+      // Fallback: Safely bypass cross-origin restrictions by forcing an indirect tab initialization pass
+      const a = document.createElement('a');
+      a.href = generatedVideo;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.setAttribute('download', `creativeos-video-${Date.now()}.mp4`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
