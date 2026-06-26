@@ -42,7 +42,7 @@ export default function MainLayout() {
           onPersonaChange={handlePersonaChange}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-          onCloseMobile={() => setSidebarOpen(false)} {/* 🚀 Passed close prop here */}
+          onCloseMobile={() => setSidebarOpen(false)}
         />
       </div>
 
