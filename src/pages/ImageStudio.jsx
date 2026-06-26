@@ -29,7 +29,6 @@ const ASPECT_RATIOS = [
   { value: '4:5', label: '4:5 Vertical (Social Feeds)' },
 ];
 
-// 🚀 Professional additions: Studio lighting configurations
 const LIGHTING_MODES = [
   { value: 'natural', label: 'Natural Soft Light' },
   { value: 'cinematic', label: 'Cinematic Volumetric' },
@@ -52,7 +51,7 @@ export default function ImageStudio() {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('realistic');
   const [aspectRatio, setAspectRatio] = useState('16:9');
-  const [lighting, setLighting] = useState('cinematic'); // 🚀 Added state
+  const [lighting, setLighting] = useState('cinematic');
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStatus, setPollingStatus] = useState(null);
@@ -81,20 +80,18 @@ export default function ImageStudio() {
   const generateMutation = useMutation({
     mutationFn: async (params) => {
       setPollingStatus('preparing');
-      
-      // 🛠️ Structural prompt-injection: format criteria using clear model weight styling markers
       const finalBuiltPrompt = `${params.prompt}, ${params.style} style, ${params.lighting} lighting, ultra-detailed masterwork, --ar ${params.aspectRatio}`;
       
       const response = await startAsyncImageGeneration({
         topic: finalBuiltPrompt,
         style: params.style,
-        aspectRatio: params.aspectRatio,   // camelCase variant fallback
-        aspect_ratio: params.aspectRatio,  // 🚀 SNAKE_CASE FIXED FOR BACKEND SCHEMAS
+        aspectRatio: params.aspectRatio,
+        aspect_ratio: params.aspectRatio,
       });
       return response;
     },
     onSuccess: (response) => {
-      const jobId = response.jobId || response.id || response.job_id;
+      const jobId = response?.jobId || response?.id || response?.job_id;
       if (!jobId) {
         setPollingStatus('failed');
         setIsPolling(false);
@@ -108,10 +105,12 @@ export default function ImageStudio() {
         jobId,
         'image',
         (status) => {
-          const statusCode = status.status || pollingStatus;
+          if (!status) return; // 🚀 Guard clause against empty frames
+          const statusCode = status?.status || pollingStatus;
           setPollingStatus(statusCode);
-          if (statusCode === 'completed' && status.result) {
-            const imageUrl = status.result.image_url || status.result.imageUrl;
+          
+          if (statusCode === 'completed' && status?.result) {
+            const imageUrl = status?.result?.image_url || status?.result?.imageUrl;
             if (imageUrl) {
               const imageEntry = {
                 topic: prompt,
@@ -132,12 +131,16 @@ export default function ImageStudio() {
         (finalStatus) => {
           setIsPolling(false);
           setStageStartedAt(null);
-          const statusCode = finalStatus.status;
-          if (statusCode === 'completed' && finalStatus.result) {
-            const imageUrl = finalStatus.result.image_url || finalStatus.result.imageUrl;
+          
+          const statusCode = finalStatus?.status || 'failed'; // 🚀 Safe navigation fallback
+          setPollingStatus(statusCode);
+          
+          if (statusCode === 'completed' && finalStatus?.result) {
+            const imageUrl = finalStatus?.result?.image_url || finalStatus?.result?.imageUrl;
             if (imageUrl) {
               setGeneratedImage(imageUrl);
-              setPollingStatus('completed');
+            } else {
+              setPollingStatus('failed');
             }
           } else {
             setPollingStatus('failed');
@@ -184,7 +187,13 @@ export default function ImageStudio() {
     }
   };
 
-  // 🚀 Dynamic wrapper classes mapping the chosen ratio to the placeholder containers
+  const handleReset = () => {
+    setGeneratedImage(null);
+    setPrompt('');
+    setPollingStatus(null);
+    setStageStartedAt(null);
+  };
+
   const getDynamicFrameRatio = () => {
     if (aspectRatio === '16:9') return 'w-full aspect-video';
     if (aspectRatio === '9:16') return 'w-[240px] aspect-[9/16]';
@@ -195,7 +204,6 @@ export default function ImageStudio() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Header Block */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             <Camera className="w-8 h-8 text-primary" />
@@ -206,7 +214,6 @@ export default function ImageStudio() {
           </p>
         </div>
 
-        {/* Feature Explainer Banner */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 bg-muted/30 border border-border/70 rounded-xl p-4">
           <div className="flex items-start gap-3">
             <Sliders className="w-5 h-5 text-primary mt-0.5 shrink-0" />
@@ -232,7 +239,6 @@ export default function ImageStudio() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Panel - Control Form */}
           <Card>
             <CardHeader>
               <CardTitle className="text-md flex items-center gap-2">
@@ -253,7 +259,6 @@ export default function ImageStudio() {
                 />
               </div>
 
-              {/* Aspect Ratio Node */}
               <div className="space-y-2">
                 <Label htmlFor="aspectRatio">Target Geometry (Aspect Ratio)</Label>
                 <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={isPolling}>
@@ -268,7 +273,6 @@ export default function ImageStudio() {
                 </Select>
               </div>
 
-              {/* Lighting Mode Node */}
               <div className="space-y-2">
                 <Label htmlFor="lighting">Studio Illumination</Label>
                 <Select value={lighting} onValueChange={setLighting} disabled={isPolling}>
@@ -312,7 +316,6 @@ export default function ImageStudio() {
             </CardContent>
           </Card>
 
-          {/* Right Panel - Studio Viewport Frame Container */}
           <Card className="flex flex-col">
             <CardHeader>
               <CardTitle className="text-md flex items-center gap-2">
@@ -343,12 +346,11 @@ export default function ImageStudio() {
                 </div>
               ) : generatedImage ? (
                 <div className="w-full flex flex-col items-center gap-4">
-                  {/* Dynamic containment boundaries keeping aspect ratio aligned */}
                   <div className={`relative border border-border/60 bg-background/50 shadow-inner overflow-hidden flex items-center justify-center p-1 max-h-[460px] ${getDynamicFrameRatio()}`}>
                     <img
                       src={generatedImage}
                       alt="Studio Output Visual"
-                      className="w-full h-full object-cover rounded"
+                      className="w-full h-full object-contain rounded"
                     />
                   </div>
                   <div className="flex gap-3 w-full">
@@ -356,15 +358,18 @@ export default function ImageStudio() {
                     <Button onClick={handleReset} variant="outline" className="flex-1"><RefreshCw className="w-4 h-4 mr-2" /> Reset Canvas</Button>
                   </div>
                 </div>
+              ) : pollingStatus === 'failed' ? (
+                <div className="text-center space-y-3">
+                  <p className="text-sm text-red-500 font-semibold">Compilation interrupted or failed.</p>
+                  <Button size="sm" variant="outline" onClick={handleReset} className="gap-2">
+                    <RefreshCw className="w-3.5 h-3.5" /> Try Again
+                  </Button>
+                </div>
               ) : (
-                /* Interactive Placeholder Frame changing values layout shapes natively */
                 <div className={`border-2 border-dashed border-border/80 rounded-xl flex flex-col items-center justify-center bg-background/40 p-4 transition-all duration-300 ${getDynamicFrameRatio()}`}>
                   <Camera className="w-10 h-10 text-muted-foreground mb-2 stroke-[1.5]" />
                   <p className="text-xs text-muted-foreground text-center font-medium px-2">
                     Canvas Shape Preset: <span className="text-primary font-bold font-mono">{aspectRatio}</span>
-                  </p>
-                  <p className="text-[10px] text-muted-foreground/70 text-center mt-1 hidden sm:block">
-                    Ready to capture {lighting.split(' ')[0]} illumination weights.
                   </p>
                 </div>
               )}
