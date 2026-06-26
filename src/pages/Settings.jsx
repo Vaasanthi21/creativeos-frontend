@@ -23,11 +23,9 @@ import {
   ArrowRight,
   Newspaper,
   Upload,
-  Linkedin,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
-import LinkedInAds from "./LinkedInAds";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -198,6 +196,7 @@ export default function Settings() {
         </CardContent>
       </Card>
 
+      {/* Personas List */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-display flex items-center gap-2">
@@ -290,33 +289,6 @@ export default function Settings() {
           >
             <Newspaper className="w-4 h-4" />
             Go to Publishing
-            <ArrowRight className="w-4 h-4 ml-auto" />
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Linkedin Campaign Tracker */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-display flex items-center gap-2">
-            <Linkedin className="w-4 h-4 text-[#0077B5]" />
-            Linkedin Campaign Tracker
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <p className="text-sm text-foreground">Track LinkedIn Ad Campaigns</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Monitor impressions, clicks, spend, leads, CTR, and CPL from your connected LinkedIn Ads account
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            className="w-full gap-2"
-            onClick={() => navigate("/linkedinads")}
-          >
-            <Linkedin className="w-4 h-4 text-[#0077B5]" />
-            Go to Campaign Tracker
             <ArrowRight className="w-4 h-4 ml-auto" />
           </Button>
         </CardContent>
