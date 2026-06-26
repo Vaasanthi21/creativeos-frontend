@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Sparkles, Download, RefreshCw, Camera, Layers, Sliders, Maximize, Flame, Wand2 } from 'lucide-react';
+import { Loader2, Sparkles, Download, RefreshCw, Camera, Layers, Sliders, Flame, Wand2, Image as ImageIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addHistoryEntry } from '@/services/aiService';
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
@@ -22,13 +22,6 @@ const IMAGE_STYLES = [
   { value: 'oil-painting', label: 'Oil Painting Textured' },
 ];
 
-const ASPECT_RATIOS = [
-  { value: '16:9', label: '16:9 Landscape (YouTube, Website)' },
-  { value: '1:1', label: '1:1 Square (Instagram, Ads)' },
-  { value: '9:16', label: '9:16 Portrait (Reels, Shorts)' },
-  { value: '4:5', label: '4:5 Vertical (Social Feeds)' },
-];
-
 const LIGHTING_MODES = [
   { value: 'natural', label: 'Natural Soft Light' },
   { value: 'cinematic', label: 'Cinematic Volumetric' },
@@ -37,7 +30,7 @@ const LIGHTING_MODES = [
   { value: 'dramatic', label: 'Dramatic Chiaroscuro' },
 ];
 
-const ESTIMATED_TOTAL_MS = 180000;
+const IMAGE_STAGE_ESTIMATES_MS = 180000; // Matches core image 180000ms allocation
 
 const formatRemainingTime = (milliseconds) => {
   const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
@@ -50,7 +43,6 @@ const formatRemainingTime = (milliseconds) => {
 export default function ImageStudio() {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('realistic');
-  const [aspectRatio, setAspectRatio] = useState('16:9');
   const [lighting, setLighting] = useState('cinematic');
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
@@ -72,40 +64,19 @@ export default function ImageStudio() {
   }, [isPolling, stageStartedAt]);
 
   const displayProgressValue = isPolling
-    ? Math.min(96, Math.max(8, Math.round((stageElapsedMs / ESTIMATED_TOTAL_MS) * 100)))
+    ? Math.min(96, Math.max(8, Math.round((stageElapsedMs / IMAGE_STAGE_ESTIMATES_MS) * 100)))
     : 0;
 
-  const displayRemainingMs = Math.max(0, ESTIMATED_TOTAL_MS - stageElapsedMs);
+  const displayRemainingMs = Math.max(0, IMAGE_STAGE_ESTIMATES_MS - stageElapsedMs);
 
   const generateMutation = useMutation({
     mutationFn: async (params) => {
       setPollingStatus('preparing');
-      
-      // 🚀 Map the chosen human aspect ratio format to pixel bounds expected by backend models
-      let width = 1024;
-      let height = 1024;
-
-      if (params.aspectRatio === '16:9') {
-        width = 1024;
-        height = 576;
-      } else if (params.aspectRatio === '9:16') {
-        width = 576;
-        height = 1024;
-      } else if (params.aspectRatio === '4:5') {
-        width = 819;
-        height = 1024;
-      }
-
-      // Format clean, heavy prompt constraints
       const finalBuiltPrompt = `${params.prompt}, ${params.style} style, ${params.lighting} lighting, ultra-detailed masterwork`;
       
       const response = await startAsyncImageGeneration({
         topic: finalBuiltPrompt,
         style: params.style,
-        aspectRatio: params.aspectRatio,
-        aspect_ratio: params.aspectRatio,
-        width: width,   // 🚀 Passed direct layout parameters
-        height: height, // 🚀 Passed direct layout parameters
       });
       return response;
     },
@@ -124,7 +95,7 @@ export default function ImageStudio() {
         jobId,
         'image',
         (status) => {
-          if (!status) return; // 🚀 Guard clause against empty frames
+          if (!status) return;
           const statusCode = status?.status || pollingStatus;
           setPollingStatus(statusCode);
           
@@ -150,8 +121,7 @@ export default function ImageStudio() {
         (finalStatus) => {
           setIsPolling(false);
           setStageStartedAt(null);
-          
-          const statusCode = finalStatus?.status || 'failed'; // 🚀 Safe navigation fallback
+          const statusCode = finalStatus?.status || 'failed';
           setPollingStatus(statusCode);
           
           if (statusCode === 'completed' && finalStatus?.result) {
@@ -179,10 +149,9 @@ export default function ImageStudio() {
     generateMutation.mutate({
       prompt: prompt.trim(),
       style: style,
-      aspectRatio: aspectRatio,
       lighting: lighting,
     });
-  }, [prompt, style, aspectRatio, lighting, generateMutation]);
+  }, [prompt, style, lighting, generateMutation]);
 
   const handleGenerateClick = () => {
     if (!prompt.trim()) return;
@@ -192,17 +161,40 @@ export default function ImageStudio() {
   const handleDownload = async () => {
     if (!generatedImage) return;
     try {
-      const response = await fetch(generatedImage, { mode: 'cors' });
+      const response = await fetch(generatedImage, { method: 'GET', mode: 'cors' });
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = `studio-pro-${Date.now()}.png`;
+      link.download = `studio-asset-${Date.now()}.png`;
       document.body.appendChild(link);
       link.click();
+      
       document.body.removeChild(link);
-    } catch {
-      window.open(generatedImage, '_blank');
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = generatedImage;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        
+        canvas.toBlob((blob) => {
+          const fallbackUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = fallbackUrl;
+          link.download = `studio-asset-${Date.now()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(fallbackUrl);
+        }, 'image/png');
+      };
     }
   };
 
@@ -211,13 +203,6 @@ export default function ImageStudio() {
     setPrompt('');
     setPollingStatus(null);
     setStageStartedAt(null);
-  };
-
-  const getDynamicFrameRatio = () => {
-    if (aspectRatio === '16:9') return 'w-full aspect-video';
-    if (aspectRatio === '9:16') return 'w-[240px] aspect-[9/16]';
-    if (aspectRatio === '4:5') return 'w-[300px] aspect-[4/5]';
-    return 'w-[360px] aspect-square max-w-full';
   };
 
   return (
@@ -229,7 +214,7 @@ export default function ImageStudio() {
             Image Studio Pro
           </h1>
           <p className="text-muted-foreground mt-2">
-            Advanced asset laboratory designed for complete canvas geometry control and deep texture generation.
+            Advanced asset laboratory designed for professional art style mapping and high-fidelity rendering.
           </p>
         </div>
 
@@ -238,21 +223,21 @@ export default function ImageStudio() {
             <Sliders className="w-5 h-5 text-primary mt-0.5 shrink-0" />
             <div>
               <p className="text-xs font-semibold text-foreground">Advanced Consistency</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Appends layered rendering weights to guarantee precise model output alignment.</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Appends deep aesthetic filters to guarantee exact model output alignment.</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <Maximize className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <Wand2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-semibold text-foreground">Geometric Canvas Sizing</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Forces exact target boundaries across specialized device viewports.</p>
+              <p className="text-xs font-semibold text-foreground">Illumination Control</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Fine-tune lighting layouts using advanced cinematic or studio nodes.</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <Layers className="w-5 h-5 text-primary mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-semibold text-foreground">Standalone Fine-Tuning</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Enriched parameter nodes built specifically for high-end graphic assets.</p>
+              <p className="text-xs font-semibold text-foreground">Standalone Production</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Enriched rendering blocks built explicitly for masterwork branding assets.</p>
             </div>
           </div>
         </div>
@@ -270,26 +255,12 @@ export default function ImageStudio() {
                 <Label htmlFor="prompt">Prompt Brief</Label>
                 <Textarea
                   id="prompt"
-                  placeholder="Describe your vision in high-fidelity detail..."
+                  placeholder="Describe your creative vision..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[120px] resize-none"
+                  className="min-h-[140px] resize-none"
                   disabled={isPolling}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="aspectRatio">Target Geometry (Aspect Ratio)</Label>
-                <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={isPolling}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ASPECT_RATIOS.map((ratio) => (
-                      <SelectItem key={ratio.value} value={ratio.value}>{ratio.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="space-y-2">
@@ -343,33 +314,62 @@ export default function ImageStudio() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[440px] bg-muted/10 rounded-b-xl p-6">
-              {isPolling ? (
+              {isPolling || generateMutation.isPending ? (
+                /* Dynamic Progress Wrapper matched directly to the core dashboard workflow metrics */
                 <div className="w-full space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5 relative">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        {/* 🚀 Added glowing, floating layout asset animation micro-icon */}
+                        <span className="absolute inset-0 flex items-center justify-center animate-pulse text-[9px] font-bold">✨</span>
+                      </div>
                       <div>
-                        <p className="text-sm font-semibold">Compiling Render Matrices</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {pollingStatus === 'queued' ? 'Arranging graphics core threads...' : 'Injecting lighting variables into raster blocks.'}
+                        <p className="text-sm font-semibold text-foreground">Generating image</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {pollingStatus === 'queued' 
+                            ? 'Allocating compute nodes. Initializing layout engine models...' 
+                            : 'This is an estimate based on recent image generation time. The image will appear automatically when the provider finishes.'}
                         </p>
                       </div>
                     </div>
-                    <span className="text-2xl font-bold text-primary">{displayProgressValue}%</span>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-primary tracking-tight">{displayProgressValue}%</p>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Estimated progress</p>
+                    </div>
                   </div>
-                  <Progress value={displayProgressValue} className="h-2" />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Elapsed: {formatRemainingTime(stageElapsedMs)}</span>
-                    <span>{displayRemainingMs > 0 ? `~${formatRemainingTime(displayRemainingMs)} remaining` : 'Finalizing resolution...'}</span>
+
+                  <div className="space-y-2">
+                    <Progress value={displayProgressValue} className="h-2.5" />
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Elapsed: {formatRemainingTime(stageElapsedMs)}</span>
+                      <span>{displayRemainingMs > 0 ? `About ${formatRemainingTime(displayRemainingMs)} remaining` : 'Finalizing result...'}</span>
+                    </div>
+                  </div>
+
+                  {/* 🟢 Synchronized 3-Step Pipeline Blocks */}
+                  <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4 grid-cols-3 mt-2">
+                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'preparing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 1</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Prepare Prompt</p>
+                    </div>
+                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' || pollingStatus === 'image' || isPolling ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 2</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Generate Image</p>
+                    </div>
+                    <div className={`rounded-xl border px-3 py-3 ${displayProgressValue >= 92 ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 3</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Finalize Result</p>
+                    </div>
                   </div>
                 </div>
               ) : generatedImage ? (
                 <div className="w-full flex flex-col items-center gap-4">
-                  <div className={`relative border border-border/60 bg-background/50 shadow-inner overflow-hidden flex items-center justify-center p-1 max-h-[460px] ${getDynamicFrameRatio()}`}>
+                  <div className="relative border border-border/60 bg-background/50 shadow-inner overflow-hidden flex items-center justify-center p-1 w-full aspect-square max-w-[380px]">
                     <img
                       src={generatedImage}
                       alt="Studio Output Visual"
-                      className="w-full h-full object-contain rounded"
+                      className="w-full h-full object-cover rounded"
                     />
                   </div>
                   <div className="flex gap-3 w-full">
@@ -385,10 +385,10 @@ export default function ImageStudio() {
                   </Button>
                 </div>
               ) : (
-                <div className={`border-2 border-dashed border-border/80 rounded-xl flex flex-col items-center justify-center bg-background/40 p-4 transition-all duration-300 ${getDynamicFrameRatio()}`}>
+                <div className="border-2 border-dashed border-border/80 rounded-xl flex flex-col items-center justify-center bg-background/40 p-6 w-full aspect-square max-w-[380px]">
                   <Camera className="w-10 h-10 text-muted-foreground mb-2 stroke-[1.5]" />
-                  <p className="text-xs text-muted-foreground text-center font-medium px-2">
-                    Canvas Shape Preset: <span className="text-primary font-bold font-mono">{aspectRatio}</span>
+                  <p className="text-xs text-muted-foreground text-center font-medium">
+                    Ready to capture custom art profile weights.
                   </p>
                 </div>
               )}
