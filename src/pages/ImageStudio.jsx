@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { startAsyncImageGeneration, createGenerationPoller } from '@/services/generationPollingService';
 import { Button } from '@/components/ui/button';
@@ -6,23 +6,37 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Sparkles, Download, RefreshCw, Camera } from 'lucide-react';
+import { Loader2, Sparkles, Download, RefreshCw, Camera, Layers, Sliders, Flame, Wand2, Maximize2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addHistoryEntry } from '@/services/aiService';
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 
 const IMAGE_STYLES = [
-  { value: 'realistic', label: 'Realistic' },
-  { value: 'illustration', label: 'Illustration' },
-  { value: 'anime', label: 'Anime' },
-  { value: 'abstract', label: 'Abstract' },
-  { value: 'minimalist', label: 'Minimalist' },
-  { value: 'cyberpunk', label: 'Cyberpunk' },
-  { value: 'watercolor', label: 'Watercolor' },
-  { value: 'oil-painting', label: 'Oil Painting' },
+  { value: 'realistic', label: 'Realistic Cinematic' },
+  { value: 'illustration', label: 'Vector Illustration' },
+  { value: 'anime', label: 'Anime / Manga' },
+  { value: 'abstract', label: 'Abstract Concept Art' },
+  { value: 'minimalist', label: 'Clean Minimalist' },
+  { value: 'cyberpunk', label: 'Cyberpunk Neon' },
+  { value: 'watercolor', label: 'Watercolor Wash' },
+  { value: 'oil-painting', label: 'Oil Painting Textured' },
 ];
 
-const ESTIMATED_TOTAL_MS = 180000; // 3 minutes total runtime estimate
+const LIGHTING_MODES = [
+  { value: 'natural', label: 'Natural Soft Light' },
+  { value: 'cinematic', label: 'Cinematic Volumetric' },
+  { value: 'neon', label: 'Cyberpunk Neon Cyber Glow' },
+  { value: 'studio', label: 'Studio Three-Point Lighting' },
+  { value: 'dramatic', label: 'Dramatic Chiaroscuro' },
+];
+
+const ASPECT_RATIOS = [
+  { value: '1:1', label: 'Square (1:1) - Post' },
+  { value: '16:9', label: 'Landscape (16:9) - Desktop' },
+  { value: '9:16', label: 'Portrait (9:16) - Mobile/Stories' },
+];
+
+const IMAGE_STAGE_ESTIMATES_MS = 180000;
 
 const formatRemainingTime = (milliseconds) => {
   const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
@@ -35,12 +49,13 @@ const formatRemainingTime = (milliseconds) => {
 export default function ImageStudio() {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('realistic');
+  const [lighting, setLighting] = useState('cinematic');
+  const [aspectRatio, setAspectRatio] = useState('1:1');
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStatus, setPollingStatus] = useState(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-  // Simulated live-progress counter parameters
   const [stageStartedAt, setStageStartedAt] = useState(null);
   const [stageElapsedMs, setStageElapsedMs] = useState(0);
 
@@ -49,40 +64,38 @@ export default function ImageStudio() {
       setStageElapsedMs(0);
       return undefined;
     }
-
-    const updateElapsed = () => {
-      setStageElapsedMs(Date.now() - stageStartedAt);
-    };
-
+    const updateElapsed = () => setStageElapsedMs(Date.now() - stageStartedAt);
     updateElapsed();
     const intervalId = window.setInterval(updateElapsed, 1000);
     return () => window.clearInterval(intervalId);
   }, [isPolling, stageStartedAt]);
 
   const displayProgressValue = isPolling
-    ? Math.min(96, Math.max(8, Math.round((stageElapsedMs / ESTIMATED_TOTAL_MS) * 100)))
+    ? Math.min(96, Math.max(8, Math.round((stageElapsedMs / IMAGE_STAGE_ESTIMATES_MS) * 100)))
     : 0;
 
-  const displayRemainingMs = Math.max(0, ESTIMATED_TOTAL_MS - stageElapsedMs);
+  const displayRemainingMs = Math.max(0, IMAGE_STAGE_ESTIMATES_MS - stageElapsedMs);
 
   const generateMutation = useMutation({
     mutationFn: async (params) => {
       setPollingStatus('preparing');
+      const finalBuiltPrompt = `${params.prompt}, ${params.style} style, ${params.lighting} lighting, ultra-detailed masterwork`;
+      
       const response = await startAsyncImageGeneration({
-        topic: params.prompt,
+        topic: finalBuiltPrompt,
         style: params.style,
+        aspectRatio: params.aspectRatio,      // Main parameter format requested by Neeta
+        aspect_ratio: params.aspectRatio,     // Secondary snake_case fallback configuration
       });
       return response;
     },
     onSuccess: (response) => {
-      const jobId = response.jobId || response.id || response.job_id;
-      
+      const jobId = response?.jobId || response?.id || response?.job_id;
       if (!jobId) {
         setPollingStatus('failed');
         setIsPolling(false);
         return;
       }
-      
       setIsPolling(true);
       setStageStartedAt(Date.now());
       setPollingStatus('queued');
@@ -91,24 +104,25 @@ export default function ImageStudio() {
         jobId,
         'image',
         (status) => {
-          const statusCode = status.status || pollingStatus;
+          if (!status) return;
+          const statusCode = status?.status || pollingStatus;
           setPollingStatus(statusCode);
           
-          if (statusCode === 'completed' && status.result) {
-            const imageUrl = status.result.image_url || status.result.imageUrl;
+          if (statusCode === 'completed' && status?.result) {
+            const imageUrl = status?.result?.image_url || status?.result?.imageUrl;
             if (imageUrl) {
               const imageEntry = {
                 topic: prompt,
                 content_type: "Image",
-                platform: "AI Image",
+                platform: "Studio Pro Canvas",
                 variants: [{
                   content: prompt,
                   image_url: imageUrl,
-                  title: "AI Image"
+                  title: `${style.toUpperCase()} Studio Design (${aspectRatio})`
                 }],
                 status: "completed"
               };
-              addHistoryEntry(imageEntry).catch(err => console.error("Failed to save image to history:", err));
+              addHistoryEntry(imageEntry).catch(err => console.error("Failed history save:", err));
               setGeneratedImage(imageUrl);
             }
           }
@@ -116,13 +130,15 @@ export default function ImageStudio() {
         (finalStatus) => {
           setIsPolling(false);
           setStageStartedAt(null);
-          const statusCode = finalStatus.status;
+          const statusCode = finalStatus?.status || 'failed';
+          setPollingStatus(statusCode);
           
-          if (statusCode === 'completed' && finalStatus.result) {
-            const imageUrl = finalStatus.result.image_url || finalStatus.result.imageUrl;
+          if (statusCode === 'completed' && finalStatus?.result) {
+            const imageUrl = finalStatus?.result?.image_url || finalStatus?.result?.imageUrl;
             if (imageUrl) {
               setGeneratedImage(imageUrl);
-              setPollingStatus('completed');
+            } else {
+              setPollingStatus('failed');
             }
           } else {
             setPollingStatus('failed');
@@ -131,11 +147,10 @@ export default function ImageStudio() {
         3000
       );
     },
-    onError: (error) => {
+    onError: () => {
       setIsPolling(false);
       setStageStartedAt(null);
       setPollingStatus('failed');
-      console.error('Image generation failed:', error);
     },
   });
 
@@ -143,41 +158,53 @@ export default function ImageStudio() {
     generateMutation.mutate({
       prompt: prompt.trim(),
       style: style,
+      lighting: lighting,
+      aspectRatio: aspectRatio
     });
-  }, [prompt, style, generateMutation]);
+  }, [prompt, style, lighting, aspectRatio, generateMutation]);
 
   const handleGenerateClick = () => {
-    if (!prompt.trim()) {
-      alert('Please enter a prompt');
-      return;
-    }
+    if (!prompt.trim()) return;
     setShowConfirmDialog(true);
   };
 
   const handleDownload = async () => {
     if (!generatedImage) return;
     try {
-      const response = await fetch(generatedImage, { mode: 'cors' });
+      const response = await fetch(generatedImage, { method: 'GET', mode: 'cors' });
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = `creativeos-image-${Date.now()}.png`;
+      link.download = `studio-asset-${Date.now()}.png`;
       document.body.appendChild(link);
       link.click();
       
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error('Blob download failed, falling back to direct tab link:', error);
-      const link = document.createElement('a');
-      link.href = generatedImage;
-      link.target = '_blank';
-      link.setAttribute('download', `generated-image-${Date.now()}.png`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = generatedImage;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        
+        canvas.toBlob((blob) => {
+          const fallbackUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = fallbackUrl;
+          link.download = `studio-asset-${Date.now()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(fallbackUrl);
+        }, 'image/png');
+      };
     }
   };
 
@@ -188,50 +215,109 @@ export default function ImageStudio() {
     setStageStartedAt(null);
   };
 
+  // Helper utility function to dynamically adjust preview container orientation
+  const getAspectRatioClass = () => {
+    if (aspectRatio === '16:9') return 'aspect-[16/9] w-full max-w-[440px]';
+    if (aspectRatio === '9:16') return 'aspect-[9/16] h-[380px] w-auto';
+    return 'aspect-square w-full max-w-[380px]';
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             <Camera className="w-8 h-8 text-primary" />
-            Image Studio
+            Image Studio Pro
           </h1>
           <p className="text-muted-foreground mt-2">
-            Generate stunning AI-powered images with custom studio styles
+            Advanced asset laboratory designed for professional art style mapping and high-fidelity rendering.
           </p>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 bg-muted/30 border border-border/70 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <Sliders className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-foreground">Advanced Consistency</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Appends deep aesthetic filters to guarantee exact model output alignment.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Wand2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-foreground">Illumination Control</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Fine-tune lighting layouts using advanced cinematic or studio nodes.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Layers className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-foreground">Standalone Production</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Enriched rendering blocks built explicitly for masterwork branding assets.</p>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Panel - Generation Form */}
           <Card>
             <CardHeader>
-              <CardTitle>Image Settings</CardTitle>
+              <CardTitle className="text-md flex items-center gap-2">
+                <Wand2 className="w-4 h-4 text-primary" />
+                Studio Parameters
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="prompt">Prompt</Label>
+                <Label htmlFor="prompt">Prompt Brief</Label>
                 <Textarea
                   id="prompt"
-                  placeholder="Describe the image you want to generate..."
+                  placeholder="Describe your creative vision..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[140px]"
-                  disabled={generateMutation.isPending || isPolling}
+                  className="min-h-[140px] resize-none"
+                  disabled={isPolling}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="style">Style</Label>
-                <Select value={style} onValueChange={setStyle} disabled={generateMutation.isPending || isPolling}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select style" />
+                <Label htmlFor="aspectRatio">Canvas Layout Dimensions</Label>
+                <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={isPolling}>
+                  <SelectTrigger id="aspectRatio">
+                    <Maximize2 className="w-4 h-4 mr-1 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ASPECT_RATIOS.map((ratio) => (
+                      <SelectItem key={ratio.value} value={ratio.value}>{ratio.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lighting">Studio Illumination</Label>
+                <Select value={lighting} onValueChange={setLighting} disabled={isPolling}>
+                  <SelectTrigger id="lighting">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LIGHTING_MODES.map((light) => (
+                      <SelectItem key={light.value} value={light.value}>{light.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="style">Artistic Profile Style</Label>
+                <Select value={style} onValueChange={setStyle} disabled={isPolling}>
+                  <SelectTrigger id="style">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {IMAGE_STYLES.map((styleOption) => (
-                      <SelectItem key={styleOption.value} value={styleOption.value}>
-                        {styleOption.label}
-                      </SelectItem>
+                      <SelectItem key={styleOption.value} value={styleOption.value}>{styleOption.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -239,61 +325,47 @@ export default function ImageStudio() {
 
               <Button
                 onClick={handleGenerateClick}
-                disabled={generateMutation.isPending || isPolling || !prompt.trim()}
-                className="w-full"
+                disabled={isPolling || !prompt.trim()}
+                className="w-full mt-2"
                 size="lg"
               >
-                {generateMutation.isPending || isPolling ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generating...
-                  </>
+                {isPolling ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Rendering Canvas...</>
                 ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Generate Image
-                  </>
+                  <><Sparkles className="w-4 h-4 mr-2" /> Render Studio Asset</>
                 )}
               </Button>
-
-              {pollingStatus === 'failed' && (
-                <p className="text-sm text-center text-red-500 font-medium">Generation failed. Please try a different prompt structure.</p>
-              )}
             </CardContent>
           </Card>
 
-          {/* Right Panel - Progress Block or Generated Asset Rendering */}
-          <Card>
+          <Card className="flex flex-col">
             <CardHeader>
-              <CardTitle>Studio Output</CardTitle>
+              <CardTitle className="text-md flex items-center gap-2">
+                <Flame className="w-4 h-4 text-primary" />
+                Studio Canvas
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[440px] bg-muted/10 rounded-b-xl p-6">
               {isPolling || generateMutation.isPending ? (
-                /* Dynamic Progress Component Layout cloned verbatim from Generation Layout in image_c860a5.png */
-                <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-center min-h-[400px] gap-5">
+                <div className="w-full space-y-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
-                      <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5">
+                      <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5 relative">
                         <Loader2 className="h-5 w-5 animate-spin" />
+                        <span className="absolute inset-0 flex items-center justify-center animate-pulse text-[9px] font-bold">✨</span>
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          Generating image
-                        </p>
+                        <p className="text-sm font-semibold text-foreground">Generating image</p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {pollingStatus === 'queued' 
-                            ? 'Queued in system. Preparing image engine context...' 
-                            : 'Midjourney/Dall-E is rendering high-resolution asset matrices.'}
+                            ? 'Allocating compute nodes. Initializing layout engine models...' 
+                            : 'This is an estimate based on recent image generation time. The image will appear automatically when the provider finishes.'}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-semibold tracking-tight text-foreground">
-                        {displayProgressValue}%
-                      </p>
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                        Estimated progress
-                      </p>
+                      <p className="text-2xl font-bold text-primary tracking-tight">{displayProgressValue}%</p>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Estimated progress</p>
                     </div>
                   </div>
 
@@ -301,58 +373,52 @@ export default function ImageStudio() {
                     <Progress value={displayProgressValue} className="h-2.5" />
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>Elapsed: {formatRemainingTime(stageElapsedMs)}</span>
-                      <span>
-                        {displayRemainingMs > 0 
-                          ? `About ${formatRemainingTime(displayRemainingMs)} remaining` 
-                          : 'Finalizing layout view...'}
-                      </span>
+                      <span>{displayRemainingMs > 0 ? `About ${formatRemainingTime(displayRemainingMs)} remaining` : 'Finalizing result...'}</span>
                     </div>
                   </div>
 
                   <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4 grid-cols-3 mt-2">
                     <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'preparing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 1</p>
-                      <p className="mt-1 text-xs font-medium text-foreground">Init Engine</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Prepare Prompt</p>
                     </div>
-                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' || pollingStatus === 'image' || isPolling ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 2</p>
-                      <p className="mt-1 text-xs font-medium text-foreground">Render Media</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Generate Image</p>
                     </div>
                     <div className={`rounded-xl border px-3 py-3 ${displayProgressValue >= 92 ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 3</p>
-                      <p className="mt-1 text-xs font-medium text-foreground">Finalize</p>
+                      <p className="mt-1 text-xs font-medium text-foreground">Finalize Result</p>
                     </div>
                   </div>
                 </div>
               ) : generatedImage ? (
-                <div className="space-y-4">
-                  <div className="relative rounded-lg overflow-hidden border">
+                <div className="w-full flex flex-col items-center gap-4">
+                  <div className={`relative border border-border/60 bg-background/50 shadow-inner overflow-hidden flex items-center justify-center p-1 rounded-lg ${getAspectRatioClass()}`}>
                     <img
                       src={generatedImage}
-                      alt="Generated asset outcome"
-                      className="w-full h-auto object-contain mx-auto"
-                      style={{ minHeight: '300px', maxHeight: '500px' }}
+                      alt="Studio Output Visual"
+                      className="w-full h-full object-contain rounded"
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleDownload} className="flex-1">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
-                    <Button onClick={handleReset} variant="outline" className="flex-1">
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      New Image
-                    </Button>
+                  <div className="flex gap-3 w-full max-w-[380px]">
+                    <Button onClick={handleDownload} className="flex-1"><Download className="w-4 h-4 mr-2" /> Download Asset</Button>
+                    <Button onClick={handleReset} variant="outline" className="flex-1"><RefreshCw className="w-4 h-4 mr-2" /> Reset Canvas</Button>
                   </div>
                 </div>
+              ) : pollingStatus === 'failed' ? (
+                <div className="text-center space-y-3">
+                  <p className="text-sm text-red-500 font-semibold">Compilation interrupted or failed.</p>
+                  <Button size="sm" variant="outline" onClick={handleReset} className="gap-2">
+                    <RefreshCw className="w-3.5 h-3.5" /> Try Again
+                  </Button>
+                </div>
               ) : (
-                <div className="flex items-center justify-center h-[400px] border rounded-lg bg-muted/20">
-                  <div className="text-center space-y-2">
-                    <Camera className="w-12 h-12 text-muted-foreground mx-auto" />
-                    <p className="text-muted-foreground px-4">
-                      Enter a creative prompt brief and click generate to begin.
-                    </p>
-                  </div>
+                <div className="border-2 border-dashed border-border/80 rounded-xl flex flex-col items-center justify-center bg-background/40 p-6 w-full aspect-square max-w-[380px]">
+                  <Camera className="w-10 h-10 text-muted-foreground mb-2 stroke-[1.5]" />
+                  <p className="text-xs text-muted-foreground text-center font-medium">
+                    Ready to capture custom art profile weights.
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -367,9 +433,9 @@ export default function ImageStudio() {
           setShowConfirmDialog(false);
           submitGeneration();
         }}
-        title="Confirm image generation"
-        description="High-resolution workspace creation and stylistic painting cycles may take up to 2-3 minutes. Please stay on this tab until assets finalize."
-        confirmLabel="Continue Generation"
+        title="Confirm Custom Studio Generation"
+        description="High-fidelity image canvas compiling can utilize up to 2-3 minutes of render cluster time. Please maintain this viewport session active."
+        confirmLabel="Initialize Render Pipeline"
       />
     </div>
   );

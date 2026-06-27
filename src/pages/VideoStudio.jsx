@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Sparkles, Download, RefreshCw, Video, Play, Pause, Volume2 } from 'lucide-react';
+import { Loader2, Sparkles, Download, RefreshCw, Video, Play, Pause, Volume2, Film, Sliders, Eye, Wand2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { apiClient, tokenStorage } from '@/api/apiClient';
 import { addHistoryEntry } from '@/services/aiService';
@@ -19,14 +19,14 @@ const PLATFORMS = [
 ];
 
 const VIDEO_STYLES = [
-  { value: 'cinematic', label: 'Cinematic' },
-  { value: 'documentary', label: 'Documentary' },
-  { value: 'promotional', label: 'Promotional' },
-  { value: 'testimonial', label: 'Testimonial' },
-  { value: 'tutorial', label: 'Tutorial' },
-  { value: 'animated', label: 'Animated' },
-  { value: 'live-action', label: 'Live Action' },
-  { value: 'minimalist', label: 'Minimalist' },
+  { value: 'cinematic', label: 'Cinematic Hyper-Real' },
+  { value: 'documentary', label: 'Documentary Realism' },
+  { value: 'promotional', label: 'High-Impact Promotional' },
+  { value: 'testimonial', label: 'Authentic Testimonial' },
+  { value: 'tutorial', label: 'Crisp E-Learning Tutorial' },
+  { value: 'animated', label: '3D Stylized Animated' },
+  { value: 'live-action', label: 'Natural Live Action' },
+  { value: 'minimalist', label: 'Clean Editorial Minimalist' },
 ];
 
 const ESTIMATED_TOTAL_MS = 600000; // 10 minutes total video processing allocation
@@ -59,7 +59,6 @@ export default function VideoStudio() {
   const [volume, setVolume] = useState(1);
   const videoRef = useRef(null);
 
-  // Time tracker state variables
   const [stageStartedAt, setStageStartedAt] = useState(null);
   const [stageElapsedMs, setStageElapsedMs] = useState(0);
 
@@ -68,11 +67,9 @@ export default function VideoStudio() {
       setStageElapsedMs(0);
       return undefined;
     }
-
     const updateElapsed = () => {
       setStageElapsedMs(Date.now() - stageStartedAt);
     };
-
     updateElapsed();
     const intervalId = window.setInterval(updateElapsed, 1000);
     return () => window.clearInterval(intervalId);
@@ -92,9 +89,12 @@ export default function VideoStudio() {
         throw new Error('User token not available');
       }
 
-      // ✂️ aspect ratio key removed from post data payload
+      // 🛠️ FIX ARTISTIC DIRECTION: Enrich the topic prompt explicitly with style parameters so the model obeys it
+      const activeStyleLabel = VIDEO_STYLES.find(s => s.value === params.style)?.label || params.style;
+      const finalBuiltPrompt = `${params.prompt}, shot in a distinct ${activeStyleLabel} style environment`;
+
       const response = await apiClient.post('/generate-video', {
-        topic: params.prompt,
+        topic: finalBuiltPrompt, // 🚀 Passed enriched style parameters
         platform: params.platform,
         contentType: params.style,
         cameraPan: params.pan,
@@ -106,11 +106,9 @@ export default function VideoStudio() {
       return response;
     },
     onSuccess: (response) => {
-      console.log('Video generation started:', response);
       const jobId = response.video_id || response.jobId || response.id || response.job_id;
 
       if (!jobId) {
-        console.error('No job ID returned', response);
         setPollingStatus('failed');
         setIsPolling(false);
         setErrorMessage('No job ID returned from server');
@@ -130,7 +128,6 @@ export default function VideoStudio() {
             token
           );
 
-          console.log('Video status update:', statusResponse);
           const statusCode = statusResponse.status;
           setPollingStatus(statusCode);
 
@@ -170,7 +167,6 @@ export default function VideoStudio() {
       }, 3000);
     },
     onError: (error) => {
-      console.error('Video generation failed:', error);
       setIsPolling(false);
       setStageStartedAt(null);
       setPollingStatus('failed');
@@ -221,7 +217,6 @@ export default function VideoStudio() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.warn('CORS blob compilation restricted, triggering proxy window fallback:', error);
       const a = document.createElement('a');
       a.href = generatedVideo;
       a.target = '_blank';
@@ -260,38 +255,68 @@ export default function VideoStudio() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Header */}
+        {/* Header Block */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             <Video className="w-8 h-8 text-primary" />
-            Video Studio
+            Video Studio Pro
           </h1>
           <p className="text-muted-foreground mt-2">
-            Create stunning AI-powered videos with camera controls
+            Advanced motion picture engine designed for granular camera manipulation and multi-platform scenario generation.
           </p>
         </div>
 
+        {/* Feature Differentiation Explainer Banner */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 bg-muted/30 border border-border/70 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <Sliders className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-foreground">Kinetic Control Panels</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Manipulate complex physical attributes like camera panning matrices, focal zoom speeds, and animation motion weight parameters.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Film className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-foreground">Target Platform Sizing</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Bake custom timeline containers formatted perfectly for distribution rules across primary global video distribution networks.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Wand2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-foreground">Standalone Render Core</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">High-end computing blocks optimized specifically for generating autonomous timeline footage clips without needing post context fields.</p>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Panel */}
+          {/* Left Panel - Video Configuration */}
           <Card>
-            <CardHeader><CardTitle>Video Settings</CardTitle></CardHeader>
-            <CardContent className="space-y-6">
+            <CardHeader>
+              <CardTitle className="text-md flex items-center gap-2">
+                <Wand2 className="w-4 h-4 text-primary" />
+                Studio Parameters
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="prompt">Prompt</Label>
+                <Label htmlFor="prompt">Prompt Brief Scenario</Label>
                 <Textarea
                   id="prompt"
-                  placeholder="Describe the video you want to create..."
+                  placeholder="Describe your scene trajectory, subjects, and lighting environment details..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[140px]"
+                  className="min-h-[140px] resize-none"
                   disabled={generateMutation.isPending || isPolling}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="platform">Platform</Label>
+                <Label htmlFor="platform">Target Platform Layout</Label>
                 <Select value={platform} onValueChange={setPlatform} disabled={generateMutation.isPending || isPolling}>
-                  <SelectTrigger><SelectValue placeholder="Select platform" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select network shell" /></SelectTrigger>
                   <SelectContent>
                     {PLATFORMS.map((p) => (<SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>))}
                   </SelectContent>
@@ -299,72 +324,74 @@ export default function VideoStudio() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="style">Style</Label>
+                <Label htmlFor="style">Artistic Direction Style</Label>
                 <Select value={style} onValueChange={setStyle} disabled={generateMutation.isPending || isPolling}>
-                  <SelectTrigger><SelectValue placeholder="Select style" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select style matrix" /></SelectTrigger>
                   <SelectContent>
                     {VIDEO_STYLES.map((s) => (<SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <Button onClick={handleAnimate} disabled={!prompt.trim() || generateMutation.isPending || isPolling} className="w-full" variant="outline">
-                <Sparkles className="w-4 h-4 mr-2" /> Animate with Camera Control
-              </Button>
-
-              <Button 
-                onClick={handleGenerateClick} 
-                disabled={isButtonDisabled} 
-                className="w-full" 
-                size="lg"
-              >
-                {generateMutation.isPending || isPolling ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-                ) : (
-                  <><Video className="w-4 h-4 mr-2" /> Generate Video</>
-                )}
-              </Button>
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <Button onClick={handleAnimate} disabled={!prompt.trim() || generateMutation.isPending || isPolling} className="flex-1 gap-2" variant="outline">
+                  <Sliders className="w-4 h-4" /> Camera Controls ({pan !== 0 || zoom !== 1 || motionStrength !== 5 ? "Modified" : "Default"})
+                </Button>
+                
+                <Button 
+                  onClick={handleGenerateClick} 
+                  disabled={isButtonDisabled} 
+                  className="flex-1 gap-2" 
+                  size="lg"
+                >
+                  {generateMutation.isPending || isPolling ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Rendering...</>
+                  ) : (
+                    <><Sparkles className="w-4 h-4" /> Render Studio Video</>
+                  )}
+                </Button>
+              </div>
 
               {errorMessage && (
-                <div className="text-center p-3 bg-red-500/10 border border-red-500 rounded">
-                  <p className="text-sm text-red-500"> {errorMessage}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Please add credits to your account to generate videos
-                  </p>
+                <div className="text-center p-3 bg-red-500/10 border border-red-500 rounded-lg">
+                  <p className="text-sm text-red-500 font-semibold">{errorMessage}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Please append credits to your wallet dashboard to execute complex render frames.</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Right Panel */}
-          <Card>
-            <CardHeader><CardTitle>Studio Output</CardTitle></CardHeader>
-            <CardContent>
+          {/* Right Panel - Studio Viewport Frame Container */}
+          <Card className="flex flex-col">
+            <CardHeader>
+              <CardTitle className="text-md flex items-center gap-2">
+                <Eye className="w-4 h-4 text-primary" />
+                Studio Viewport
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[440px] bg-muted/10 rounded-b-xl p-6">
               {isPolling || generateMutation.isPending ? (
-                <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-center min-h-[400px] gap-5">
+                /* Dynamic Progress Wrapper matched directly to the core dashboard workflow metrics */
+                <div className="w-full space-y-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
-                      <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5">
+                      <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5 relative">
                         <Loader2 className="h-5 w-5 animate-spin" />
+                        {/* 🚀 Added glowing, floating layout video asset animation micro-icon */}
+                        <span className="absolute inset-0 flex items-center justify-center animate-pulse text-[9px] font-bold">🎬</span>
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          Generating video
-                        </p>
+                        <p className="text-sm font-semibold text-foreground">Generating video</p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {pollingStatus === 'queued'
                             ? 'Queued in frame sequencer pipeline. Preparing simulation context...'
-                            : 'Azure/Sora cluster is generating high-fidelity scene intervals.'}
+                            : 'Video generation is asynchronous. The preview will update automatically when the provider finishes processing.'}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-semibold tracking-tight text-foreground">
-                        {displayProgressValue}%
-                      </p>
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                        Estimated progress
-                      </p>
+                      <p className="text-2xl font-bold text-primary tracking-tight">{displayProgressValue}%</p>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Estimated progress</p>
                     </div>
                   </div>
 
@@ -380,12 +407,13 @@ export default function VideoStudio() {
                     </div>
                   </div>
 
+                  {/* 🟢 Synchronized 3-Step Pipeline Blocks */}
                   <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4 grid-cols-3 mt-2">
                     <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'preparing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 1</p>
                       <p className="mt-1 text-xs font-medium text-foreground">Prepare Prompt</p>
                     </div>
-                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' || isPolling ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 2</p>
                       <p className="mt-1 text-xs font-medium text-foreground">Generate Video</p>
                     </div>
@@ -396,32 +424,30 @@ export default function VideoStudio() {
                   </div>
                 </div>
               ) : generatedVideo ? (
-                <div className="space-y-4">
-                  <div className="relative rounded-lg overflow-hidden border bg-black">
+                <div className="w-full space-y-4">
+                  <div className="relative rounded-xl overflow-hidden border bg-black shadow-lg">
                     <video ref={videoRef} src={generatedVideo} controls className="w-full h-auto" style={{ minHeight: '300px', maxHeight: '500px' }} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent flex items-center gap-3">
+                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center gap-3 opacity-0 hover:opacity-100 transition-opacity duration-200">
                       <Button onClick={togglePlay} size="sm" variant="ghost" className="text-white hover:bg-white/20">
                         {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                       </Button>
                       <div className="flex items-center gap-2">
                         <Volume2 className="w-4 h-4 text-white" />
-                        <input type="range" min="0" max="1" step="0.1" value={volume} onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} className="w-20 h-1 bg-white/30 rounded-lg" />
+                        <input type="range" min="0" max="1" step="0.1" value={volume} onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} className="w-20 h-1 bg-white/30 rounded-lg accent-primary" />
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleDownload} className="flex-1"><Download className="w-4 h-4 mr-2" /> Download</Button>
-                    <Button onClick={handleReset} variant="outline" className="flex-1"><RefreshCw className="w-4 h-4 mr-2" /> New Video</Button>
+                  <div className="flex gap-3">
+                    <Button onClick={handleDownload} className="flex-1 gap-2"><Download className="w-4 h-4" /> Download Video</Button>
+                    <Button onClick={handleReset} variant="outline" className="flex-1 gap-2"><RefreshCw className="w-4 h-4" /> Reset Canvas</Button>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-[400px] border rounded-lg bg-muted/20">
-                  <div className="text-center space-y-2">
-                    <Video className="w-12 h-12 text-muted-foreground mx-auto" />
-                    <p className="text-muted-foreground px-4">
-                      Enter a creative prompt scenario to render video motion assets.
-                    </p>
-                  </div>
+                <div className="border-2 border-dashed border-border/80 rounded-xl flex flex-col items-center justify-center bg-background/40 p-6 w-full max-w-[380px] aspect-square">
+                  <Film className="w-12 h-12 text-muted-foreground mb-3 stroke-[1.5]" />
+                  <p className="text-xs text-muted-foreground text-center font-medium px-4">
+                    Enter a creative scenario and render to review your studio cinematic footage timeline.
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -429,27 +455,35 @@ export default function VideoStudio() {
         </div>
       </div>
 
+      {/* Camera Control Modal Config */}
       {showCameraModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full">
-            <div className="p-6 border-b"><h2 className="text-xl font-semibold">Camera Control</h2></div>
-            <div className="p-6 space-y-6">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-xl border border-border/70 shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-5 border-b bg-muted/20">
+              <h2 className="text-md font-semibold flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-primary" /> Camera Direction Configurations
+              </h2>
+            </div>
+            <div className="p-6 space-y-5">
               <div className="space-y-2">
-                <Label>Pan: {pan.toFixed(1)}</Label>
-                <input type="range" min="-10" max="10" step="0.1" value={pan} onChange={(e) => setPan(parseFloat(e.target.value))} className="w-full" />
+                <div className="flex justify-between items-center"><Label>Horizontal Pan Sizing</Label><span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground font-bold">{pan.toFixed(1)}</span></div>
+                <input type="range" min="-10" max="10" step="0.1" value={pan} onChange={(e) => setPan(parseFloat(e.target.value))} className="w-full accent-primary" />
+                <div className="flex justify-between text-[10px] text-muted-foreground"><span>← Pan Left</span><span>Center</span><span>Pan Right →</span></div>
               </div>
               <div className="space-y-2">
-                <Label>Zoom: {zoom.toFixed(1)}</Label>
-                <input type="range" min="0.5" max="3" step="0.1" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} className="w-full" />
+                <div className="flex justify-between items-center"><Label>Focal Zoom Scale</Label><span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground font-bold">{zoom.toFixed(1) || '1.0'}x</span></div>
+                <input type="range" min="0.5" max="3" step="0.1" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} className="w-full accent-primary" />
+                <div className="flex justify-between text-[10px] text-muted-foreground"><span>Zoom Out</span><span>1.0x (Normal)</span><span>Zoom In</span></div>
               </div>
               <div className="space-y-2">
-                <Label>Motion Strength: {motionStrength}</Label>
-                <input type="range" min="1" max="10" step="1" value={motionStrength} onChange={(e) => setMotionStrength(parseInt(e.target.value))} className="w-full" />
+                <div className="flex justify-between items-center"><Label>Timeline Motion Strength</Label><span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground font-bold">{motionStrength}</span></div>
+                <input type="range" min="1" max="10" step="1" value={motionStrength} onChange={(e) => setMotionStrength(parseInt(e.target.value))} className="w-full accent-primary" />
+                <div className="flex justify-between text-[10px] text-muted-foreground"><span>Subtle Motion</span><span>Intense Motion</span></div>
               </div>
             </div>
-            <div className="p-6 border-t flex gap-2 justify-end">
-              <Button onClick={() => setShowCameraModal(false)} variant="outline">Close</Button>
-              <Button onClick={() => { setShowCameraModal(false); handleGenerateClick(); }}><Sparkles className="w-4 h-4 mr-2" /> Generate</Button>
+            <div className="p-4 border-t bg-muted/20 flex gap-2 justify-end">
+              <Button onClick={() => setShowCameraModal(false)} variant="outline" size="sm">Cancel Layout</Button>
+              <Button size="sm" onClick={() => { setShowCameraModal(false); handleGenerateClick(); }}><Sparkles className="w-3.5 h-3.5 mr-1.5" /> Confirm Direction</Button>
             </div>
           </div>
         </div>
@@ -462,9 +496,9 @@ export default function VideoStudio() {
           setShowConfirmDialog(false);
           submitGeneration();
         }}
-        title="Confirm video generation"
-        description="Complex camera projection trajectories and high-fidelity video processing models can take up to 3-5 minutes to bake. Please leave this dashboard active until it finishes."
-        confirmLabel="Continue Generation"
+        title="Confirm Custom Studio Generation"
+        description="Complex camera projection trajectories and high-fidelity video processing models can take up to 5-10 minutes to compile. Please leave this studio viewport session active."
+        confirmLabel="Initialize Render Pipeline"
       />
     </div>
   );
