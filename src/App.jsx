@@ -2,6 +2,7 @@ import { Toaster } from "./components/ui/toaster"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from './lib/AuthContext';
+import { GenerationJobsProvider } from './contexts/GenerationJobsContext';
 import MainLayout from './components/layout/MainLayout';
 import Generate from './pages/Generate';
 import History from './pages/History';
@@ -128,9 +129,11 @@ function App() {
 function AppShell() {
   return (
     <>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <AuthenticatedApp />
-      </Router>
+      <GenerationJobsProvider>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <AuthenticatedApp />
+        </Router>
+      </GenerationJobsProvider>
       <Toaster />
     </>
   );

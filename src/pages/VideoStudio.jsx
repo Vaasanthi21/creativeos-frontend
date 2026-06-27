@@ -1,11 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Sparkles, Download, RefreshCw, Video, Play, Pause, Volume2, Film, Sliders, Eye, Wand2 } from 'lucide-react';
+import { Loader2, Sparkles, Download, Share2, RefreshCw, Video, Play, Pause, Volume2, Film, Sliders, Eye, Wand2, Maximize2, Layers, Building2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { apiClient, tokenStorage } from '@/api/apiClient';
 import { addHistoryEntry } from '@/services/aiService';
@@ -29,6 +29,21 @@ const VIDEO_STYLES = [
   { value: 'minimalist', label: 'Clean Editorial Minimalist' },
 ];
 
+const ASPECT_RATIOS = [
+  { value: '1:1', label: 'Square (1:1)', description: 'Perfect for feed posts' },
+  { value: '16:9', label: 'Landscape (16:9)', description: 'Standard widescreen' },
+  { value: '9:16', label: 'Portrait (9:16)', description: 'Optimized for Reels & Shorts' }
+];
+
+const LOGO_PLACEMENTS = [
+  { value: 'persona_default', label: 'Persona Default' },
+  { value: 'top_left', label: 'Top Left' },
+  { value: 'top_right', label: 'Top Right' },
+  { value: 'bottom_left', label: 'Bottom Left' },
+  { value: 'bottom_right', label: 'Bottom Right' },
+  { value: 'center', label: 'Centralized overlay' },
+];
+
 const ESTIMATED_TOTAL_MS = 600000; // 10 minutes total video processing allocation
 
 const formatRemainingTime = (milliseconds) => {
@@ -43,6 +58,9 @@ export default function VideoStudio() {
   const [prompt, setPrompt] = useState('');
   const [platform, setPlatform] = useState('instagram');
   const [style, setStyle] = useState('cinematic');
+  const [aspectRatio, setAspectRatio] = useState('9:16'); 
+  const [logoPlacement, setLogoPlacement] = useState('persona_default');
+  const [selectedPersona, setSelectedPersona] = useState(''); 
   const [generatedVideo, setGeneratedVideo] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStatus, setPollingStatus] = useState(null);
@@ -61,6 +79,30 @@ export default function VideoStudio() {
 
   const [stageStartedAt, setStageStartedAt] = useState(null);
   const [stageElapsedMs, setStageElapsedMs] = useState(0);
+
+  const { data: personasList, isLoading: loadingPersonas } = useQuery({
+    queryKey: ['companyPersonasOverviewList'],
+    queryFn: async () => {
+      const token = tokenStorage.getUserToken();
+      if (!token) return [];
+      const response = await apiClient.get('/company-personas', token);
+
+      if (Array.isArray(response)) return response;
+      if (Array.isArray(response?.items)) return response.items;
+      if (Array.isArray(response?.data)) return response.data;
+      if (Array.isArray(response?.personas)) return response.personas;
+      if (Array.isArray(response?.data?.personas)) return response.data.personas;
+
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    if (personasList?.length > 0 && !selectedPersona) {
+      const defaultActive = personasList.find(p => p.isActive || p.active) || personasList[0];
+      setSelectedPersona(defaultActive.id || defaultActive._id);
+    }
+  }, [personasList, selectedPersona]);
 
   useEffect(() => {
     if (!isPolling || !stageStartedAt) {
@@ -89,14 +131,16 @@ export default function VideoStudio() {
         throw new Error('User token not available');
       }
 
-      // 🛠️ FIX ARTISTIC DIRECTION: Enrich the topic prompt explicitly with style parameters so the model obeys it
       const activeStyleLabel = VIDEO_STYLES.find(s => s.value === params.style)?.label || params.style;
       const finalBuiltPrompt = `${params.prompt}, shot in a distinct ${activeStyleLabel} style environment`;
 
       const response = await apiClient.post('/generate-video', {
-        topic: finalBuiltPrompt, // 🚀 Passed enriched style parameters
+        topic: finalBuiltPrompt,
         platform: params.platform,
         contentType: params.style,
+        aspect_ratio: params.aspectRatio,     // 🟢 FIXED: Kept ONLY camelCase to comply with backend strict schema
+        persona_id: params.personaId,       
+        logo_placement: params.logoPlacement, 
         cameraPan: params.pan,
         cameraZoom: params.zoom,
         motionStrength: params.motionStrength,
@@ -179,11 +223,14 @@ export default function VideoStudio() {
       prompt: prompt.trim(),
       platform: platform,
       style: style,
+      aspectRatio: aspectRatio, 
+      personaId: selectedPersona, 
+      logoPlacement: logoPlacement, 
       pan: pan,
       zoom: zoom,
       motionStrength: motionStrength
     });
-  }, [prompt, platform, style, pan, zoom, motionStrength, generateMutation]);
+  }, [prompt, platform, style, aspectRatio, selectedPersona, logoPlacement, pan, zoom, motionStrength, generateMutation]);
 
   const handleAnimate = () => {
     if (!prompt.trim()) {
@@ -225,6 +272,28 @@ export default function VideoStudio() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!generatedVideo) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Creative OS - Video Studio Export',
+          text: `Check out this brand cinematic update tracking for prompt: "${prompt}"`,
+          url: generatedVideo,
+        });
+      } catch (err) {
+        console.log('Share operations sheets closed:', err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(generatedVideo);
+        alert('Asset link copied safely onto clipboard rows!');
+      } catch (err) {
+        console.error('Clipboard error:', err);
+      }
     }
   };
 
@@ -324,6 +393,63 @@ export default function VideoStudio() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="aspectRatio" className="flex items-center gap-1.5">
+                  <Maximize2 className="w-3.5 h-3.5 text-muted-foreground" /> Video Aspect Ratio
+                </Label>
+                <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={generateMutation.isPending || isPolling}>
+                  <SelectTrigger id="aspectRatio"><SelectValue placeholder="Select dimensions" /></SelectTrigger>
+                  <SelectContent>
+                    {ASPECT_RATIOS.map((ar) => (
+                      <SelectItem key={ar.value} value={ar.value}>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{ar.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="companyPersona" className="flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-muted-foreground" /> Active Brand Persona Profile
+                </Label>
+                <Select value={selectedPersona} onValueChange={setSelectedPersona} disabled={generateMutation.isPending || isPolling || loadingPersonas}>
+                  <SelectTrigger id="companyPersona">
+                    <SelectValue placeholder={loadingPersonas ? "Syncing brand elements..." : "Select targeted profile context"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {personasList?.map((persona) => (
+                      <SelectItem key={persona.id || persona._id} value={persona.id || persona._id}>
+                        <div className="flex items-center gap-2">
+                          {persona.logoUrl || persona.logo_url ? (
+                            <img src={persona.logoUrl || persona.logo_url} alt="" className="h-4 w-4 object-contain rounded" />
+                          ) : (
+                            <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          )}
+                          <span>{persona.name || persona.personaName || persona.persona_name || "Unnamed Persona"}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="logoPlacement" className="flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-muted-foreground" /> Watermark Overlay Placement
+                </Label>
+                <Select value={logoPlacement} onValueChange={setLogoPlacement} disabled={generateMutation.isPending || isPolling}>
+                  <SelectTrigger id="logoPlacement"><SelectValue placeholder="Select logo placement" /></SelectTrigger>
+                  <SelectContent>
+                    {LOGO_PLACEMENTS.map((lp) => (
+                      <SelectItem key={lp.value} value={lp.value}>{lp.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="style">Artistic Direction Style</Label>
                 <Select value={style} onValueChange={setStyle} disabled={generateMutation.isPending || isPolling}>
                   <SelectTrigger><SelectValue placeholder="Select style matrix" /></SelectTrigger>
@@ -347,7 +473,7 @@ export default function VideoStudio() {
                   {generateMutation.isPending || isPolling ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Rendering...</>
                   ) : (
-                    <><Sparkles className="w-4 h-4" /> Render Studio Video</>
+                    <><Sparkles className="w-4 h-4" /> Generate Video</>
                   )}
                 </Button>
               </div>
@@ -355,7 +481,11 @@ export default function VideoStudio() {
               {errorMessage && (
                 <div className="text-center p-3 bg-red-500/10 border border-red-500 rounded-lg">
                   <p className="text-sm text-red-500 font-semibold">{errorMessage}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Please append credits to your wallet dashboard to execute complex render frames.</p>
+                  {/credit|quota|insufficient|balance/i.test(errorMessage) && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Please add credits to your wallet dashboard to continue generating videos.
+                    </p>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -371,13 +501,11 @@ export default function VideoStudio() {
             </CardHeader>
             <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[440px] bg-muted/10 rounded-b-xl p-6">
               {isPolling || generateMutation.isPending ? (
-                /* Dynamic Progress Wrapper matched directly to the core dashboard workflow metrics */
                 <div className="w-full space-y-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
                       <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5 relative">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        {/* 🚀 Added glowing, floating layout video asset animation micro-icon */}
                         <span className="absolute inset-0 flex items-center justify-center animate-pulse text-[9px] font-bold">🎬</span>
                       </div>
                       <div>
@@ -407,7 +535,6 @@ export default function VideoStudio() {
                     </div>
                   </div>
 
-                  {/* 🟢 Synchronized 3-Step Pipeline Blocks */}
                   <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4 grid-cols-3 mt-2">
                     <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'preparing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 1</p>
@@ -437,9 +564,10 @@ export default function VideoStudio() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-3">
-                    <Button onClick={handleDownload} className="flex-1 gap-2"><Download className="w-4 h-4" /> Download Video</Button>
-                    <Button onClick={handleReset} variant="outline" className="flex-1 gap-2"><RefreshCw className="w-4 h-4" /> Reset Canvas</Button>
+                  <div className="flex gap-2 w-full max-w-[440px]">
+                    <Button onClick={handleDownload} className="flex-1 gap-1.5"><Download className="w-4 h-4" /> Download</Button>
+                    <Button onClick={handleShare} variant="secondary" className="flex-1 gap-1.5"><Share2 className="w-4 h-4" /> Share Asset</Button>
+                    <Button onClick={handleReset} variant="outline" className="px-3"><RefreshCw className="w-4 h-4" /></Button>
                   </div>
                 </div>
               ) : (
@@ -498,7 +626,7 @@ export default function VideoStudio() {
         }}
         title="Confirm Custom Studio Generation"
         description="Complex camera projection trajectories and high-fidelity video processing models can take up to 5-10 minutes to compile. Please leave this studio viewport session active."
-        confirmLabel="Initialize Render Pipeline"
+        confirmLabel="Generate Video"
       />
     </div>
   );

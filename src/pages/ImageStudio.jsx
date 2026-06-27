@@ -1,13 +1,15 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { startAsyncImageGeneration, createGenerationPoller } from '@/services/generationPollingService';
+import { useGenerationJobs } from '@/contexts/GenerationJobsContext';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Sparkles, Download, RefreshCw, Camera, Layers, Sliders, Flame, Wand2, Maximize2 } from 'lucide-react';
+import { Loader2, Sparkles, Download, Share2, RefreshCw, Camera, Layers, Sliders, Flame, Wand2, Maximize2, Building2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { apiClient, tokenStorage } from '@/api/apiClient';
 import { addHistoryEntry } from '@/services/aiService';
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 
@@ -36,6 +38,15 @@ const ASPECT_RATIOS = [
   { value: '9:16', label: 'Portrait (9:16) - Mobile/Stories' },
 ];
 
+const LOGO_PLACEMENTS = [
+  { value: 'persona_default', label: 'Persona Default' },
+  { value: 'top_left', label: 'Top Left' },
+  { value: 'top_right', label: 'Top Right' },
+  { value: 'bottom_left', label: 'Bottom Left' },
+  { value: 'bottom_right', label: 'Bottom Right' },
+  { value: 'center', label: 'Centralized overlay' },
+];
+
 const IMAGE_STAGE_ESTIMATES_MS = 180000;
 
 const formatRemainingTime = (milliseconds) => {
@@ -46,18 +57,70 @@ const formatRemainingTime = (milliseconds) => {
   return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`;
 };
 
+// Builds platform share-intent URLs. These are plain links (no Web Share API),
+// so they work over HTTP and on desktop, unlike navigator.share.
+const getShareLinks = (imageUrl, caption) => {
+  const encodedUrl = encodeURIComponent(imageUrl);
+  const encodedText = encodeURIComponent(caption);
+  return {
+    whatsapp: `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+  };
+};
+
 export default function ImageStudio() {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('realistic');
   const [lighting, setLighting] = useState('cinematic');
   const [aspectRatio, setAspectRatio] = useState('1:1');
-  const [generatedImage, setGeneratedImage] = useState(null);
-  const [isPolling, setIsPolling] = useState(false);
-  const [pollingStatus, setPollingStatus] = useState(null);
+  const [logoPlacement, setLogoPlacement] = useState('persona_default'); 
+  // 🟢 State tracking hook for the selected company persona ID
+  const [selectedPersona, setSelectedPersona] = useState(''); 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showSharePopover, setShowSharePopover] = useState(false);
 
-  const [stageStartedAt, setStageStartedAt] = useState(null);
+  // Job state (isPolling, pollingStatus, stageStartedAt, generatedImage) now lives in
+  // GenerationJobsContext instead of local useState, so it survives navigating away
+  // from this page and back. The variable names below are kept the same as before
+  // so the rest of this component (JSX, handlers) doesn't need to change.
+  const { getJob, setJob, clearJob } = useGenerationJobs();
+  const imageJob = getJob('image');
+
+  const generatedImage = imageJob?.generatedImage || null;
+  const isPolling = imageJob?.isPolling || false;
+  const pollingStatus = imageJob?.pollingStatus || null;
+  const stageStartedAt = imageJob?.stageStartedAt || null;
   const [stageElapsedMs, setStageElapsedMs] = useState(0);
+
+  const hasResumedRef = useRef(false);
+
+  // 🟢 Dynamic fetch supporting robust unwrapping fallbacks for formatting edge cases
+  const { data: personasList, isLoading: loadingPersonas } = useQuery({
+    queryKey: ['companyPersonasOverviewList'],
+    queryFn: async () => {
+      const token = tokenStorage.getUserToken();
+      if (!token) return [];
+      const response = await apiClient.get('/company-personas', token);
+
+      if (Array.isArray(response)) return response;
+      if (Array.isArray(response?.items)) return response.items;
+      if (Array.isArray(response?.data)) return response.data;
+      if (Array.isArray(response?.personas)) return response.personas;
+      if (Array.isArray(response?.data?.personas)) return response.data.personas;
+
+      return [];
+    }
+  });
+
+  // 🟢 Effect to fallback assign an initial default persona once the lists load cleanly
+  useEffect(() => {
+    if (personasList?.length > 0 && !selectedPersona) {
+      const defaultActive = personasList.find(p => p.isActive || p.active) || personasList[0];
+      setSelectedPersona(defaultActive.id || defaultActive._id);
+    }
+  }, [personasList, selectedPersona]);
 
   useEffect(() => {
     if (!isPolling || !stageStartedAt) {
@@ -76,81 +139,102 @@ export default function ImageStudio() {
 
   const displayRemainingMs = Math.max(0, IMAGE_STAGE_ESTIMATES_MS - stageElapsedMs);
 
+  // Shared status-handling logic, used both when a generation is freshly started
+  // and when we resume tracking a job that was already in flight (e.g. the user
+  // navigated away from Image Studio and came back while it was still rendering).
+  const attachPoller = useCallback((jobId) => {
+    createGenerationPoller(
+      jobId,
+      'image',
+      (status) => {
+        if (!status) return;
+        const statusCode = status?.status;
+        setJob('image', { pollingStatus: statusCode });
+
+        if (statusCode === 'completed' && status?.result) {
+          const imageUrl = status?.result?.image_url || status?.result?.imageUrl;
+          if (imageUrl) {
+            const imageEntry = {
+              topic: prompt,
+              content_type: "Image",
+              platform: "Studio Pro Canvas",
+              variants: [{
+                content: prompt,
+                image_url: imageUrl,
+                title: `${style.toUpperCase()} Studio Design (${aspectRatio})`
+              }],
+              status: "completed"
+            };
+            addHistoryEntry(imageEntry).catch(err => console.error("Failed history save:", err));
+            setJob('image', { generatedImage: imageUrl });
+          }
+        }
+      },
+      (finalStatus) => {
+        const statusCode = finalStatus?.status || 'failed';
+
+        if (statusCode === 'completed' && finalStatus?.result) {
+          const imageUrl = finalStatus?.result?.image_url || finalStatus?.result?.imageUrl;
+          if (imageUrl) {
+            setJob('image', { isPolling: false, stageStartedAt: null, pollingStatus: 'completed', generatedImage: imageUrl });
+          } else {
+            setJob('image', { isPolling: false, stageStartedAt: null, pollingStatus: 'failed' });
+          }
+        } else {
+          setJob('image', { isPolling: false, stageStartedAt: null, pollingStatus: 'failed' });
+        }
+      },
+      3000
+    );
+  }, [prompt, style, aspectRatio, setJob]);
+
+  // On mount: if a job was already in flight when the user navigated away, resume
+  // polling it here instead of starting fresh. Runs once per mount.
+  useEffect(() => {
+    if (hasResumedRef.current) return;
+    hasResumedRef.current = true;
+
+    const existing = imageJob;
+    if (existing?.jobId && existing.isPolling && existing.pollingStatus !== 'completed' && existing.pollingStatus !== 'failed') {
+      attachPoller(existing.jobId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const generateMutation = useMutation({
     mutationFn: async (params) => {
-      setPollingStatus('preparing');
+      setJob('image', { pollingStatus: 'preparing' });
       const finalBuiltPrompt = `${params.prompt}, ${params.style} style, ${params.lighting} lighting, ultra-detailed masterwork`;
       
       const response = await startAsyncImageGeneration({
         topic: finalBuiltPrompt,
         style: params.style,
-        aspectRatio: params.aspectRatio,      // Main parameter format requested by Neeta
-        aspect_ratio: params.aspectRatio,     // Secondary snake_case fallback configuration
+        aspectRatio: params.aspectRatio,      
+        aspect_ratio: params.aspectRatio,     
+        persona_id: params.personaId,         // 🟢 Forwarded selected persona parameter fields
+        logo_placement: params.logoPlacement, 
       });
       return response;
     },
     onSuccess: (response) => {
       const jobId = response?.jobId || response?.id || response?.job_id;
       if (!jobId) {
-        setPollingStatus('failed');
-        setIsPolling(false);
+        setJob('image', { pollingStatus: 'failed', isPolling: false });
         return;
       }
-      setIsPolling(true);
-      setStageStartedAt(Date.now());
-      setPollingStatus('queued');
-      
-      createGenerationPoller(
+
+      setJob('image', {
         jobId,
-        'image',
-        (status) => {
-          if (!status) return;
-          const statusCode = status?.status || pollingStatus;
-          setPollingStatus(statusCode);
-          
-          if (statusCode === 'completed' && status?.result) {
-            const imageUrl = status?.result?.image_url || status?.result?.imageUrl;
-            if (imageUrl) {
-              const imageEntry = {
-                topic: prompt,
-                content_type: "Image",
-                platform: "Studio Pro Canvas",
-                variants: [{
-                  content: prompt,
-                  image_url: imageUrl,
-                  title: `${style.toUpperCase()} Studio Design (${aspectRatio})`
-                }],
-                status: "completed"
-              };
-              addHistoryEntry(imageEntry).catch(err => console.error("Failed history save:", err));
-              setGeneratedImage(imageUrl);
-            }
-          }
-        },
-        (finalStatus) => {
-          setIsPolling(false);
-          setStageStartedAt(null);
-          const statusCode = finalStatus?.status || 'failed';
-          setPollingStatus(statusCode);
-          
-          if (statusCode === 'completed' && finalStatus?.result) {
-            const imageUrl = finalStatus?.result?.image_url || finalStatus?.result?.imageUrl;
-            if (imageUrl) {
-              setGeneratedImage(imageUrl);
-            } else {
-              setPollingStatus('failed');
-            }
-          } else {
-            setPollingStatus('failed');
-          }
-        },
-        3000
-      );
+        isPolling: true,
+        stageStartedAt: Date.now(),
+        pollingStatus: 'queued',
+        generatedImage: null,
+      });
+
+      attachPoller(jobId);
     },
     onError: () => {
-      setIsPolling(false);
-      setStageStartedAt(null);
-      setPollingStatus('failed');
+      setJob('image', { isPolling: false, stageStartedAt: null, pollingStatus: 'failed' });
     },
   });
 
@@ -159,9 +243,11 @@ export default function ImageStudio() {
       prompt: prompt.trim(),
       style: style,
       lighting: lighting,
-      aspectRatio: aspectRatio
+      aspectRatio: aspectRatio,
+      personaId: selectedPersona, // 🟢 Passed into core mutation payload
+      logoPlacement: logoPlacement 
     });
-  }, [prompt, style, lighting, aspectRatio, generateMutation]);
+  }, [prompt, style, lighting, aspectRatio, selectedPersona, logoPlacement, generateMutation]);
 
   const handleGenerateClick = () => {
     if (!prompt.trim()) return;
@@ -172,50 +258,65 @@ export default function ImageStudio() {
     if (!generatedImage) return;
     try {
       const response = await fetch(generatedImage, { method: 'GET', mode: 'cors' });
+      if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = `studio-asset-${Date.now()}.png`;
       document.body.appendChild(link);
       link.click();
-      
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = generatedImage;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        
-        canvas.toBlob((blob) => {
-          const fallbackUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = fallbackUrl;
-          link.download = `studio-asset-${Date.now()}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(fallbackUrl);
-        }, 'image/png');
-      };
+      console.error('Download failed:', error);
+      // Fallback: open the asset in a new tab so the user can save it manually
+      window.open(generatedImage, '_blank', 'noopener,noreferrer');
     }
   };
 
-  const handleReset = () => {
-    setGeneratedImage(null);
-    setPrompt('');
-    setPollingStatus(null);
-    setStageStartedAt(null);
+  const handleCopyLink = async () => {
+    if (!generatedImage) return;
+    let success = false;
+
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(generatedImage);
+        success = true;
+      } catch (err) {
+        console.warn('Clipboard API failed, trying fallback:', err);
+      }
+    }
+
+    if (!success) {
+      // navigator.clipboard is unavailable on plain HTTP origins (non-secure context).
+      // Fall back to the legacy execCommand approach via a hidden textarea.
+      const textarea = document.createElement('textarea');
+      textarea.value = generatedImage;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        success = document.execCommand('copy');
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    alert(success ? 'Link copied to clipboard!' : 'Could not copy automatically. Long-press or select the link text to copy it manually.');
+    setShowSharePopover(false);
   };
 
-  // Helper utility function to dynamically adjust preview container orientation
+  const handleReset = () => {
+    clearJob('image');
+    setPrompt('');
+    setShowSharePopover(false);
+  };
+
   const getAspectRatioClass = () => {
     if (aspectRatio === '16:9') return 'aspect-[16/9] w-full max-w-[440px]';
     if (aspectRatio === '9:16') return 'aspect-[9/16] h-[380px] w-auto';
@@ -290,6 +391,47 @@ export default function ImageStudio() {
                   <SelectContent>
                     {ASPECT_RATIOS.map((ratio) => (
                       <SelectItem key={ratio.value} value={ratio.value}>{ratio.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* 🟢 NEW DYNAMIC INTERACTIVE PERSONA SELECTOR */}
+              <div className="space-y-2">
+                <Label htmlFor="companyPersona" className="flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-muted-foreground" /> Active Brand Persona Profile
+                </Label>
+                <Select value={selectedPersona} onValueChange={setSelectedPersona} disabled={isPolling || loadingPersonas}>
+                  <SelectTrigger id="companyPersona">
+                    <SelectValue placeholder={loadingPersonas ? "Syncing brand elements..." : "Select targeted profile context"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {personasList?.map((persona) => (
+                      <SelectItem key={persona.id || persona._id} value={persona.id || persona._id}>
+                        <div className="flex items-center gap-2">
+                          {persona.logoUrl || persona.logo_url ? (
+                            <img src={persona.logoUrl || persona.logo_url} alt="" className="h-4 w-4 object-contain rounded" />
+                          ) : (
+                            <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          )}
+                          <span>{persona.name || persona.personaName || persona.persona_name || "Unnamed Persona"}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="logoPlacement">Company Logo Overlay Placement</Label>
+                <Select value={logoPlacement} onValueChange={setLogoPlacement} disabled={isPolling}>
+                  <SelectTrigger id="logoPlacement">
+                    <Layers className="w-4 h-4 mr-1 text-muted-foreground" />
+                    <SelectValue placeholder="Watermark Position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOGO_PLACEMENTS.map((placement) => (
+                      <SelectItem key={placement.value} value={placement.value}>{placement.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -395,15 +537,46 @@ export default function ImageStudio() {
               ) : generatedImage ? (
                 <div className="w-full flex flex-col items-center gap-4">
                   <div className={`relative border border-border/60 bg-background/50 shadow-inner overflow-hidden flex items-center justify-center p-1 rounded-lg ${getAspectRatioClass()}`}>
-                    <img
-                      src={generatedImage}
-                      alt="Studio Output Visual"
-                      className="w-full h-full object-contain rounded"
-                    />
+                    <img src={generatedImage} alt="Studio output viewport preview" className="w-full h-auto max-h-[500px] object-contain rounded-lg" />
                   </div>
-                  <div className="flex gap-3 w-full max-w-[380px]">
-                    <Button onClick={handleDownload} className="flex-1"><Download className="w-4 h-4 mr-2" /> Download Asset</Button>
-                    <Button onClick={handleReset} variant="outline" className="flex-1"><RefreshCw className="w-4 h-4 mr-2" /> Reset Canvas</Button>
+                  <div className="flex gap-2 w-full max-w-[440px]">
+                    <Button onClick={handleDownload} className="flex-1 gap-1.5"><Download className="w-4 h-4" /> Download</Button>
+
+                    <div className="relative flex-1">
+                      <Button
+                        onClick={() => setShowSharePopover((v) => !v)}
+                        variant="secondary"
+                        className="w-full gap-1.5"
+                      >
+                        <Share2 className="w-4 h-4" /> Share Asset
+                      </Button>
+                      {showSharePopover && (
+                        <div className="absolute bottom-full mb-2 left-0 right-0 bg-background border border-border rounded-lg shadow-lg p-2 space-y-1 z-10">
+                          {Object.entries(
+                            getShareLinks(generatedImage, `Check out this asset I made: ${prompt}`)
+                          ).map(([platformName, url]) => (
+                            <a
+                              key={platformName}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setShowSharePopover(false)}
+                              className="block w-full text-left text-sm px-3 py-2 rounded-md capitalize transition-colors hover:bg-primary hover:text-primary-foreground"
+                            >
+                              {platformName}
+                            </a>
+                          ))}
+                          <button
+                            onClick={handleCopyLink}
+                            className="block w-full text-left text-sm px-3 py-2 rounded-md transition-colors hover:bg-primary hover:text-primary-foreground"
+                          >
+                            Copy link
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button onClick={handleReset} variant="outline" className="px-3"><RefreshCw className="w-4 h-4" /></Button>
                   </div>
                 </div>
               ) : pollingStatus === 'failed' ? (
@@ -435,7 +608,7 @@ export default function ImageStudio() {
         }}
         title="Confirm Custom Studio Generation"
         description="High-fidelity image canvas compiling can utilize up to 2-3 minutes of render cluster time. Please maintain this viewport session active."
-        confirmLabel="Initialize Render Pipeline"
+        confirmLabel="Generate Image"
       />
     </div>
   );

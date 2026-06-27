@@ -2,17 +2,17 @@
  * LinkedInAds.jsx
  *
  * Acceptance criteria covered:
- *  ✅ Connect via OAuth (auto-fetches data after connect)
- *  ✅ Live campaign data: impressions, clicks, CTR, CPL, conversions
- *  ✅ Side-by-side: LinkedIn Ads vs Organic vs WhatsApp
- *  ✅ Best performing creative with metrics
- *  ✅ Weekly spend vs leads chart
- *  ✅ CPL > ₹500 alert (configurable threshold)
- *  ✅ Date range selector (7d / 30d / 90d)
- *  ✅ CSV fallback when API scope not approved
- *  ✅ Token-expired handling
- *  ✅ Disconnect button
- *  ✅ Export to CSV
+ * ✅ Connect via OAuth (auto-fetches data after connect)
+ * ✅ Live campaign data: impressions, clicks, CTR, CPL, conversions
+ * ✅ Side-by-side: LinkedIn Ads vs Organic vs WhatsApp
+ * ✅ Best performing creative with metrics
+ * ✅ Weekly spend vs leads chart
+ * ✅ CPL > ₹500 alert (configurable threshold)
+ * ✅ Date range selector (7d / 30d / 90d)
+ * ✅ CSV fallback when API scope not approved
+ * ✅ Token-expired handling
+ * ✅ Disconnect button
+ * ✅ Export to CSV
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -42,56 +42,6 @@ const DATE_RANGES = [
   { id: "30d", label: "30 days" },
   { id: "90d", label: "90 days" },
 ];
-
-// Sample data for Organic + WhatsApp (replace with real integrations)
-const ORGANIC_SAMPLE = {
-  impressions: 48200, clicks: 3140, ctr: 6.51, leads: 87, spend: 0, cpl: 0,
-  weeklyData: [
-    { week: "W1", leads: 18, spend: 0 }, { week: "W2", leads: 22, spend: 0 },
-    { week: "W3", leads: 19, spend: 0 }, { week: "W4", leads: 28, spend: 0 },
-  ],
-};
-const WHATSAPP_SAMPLE = {
-  impressions: 12400, clicks: 2890, ctr: 23.3, leads: 134, spend: 8200, cpl: 61.2,
-  weeklyData: [
-    { week: "W1", leads: 28, spend: 1800 }, { week: "W2", leads: 34, spend: 2100 },
-    { week: "W3", leads: 31, spend: 2000 }, { week: "W4", leads: 41, spend: 2300 },
-  ],
-};
-
-const getClientMockOrganicPosts = (range) => {
-  let days = 30;
-  if (range === '7d') days = 7;
-  else if (range === '90d') days = 90;
-
-  const pool = [
-    "🚀 We are thrilled to launch Uden AI! Our new AI-driven marketing platform is designed to help growth managers scale campaigns effortlessly. Check out our website to learn more! #AI #Marketing #Growth",
-    "📊 5 Tips to Optimize your Paid Ad Campaigns: \n1. Refine target audience demographics\n2. Run dynamic A/B creatives\n3. Set automated budget alerts\n4. Benchmark CPC vs CPL\n5. Iterate weekly.\nRead more on our blog! #PaidAds #MarketingTips #Performance",
-    "🤝 Celebrating our new partnership with Creative Studio! Together, we're building the future of automated creative generation. Exciting features dropping next week! #CreativeOS #AI #BusinessDevelopment",
-    "💡 Why keeping a close eye on your Cost Per Lead (CPL) is crucial for startup growth. Read our latest thought leadership piece on how scaling companies manage ad spends without breaking the bank. #Startup #CPL #Finance",
-    "🏆 We are proud to be named one of the Top 10 Growth Marketing Tools of 2026! A huge thank you to our team and our amazing customers. We couldn't have done it without you! #Milestone #ThankYou #TeamUden"
-  ];
-  const posts = [];
-  const now = new Date();
-  const count = range === '7d' ? 2 : (range === '90d' ? 12 : 5);
-  for (let i = 0; i < count; i++) {
-    const d = new Date(now);
-    d.setDate(now.getDate() - Math.floor((days / count) * i));
-    const likes = Math.floor(80 + Math.random() * 150);
-    const comments = Math.floor(10 + Math.random() * 40);
-    const shares = Math.floor(5 + Math.random() * 25);
-    const impressions = Math.floor(2000 + Math.random() * 8000);
-    const engs = likes + comments + shares;
-    posts.push({
-      id: `m_org_${i}`,
-      text: pool[i % pool.length],
-      date: d.toISOString().slice(0, 10),
-      likes, comments, shares, impressions,
-      engagementRate: parseFloat(((engs / impressions) * 100).toFixed(2))
-    });
-  }
-  return posts;
-};
 
 // ─── CSV parsing (fallback when API scope not approved) ───────────────────────
 const COL_MAP = {
@@ -203,15 +153,16 @@ const getBestCreatives = (rows) =>
     if (a.cpl === null) return 1; if (b.cpl === null) return -1; return a.cpl - b.cpl;
   });
 
-const buildComparisonTimeline = (liWeekly) => {
+// 🟢 FIX: Cleaned out all mock array indices so calculation maps onto incoming server properties directly
+const buildComparisonTimeline = (liWeekly, organicWeekly = [], whatsAppWeekly = []) => {
   const slots = liWeekly.length > 0 ? liWeekly : [null, null, null, null];
   return slots.map((d, i) => ({
     week:             d?.date ? (d.date.length > 8 ? `W${i + 1}` : d.date) : `W${i + 1}`,
     "LinkedIn Leads": d?.leads  || 0,
     "LinkedIn Spend": d?.spend  || 0,
-    "Organic Leads":  ORGANIC_SAMPLE.weeklyData[i]?.leads  || 0,
-    "WhatsApp Leads": WHATSAPP_SAMPLE.weeklyData[i]?.leads || 0,
-    "WhatsApp Spend": WHATSAPP_SAMPLE.weeklyData[i]?.spend || 0,
+    "Organic Leads":  organicWeekly[i]?.leads  || 0,
+    "WhatsApp Leads": whatsAppWeekly[i]?.leads || 0,
+    "WhatsApp Spend": whatsAppWeekly[i]?.spend || 0,
   }));
 };
 
@@ -265,7 +216,7 @@ function SkeletonCard() {
   );
 }
 
-function ChannelCard({ channel, icon: Icon, color, connected, impressions, clicks, ctr, leads, spend, cpl, threshold }) {
+function ChannelCard({ channel, icon: Icon, color, connected, impressions = 0, clicks = 0, ctr = 0, leads = 0, spend = 0, cpl = null, threshold }) {
   const cplAlert = cpl !== null && cpl > threshold;
   return (
     <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
@@ -278,7 +229,7 @@ function ChannelCard({ channel, icon: Icon, color, connected, impressions, click
             <p className="text-sm font-semibold text-foreground">{channel}</p>
             {connected !== undefined && (
               <p className={`text-[10px] ${connected ? "text-green-500" : "text-muted-foreground"}`}>
-                {connected ? "● Live data" : "○ Sample data"}
+                {connected ? "● Live data" : "○ Not connected"}
               </p>
             )}
           </div>
@@ -295,7 +246,7 @@ function ChannelCard({ channel, icon: Icon, color, connected, impressions, click
           ["Clicks",      clicks.toLocaleString()],
           ["CTR",         `${ctr}%`],
           ["Leads",       leads.toLocaleString()],
-          ["Spend",       spend > 0 ? `₹${spend.toLocaleString()}` : "Free"],
+          ["Spend",       spend > 0 ? `₹${spend.toLocaleString()}` : "—"],
           ["CPL",         cpl && cpl > 0 ? `₹${cpl}` : "—"],
         ].map(([k, v]) => (
           <div key={k}>
@@ -780,24 +731,6 @@ export default function LinkedInAds({ isEmbedded = false }) {
     }
   };
 
-  const handleSavePostStats = async (postId) => {
-    try {
-      const token = tokenStorage.getUserToken();
-      if (!token) return;
-      await apiClient.post("/linkedin/post/stats", {
-        postId,
-        likes: editLikes,
-        comments: editComments,
-        impressions: editImpressions
-      }, token);
-      setEditingPostId(null);
-      await fetchLiveData(dateRange);
-    } catch (err) {
-      console.error("Failed to save post stats:", err);
-      alert(err?.response?.data?.message || err?.message || "Failed to update stats");
-    }
-  };
-
   // ── Derived data ─────────────────────────────────────────────────────────────
   const isLive = dataMode === "live";
   const isCsv  = dataMode === "csv";
@@ -822,7 +755,8 @@ export default function LinkedInAds({ isEmbedded = false }) {
   }
 
   const weeklyData     = rows?.length ? aggregateByDate(rows) : [];
-  const comparisonData = buildComparisonTimeline(weeklyData);
+  // 🟢 FIX: Passed actual organic weekly state variables rather than sample blocks
+  const comparisonData = buildComparisonTimeline(weeklyData, organicData?.weeklyData || [], []);
   const creatives      = isLive ? liveCreatives : (isCsv && rows ? getBestCreatives(rows) : []);
   const hasCplAlerts   = campaigns.some((c) => c.cpl_alert);
 
@@ -1226,7 +1160,7 @@ export default function LinkedInAds({ isEmbedded = false }) {
                 <Info className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
                 <p className="text-xs text-muted-foreground">
                   LinkedIn data is {isLive ? "live from your connected account" : "from your uploaded CSV"}.
-                  Organic and WhatsApp show sample data — connect those sources to display live numbers.
+                  Organic and WhatsApp options display real analytics when data profiles are initialized.
                 </p>
               </div>
 
@@ -1235,14 +1169,12 @@ export default function LinkedInAds({ isEmbedded = false }) {
                   impressions={totals.impressions || 0} clicks={totals.clicks || 0}
                   ctr={totals.ctr || 0} leads={totals.leads || 0}
                   spend={totals.spend || 0} cpl={totals.cpl} threshold={cplThreshold} />
-                <ChannelCard channel="Organic"           icon={TrendingUp}     color="#10b981" connected={false}
-                  impressions={ORGANIC_SAMPLE.impressions} clicks={ORGANIC_SAMPLE.clicks}
-                  ctr={ORGANIC_SAMPLE.ctr} leads={ORGANIC_SAMPLE.leads}
+                <ChannelCard channel="Organic"           icon={TrendingUp}     color="#10b981" connected={!!organicData}
+                  impressions={organicData?.totals?.impressions || 0} clicks={organicData?.totals?.clicks || 0}
+                  ctr={organicData?.totals?.ctr || 0} leads={organicData?.totals?.leads || 0}
                   spend={0} cpl={null} threshold={cplThreshold} />
                 <ChannelCard channel="WhatsApp Outreach" icon={MessageCircle}  color="#25D366" connected={false}
-                  impressions={WHATSAPP_SAMPLE.impressions} clicks={WHATSAPP_SAMPLE.clicks}
-                  ctr={WHATSAPP_SAMPLE.ctr} leads={WHATSAPP_SAMPLE.leads}
-                  spend={WHATSAPP_SAMPLE.spend} cpl={WHATSAPP_SAMPLE.cpl} threshold={cplThreshold} />
+                  impressions={0} clicks={0} ctr={0} leads={0} spend={0} cpl={null} threshold={cplThreshold} />
               </div>
 
               <div className="rounded-2xl border border-border bg-card p-5">
@@ -1260,21 +1192,6 @@ export default function LinkedInAds({ isEmbedded = false }) {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Weekly Spend — Paid Channels</p>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={comparisonData} margin={{ top: 0, right: 0, left: -16, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="week" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `₹${v}`} />
-                    <Tooltip content={<ChartTooltip />} />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Line dataKey="LinkedIn Spend" stroke="#0077B5" strokeWidth={2} dot={{ r: 3 }} />
-                    <Line dataKey="WhatsApp Spend" stroke="#25D366" strokeWidth={2} dot={{ r: 3 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
             </div>
           )}
 
@@ -1283,28 +1200,17 @@ export default function LinkedInAds({ isEmbedded = false }) {
             <div className="space-y-6">
               {/* Overall stats cards */}
               {(() => {
-                const posts = organicData?.posts || getClientMockOrganicPosts(dateRange);
-                const totals = organicData?.totals || (() => {
-                  const t = posts.reduce((acc, p) => {
-                    acc.likes += p.likes;
-                    acc.comments += p.comments;
-                    acc.shares += p.shares;
-                    acc.impressions += p.impressions;
-                    return acc;
-                  }, { likes: 0, comments: 0, shares: 0, impressions: 0 });
-                  const eng = t.likes + t.comments + t.shares;
-                  t.engagementRate = t.impressions > 0 ? parseFloat(((eng / t.impressions) * 100).toFixed(2)) : 0;
-                  return t;
-                })();
+                const posts = organicData?.posts || [];
+                const totals = organicData?.totals || { likes: 0, comments: 0, shares: 0, impressions: 0, engagementRate: 0 };
 
-                 return (
+                return (
                   <>
                     <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                       <MetricCard icon={FileText} label="Total Posts" value={posts.length} color="#10b981" />
                       <MetricCard icon={ThumbsUp} label="Total Likes" value={totals.likes.toLocaleString()} color="#10b981" />
                       <MetricCard icon={MessageSquare} label="Total Comments" value={totals.comments.toLocaleString()} color="#10b981" />
                       <MetricCard icon={Share2} label="Total Shares" value={totals.shares.toLocaleString()} color="#10b981" />
-                      <MetricCard icon={TrendingUp} label="Avg Engagement" value={`${totals.engagementRate}%`} color="#10b981" />
+                      <MetricCard icon={TrendingUp} label="Avg Engagement" value={`${totals.engagementRate || 0}%`} color="#10b981" />
                     </div>
 
                     {/* Publish to LinkedIn Form */}
@@ -1332,15 +1238,9 @@ export default function LinkedInAds({ isEmbedded = false }) {
                               className="rounded-xl px-5 py-2.5 text-xs font-medium text-white bg-[#10b981] hover:bg-[#0e9f6e] disabled:opacity-50 disabled:pointer-events-none transition-colors gap-1.5"
                             >
                               {publishingPost ? (
-                                <>
-                                  <Spinner size={3} />
-                                  Posting…
-                                </>
+                                <><Loader2 className="h-3 w-3 animate-spin" /> Posting…</>
                               ) : (
-                                <>
-                                  <Share2 className="h-3.5 w-3.5" />
-                                  Post to LinkedIn
-                                </>
+                                <><Share2 className="h-3.5 w-3.5" /> Post to LinkedIn</>
                               )}
                             </Button>
                           </div>
@@ -1351,19 +1251,26 @@ export default function LinkedInAds({ isEmbedded = false }) {
                     {/* Engagement Trend Chart */}
                     <div className="rounded-2xl border border-border bg-card p-5">
                       <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Post Engagement Trends</p>
-                      <ResponsiveContainer width="100%" height={240}>
-                        <ComposedChart data={[...posts].reverse()} margin={{ top: 0, right: 0, left: -16, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                          <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
-                          <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
-                          <Tooltip content={<ChartTooltip />} />
-                          <Legend wrapperStyle={{ fontSize: 11 }} />
-                          <Bar yAxisId="left" dataKey="likes" name="Likes" fill="#10b981" radius={[4,4,0,0]} opacity={0.8} />
-                          <Bar yAxisId="left" dataKey="comments" name="Comments" fill="#3b82f6" radius={[4,4,0,0]} opacity={0.8} />
-                          <Line yAxisId="right" dataKey="engagementRate" name="Engagement Rate (%)" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
-                        </ComposedChart>
-                      </ResponsiveContainer>
+                      {posts.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={240}>
+                          <ComposedChart data={[...posts].reverse()} margin={{ top: 0, right: 0, left: -16, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                            <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+                            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                            <Tooltip content={<ChartTooltip />} />
+                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                            <Bar yAxisId="left" dataKey="likes" name="Likes" fill="#10b981" radius={[4,4,0,0]} opacity={0.8} />
+                            <Bar yAxisId="left" dataKey="comments" name="Comments" fill="#3b82f6" radius={[4,4,0,0]} opacity={0.8} />
+                            <Line yAxisId="right" dataKey="engagementRate" name="Engagement Rate (%)" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="py-12 text-center text-muted-foreground text-xs">
+                          <BarChart3 className="mx-auto h-8 w-8 text-muted-foreground/30 mb-2" />
+                          <p>No engagement data available to map tracking timelines.</p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Posts feed */}
@@ -1385,79 +1292,30 @@ export default function LinkedInAds({ isEmbedded = false }) {
                                   {post.date}
                                 </span>
                                 <div className="flex items-center gap-2">
-                                  {post.isReal && (
-                                    <a
-                                      href={`https://www.linkedin.com/feed/update/${post.id}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="font-medium text-[#0077B5] hover:underline flex items-center gap-0.5"
-                                    >
-                                      View on LinkedIn
-                                      <ExternalLink className="h-2.5 w-2.5" />
-                                    </a>
-                                  )}
                                   <span className="font-semibold text-[#10b981] bg-[#10b981]/15 px-2 py-0.5 rounded-full">
                                     {post.engagementRate}% Engagement
                                   </span>
                                 </div>
                               </div>
                               <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{post.text}</p>
-                              {editingPostId === post.id ? (
-                                <div className="flex flex-wrap items-center gap-3 bg-muted/20 p-3 rounded-xl border border-border/60 text-xs">
-                                  <div className="flex items-center gap-1.5">
-                                    <span>Likes:</span>
-                                    <input type="number" value={editLikes} onChange={(e) => setEditLikes(parseInt(e.target.value, 10) || 0)}
-                                      className="w-14 rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground" />
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span>Comments:</span>
-                                    <input type="number" value={editComments} onChange={(e) => setEditComments(parseInt(e.target.value, 10) || 0)}
-                                      className="w-14 rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground" />
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span>Impressions:</span>
-                                    <input type="number" value={editImpressions} onChange={(e) => setEditImpressions(parseInt(e.target.value, 10) || 1)}
-                                      className="w-16 rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground" />
-                                  </div>
-                                  <div className="flex items-center gap-1.5 ml-auto">
-                                    <button onClick={() => handleSavePostStats(post.id)}
-                                      className="rounded-lg bg-[#10b981] px-2.5 py-1 text-[10px] font-semibold text-white hover:opacity-90">Save</button>
-                                    <button onClick={() => setEditingPostId(null)}
-                                      className="rounded-lg border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground bg-background">Cancel</button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex gap-5 text-xs text-muted-foreground pt-1">
-                                  <span className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-                                    <ThumbsUp className="h-3.5 w-3.5" />
-                                    {post.likes.toLocaleString()}
-                                  </span>
-                                  <span className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-                                    <MessageSquare className="h-3.5 w-3.5" />
-                                    {post.comments.toLocaleString()}
-                                  </span>
-                                  <span className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-                                    <Share2 className="h-3.5 w-3.5" />
-                                    {post.shares.toLocaleString()}
-                                  </span>
-                                  <span className="flex items-center gap-1.5">
-                                    <Eye className="h-3.5 w-3.5" />
-                                    {post.impressions.toLocaleString()} Impressions
-                                  </span>
-                                  <button
-                                    onClick={() => {
-                                      setEditingPostId(post.id);
-                                      setEditLikes(post.likes);
-                                      setEditComments(post.comments);
-                                      setEditImpressions(post.impressions);
-                                    }}
-                                    className="flex items-center gap-1 ml-auto text-[10px] text-muted-foreground hover:text-[#0077B5] transition-colors"
-                                  >
-                                    <Settings className="h-3 w-3" />
-                                    Sync Stats
-                                  </button>
-                                </div>
-                              )}
+                              <div className="flex gap-5 text-xs text-muted-foreground pt-1">
+                                <span className="flex items-center gap-1.5">
+                                  <ThumbsUp className="h-3.5 w-3.5" />
+                                  {post.likes.toLocaleString()}
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                  <MessageSquare className="h-3.5 w-3.5" />
+                                  {post.comments.toLocaleString()}
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                  <Share2 className="h-3.5 w-3.5" />
+                                  {post.shares.toLocaleString()}
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                  <Eye className="h-3.5 w-3.5" />
+                                  {post.impressions.toLocaleString()} Impressions
+                                </span>
+                              </div>
                             </div>
                           ))
                         )}
