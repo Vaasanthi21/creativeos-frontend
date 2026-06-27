@@ -3,7 +3,10 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import { GenerationJobsProvider } from './contexts/GenerationJobsContext';
+import { TaskProvider } from './context/TaskContext';
 import MainLayout from './components/layout/MainLayout';
+import { BrandSetup } from './pages/BrandSetup';
+import { BlogStudio } from './pages/BlogStudio';
 import Generate from './pages/Generate';
 import History from './pages/History';
 import Settings from './pages/Settings';
@@ -96,6 +99,8 @@ const AuthenticatedApp = () => {
         <Route path="/ambassador" element={<AmbassadorPortal />} />
         <Route path="/wallet" element={<WalletPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/brand-setup" element={<BrandSetup />} />
+        <Route path="/blog-studio" element={<BlogStudio />} />
       </Route>
 
       <Route path="/register" element={<Register />} />
@@ -130,9 +135,11 @@ function AppShell() {
   return (
     <>
       <GenerationJobsProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <AuthenticatedApp />
-        </Router>
+        <TaskProvider>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <AuthenticatedApp />
+          </Router>
+        </TaskProvider>
       </GenerationJobsProvider>
       <Toaster />
     </>

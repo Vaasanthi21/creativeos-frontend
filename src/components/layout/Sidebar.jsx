@@ -20,14 +20,16 @@ import {
   Video,
   Wallet,
   X, // 🚀 Added close icon token
+  BookOpen,
 } from "lucide-react";
 import { getPersonaById } from "@/lib/personas";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/AuthContext";
 
 const navItems = [
-  { icon: Sparkles, label: "Generate", path: "/" },
-  { icon: Building2, label: "Company Personas", path: "/personas" },
+  { icon: Sparkles, label: "Content Studio", path: "/" },
+  { icon: Building2, label: "Brand Setup", path: "/brand-setup" },
+  { icon: BookOpen, label: "Blog Studio", path: "/blog-studio" },
   { icon: Clock, label: "History", path: "/history" },
   { icon: Camera, label: "Image Studio", path: "/image-studio" },
   { icon: Video, label: "Video Studio", path: "/video-studio" },

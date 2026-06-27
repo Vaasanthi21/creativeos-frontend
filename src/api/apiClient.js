@@ -4,10 +4,11 @@ const SUPERADMIN_TOKEN_KEY = 'creative_studio_superadmin_token';
 
 function buildAuthHeaders(token, extraHeaders = {}) {
   const headers = { ...(extraHeaders || {}) };
+  const activeToken = token || tokenStorage.getUserToken();
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-    headers['X-Auth-Token'] = token;
+  if (activeToken) {
+    headers.Authorization = `Bearer ${activeToken}`;
+    headers['X-Auth-Token'] = activeToken;
   }
 
   return headers;
