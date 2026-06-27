@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Sparkles, Download, RefreshCw, Camera, Layers, Sliders, Flame, Wand2, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Sparkles, Download, RefreshCw, Camera, Layers, Sliders, Flame, Wand2, Maximize2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { addHistoryEntry } from '@/services/aiService';
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
@@ -30,7 +30,13 @@ const LIGHTING_MODES = [
   { value: 'dramatic', label: 'Dramatic Chiaroscuro' },
 ];
 
-const IMAGE_STAGE_ESTIMATES_MS = 180000; // Matches core image 180000ms allocation
+const ASPECT_RATIOS = [
+  { value: '1:1', label: 'Square (1:1) - Post' },
+  { value: '16:9', label: 'Landscape (16:9) - Desktop' },
+  { value: '9:16', label: 'Portrait (9:16) - Mobile/Stories' },
+];
+
+const IMAGE_STAGE_ESTIMATES_MS = 180000;
 
 const formatRemainingTime = (milliseconds) => {
   const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
@@ -44,6 +50,7 @@ export default function ImageStudio() {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('realistic');
   const [lighting, setLighting] = useState('cinematic');
+  const [aspectRatio, setAspectRatio] = useState('1:1');
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStatus, setPollingStatus] = useState(null);
@@ -77,6 +84,8 @@ export default function ImageStudio() {
       const response = await startAsyncImageGeneration({
         topic: finalBuiltPrompt,
         style: params.style,
+        aspectRatio: params.aspectRatio,      // Main parameter format requested by Neeta
+        aspect_ratio: params.aspectRatio,     // Secondary snake_case fallback configuration
       });
       return response;
     },
@@ -109,7 +118,7 @@ export default function ImageStudio() {
                 variants: [{
                   content: prompt,
                   image_url: imageUrl,
-                  title: `${style.toUpperCase()} Studio Design`
+                  title: `${style.toUpperCase()} Studio Design (${aspectRatio})`
                 }],
                 status: "completed"
               };
@@ -150,8 +159,9 @@ export default function ImageStudio() {
       prompt: prompt.trim(),
       style: style,
       lighting: lighting,
+      aspectRatio: aspectRatio
     });
-  }, [prompt, style, lighting, generateMutation]);
+  }, [prompt, style, lighting, aspectRatio, generateMutation]);
 
   const handleGenerateClick = () => {
     if (!prompt.trim()) return;
@@ -203,6 +213,13 @@ export default function ImageStudio() {
     setPrompt('');
     setPollingStatus(null);
     setStageStartedAt(null);
+  };
+
+  // Helper utility function to dynamically adjust preview container orientation
+  const getAspectRatioClass = () => {
+    if (aspectRatio === '16:9') return 'aspect-[16/9] w-full max-w-[440px]';
+    if (aspectRatio === '9:16') return 'aspect-[9/16] h-[380px] w-auto';
+    return 'aspect-square w-full max-w-[380px]';
   };
 
   return (
@@ -264,9 +281,24 @@ export default function ImageStudio() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="aspectRatio">Canvas Layout Dimensions</Label>
+                <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={isPolling}>
+                  <SelectTrigger id="aspectRatio">
+                    <Maximize2 className="w-4 h-4 mr-1 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ASPECT_RATIOS.map((ratio) => (
+                      <SelectItem key={ratio.value} value={ratio.value}>{ratio.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="lighting">Studio Illumination</Label>
                 <Select value={lighting} onValueChange={setLighting} disabled={isPolling}>
-                  <SelectTrigger>
+                  <SelectTrigger id="lighting">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -280,7 +312,7 @@ export default function ImageStudio() {
               <div className="space-y-2">
                 <Label htmlFor="style">Artistic Profile Style</Label>
                 <Select value={style} onValueChange={setStyle} disabled={isPolling}>
-                  <SelectTrigger>
+                  <SelectTrigger id="style">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -315,13 +347,11 @@ export default function ImageStudio() {
             </CardHeader>
             <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[440px] bg-muted/10 rounded-b-xl p-6">
               {isPolling || generateMutation.isPending ? (
-                /* Dynamic Progress Wrapper matched directly to the core dashboard workflow metrics */
                 <div className="w-full space-y-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
                       <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5 relative">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        {/* 🚀 Added glowing, floating layout asset animation micro-icon */}
                         <span className="absolute inset-0 flex items-center justify-center animate-pulse text-[9px] font-bold">✨</span>
                       </div>
                       <div>
@@ -347,7 +377,6 @@ export default function ImageStudio() {
                     </div>
                   </div>
 
-                  {/* 🟢 Synchronized 3-Step Pipeline Blocks */}
                   <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4 grid-cols-3 mt-2">
                     <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'preparing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 1</p>
@@ -365,14 +394,14 @@ export default function ImageStudio() {
                 </div>
               ) : generatedImage ? (
                 <div className="w-full flex flex-col items-center gap-4">
-                  <div className="relative border border-border/60 bg-background/50 shadow-inner overflow-hidden flex items-center justify-center p-1 w-full aspect-square max-w-[380px]">
+                  <div className={`relative border border-border/60 bg-background/50 shadow-inner overflow-hidden flex items-center justify-center p-1 rounded-lg ${getAspectRatioClass()}`}>
                     <img
                       src={generatedImage}
                       alt="Studio Output Visual"
-                      className="w-full h-full object-cover rounded"
+                      className="w-full h-full object-contain rounded"
                     />
                   </div>
-                  <div className="flex gap-3 w-full">
+                  <div className="flex gap-3 w-full max-w-[380px]">
                     <Button onClick={handleDownload} className="flex-1"><Download className="w-4 h-4 mr-2" /> Download Asset</Button>
                     <Button onClick={handleReset} variant="outline" className="flex-1"><RefreshCw className="w-4 h-4 mr-2" /> Reset Canvas</Button>
                   </div>
