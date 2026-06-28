@@ -15,6 +15,9 @@ export async function startAsyncImageGeneration(params) {
     topic: params?.topic || '',
     aspectRatio: params?.aspectRatio || null,
     style: params?.style || null,
+    companyPersona: params?.companyPersona || null,
+    logoPlacement: params?.logoPlacement || null,
+    logo_placement: params?.logo_placement || null,
     async: true 
   }, token);
   
