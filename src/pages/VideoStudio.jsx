@@ -41,7 +41,12 @@ const ASPECT_RATIOS = [
 ];
 
 const LOGO_PLACEMENTS = [
-  { value: 'persona_default', label: 'Persona Default' },
+  // NOTE: value must be 'persona-default' (hyphen) to match the backend's
+  // exact string check (logoPlacement === 'persona-default') in index.js.
+  // Using underscore here previously caused the persona's actual saved
+  // placement to be silently ignored.
+  { value: 'persona-default', label: 'Persona Default' },
+  { value: 'none', label: 'No logo' },
   { value: 'top_left', label: 'Top Left' },
   { value: 'top_right', label: 'Top Right' },
   { value: 'bottom_left', label: 'Bottom Left' },
@@ -79,7 +84,7 @@ export default function VideoStudio() {
   const [platform, setPlatform] = useState('instagram');
   const [style, setStyle] = useState('cinematic');
   const [aspectRatio, setAspectRatio] = useState('9:16'); 
-  const [logoPlacement, setLogoPlacement] = useState('persona_default');
+  const [logoPlacement, setLogoPlacement] = useState('persona-default');
   const [selectedPersona, setSelectedPersona] = useState(''); 
   const [showSharePopover, setShowSharePopover] = useState(false);
   
@@ -525,7 +530,7 @@ export default function VideoStudio() {
 
               <div className="space-y-2">
                 <Label htmlFor="logoPlacement" className="flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-muted-foreground" /> Company Logo Overlay Placement
+                  <Layers className="w-3.5 h-3.5 text-muted-foreground" /> Watermark Overlay Placement
                 </Label>
                 <Select value={logoPlacement} onValueChange={setLogoPlacement} disabled={generateMutation.isPending || isPolling}>
                   <SelectTrigger id="logoPlacement"><SelectValue placeholder="Select logo placement" /></SelectTrigger>

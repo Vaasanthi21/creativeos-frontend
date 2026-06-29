@@ -14,6 +14,13 @@ import { apiClient, tokenStorage } from '@/api/apiClient';
 import { addHistoryEntry } from '@/services/aiService';
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 
+const PLATFORMS = [
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'facebook', label: 'Facebook' },
+];
+
 const IMAGE_STYLES = [
   { value: 'realistic', label: 'Realistic Cinematic' },
   { value: 'illustration', label: 'Vector Illustration' },
@@ -40,7 +47,12 @@ const ASPECT_RATIOS = [
 ];
 
 const LOGO_PLACEMENTS = [
-  { value: 'persona_default', label: 'Persona Default' },
+  // NOTE: value must be 'persona-default' (hyphen) to match the backend's
+  // exact string check (logoPlacement === 'persona-default') in index.js.
+  // Using underscore here previously caused the persona's actual saved
+  // placement to be silently ignored.
+  { value: 'persona-default', label: 'Persona Default' },
+  { value: 'none', label: 'No logo' },
   { value: 'top_left', label: 'Top Left' },
   { value: 'top_right', label: 'Top Right' },
   { value: 'bottom_left', label: 'Bottom Left' },
@@ -74,9 +86,10 @@ const getShareLinks = (imageUrl, caption) => {
 export default function ImageStudio() {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('realistic');
+  const [platform, setPlatform] = useState('instagram');
   const [lighting, setLighting] = useState('cinematic');
   const [aspectRatio, setAspectRatio] = useState('1:1');
-  const [logoPlacement, setLogoPlacement] = useState('persona_default'); 
+  const [logoPlacement, setLogoPlacement] = useState('persona-default'); 
   const [selectedPersona, setSelectedPersona] = useState(''); 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSharePopover, setShowSharePopover] = useState(false);
@@ -209,6 +222,7 @@ export default function ImageStudio() {
       const response = await startAsyncImageGeneration({
         topic: finalBuiltPrompt,
         style: params.style,
+        platform: params.platform,
         aspectRatio: params.aspectRatio,      
         aspect_ratio: params.aspectRatio,     
         companyPersona: companyPersonaPayload,
@@ -245,10 +259,11 @@ export default function ImageStudio() {
       style: style,
       lighting: lighting,
       aspectRatio: aspectRatio,
+      platform: platform,
       personaObject: selectedPersonaObject,
       logoPlacement: logoPlacement 
     });
-  }, [prompt, style, lighting, aspectRatio, selectedPersonaObject, logoPlacement, generateMutation]);
+  }, [prompt, style, lighting, aspectRatio, platform, selectedPersonaObject, logoPlacement, generateMutation]);
 
   const handleGenerateClick = () => {
     if (!prompt.trim()) return;
@@ -387,6 +402,16 @@ export default function ImageStudio() {
                   className="min-h-[140px] resize-none"
                   disabled={isPolling}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="platform">Target Platform Layout</Label>
+                <Select value={platform} onValueChange={setPlatform} disabled={isPolling}>
+                  <SelectTrigger id="platform"><SelectValue placeholder="Select network shell" /></SelectTrigger>
+                  <SelectContent>
+                    {PLATFORMS.map((p) => (<SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

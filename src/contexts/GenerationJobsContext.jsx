@@ -1,34 +1,27 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 
 // Shared state for in-flight image/video generation jobs.
 // Mount <GenerationJobsProvider> ABOVE your <Routes>/router in App.jsx so it does
 // NOT unmount when the user navigates between Image Studio, Video Studio, etc.
 // Each studio page calls useGenerationJobs() instead of keeping isPolling /
-// pollingStatus / stageStartedAt as local useState - that's the only structural
-// change needed for generation to survive navigating away and back.
+// pollingStatus / stageStartedAt as local useState.
+//
+// IMPORTANT: this is intentionally in-memory only (plain useState, no
+// localStorage/sessionStorage). That gives us exactly the behavior we want:
+//   - Survives navigating between pages in-app (provider stays mounted,
+//     since it sits above the router and React Router never reloads the page)
+//   - Does NOT survive a hard refresh (the whole JS app restarts from
+//     scratch on reload, so this state naturally resets - no extra code
+//     needed to "clear on refresh", it's just the default behavior of
+//     in-memory state)
+// Do not add localStorage/sessionStorage persistence back without checking
+// with the team first - that was intentionally removed because a stale
+// generation surviving a hard refresh was reported as unwanted behavior.
 
 const GenerationJobsContext = createContext(null);
-const STORAGE_KEY = 'creativeos_active_jobs_v1';
-
-const loadPersisted = () => {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-};
 
 export function GenerationJobsProvider({ children }) {
-  const [jobs, setJobs] = useState(loadPersisted);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
-    } catch {
-      // ignore - non-fatal if localStorage is unavailable
-    }
-  }, [jobs]);
+  const [jobs, setJobs] = useState({});
 
   const setJob = useCallback((type, patch) => {
     setJobs((prev) => ({

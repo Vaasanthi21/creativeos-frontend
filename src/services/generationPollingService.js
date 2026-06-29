@@ -13,6 +13,7 @@ export async function startAsyncImageGeneration(params) {
 
   const response = await apiClient.post('/generate-image', { 
     topic: params?.topic || '',
+    platform: params?.platform || null,
     aspectRatio: params?.aspectRatio || null,
     style: params?.style || null,
     companyPersona: params?.companyPersona || null,
