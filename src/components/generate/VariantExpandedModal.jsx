@@ -80,6 +80,8 @@ export default function VariantExpandedModal({
   onClose,
   onExport,
   fullEntry,
+  hideExport = false, // History passes hideExport so Export doesn't show there,
+                       // while Generate.jsx (which doesn't pass this prop) keeps it.
 }) {
   if (!variant) return null;
 
@@ -360,7 +362,7 @@ export default function VariantExpandedModal({
                 Share image
               </Button>
             )}
-            {hasText && (
+            {hasText && !hideExport && (
               <Button
                 variant="outline"
                 size="sm"

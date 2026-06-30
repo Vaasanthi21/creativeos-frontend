@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { startAsyncImageGeneration, createGenerationPoller } from '@/services/generationPollingService';
 import { useGenerationJobs } from '@/contexts/GenerationJobsContext';
+import { buildCompanyPersonaPayload } from '@/utils/personaPayload';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,6 +13,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { apiClient, tokenStorage } from '@/api/apiClient';
 import { addHistoryEntry } from '@/services/aiService';
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
+
+const PLATFORMS = [
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'facebook', label: 'Facebook' },
+];
 
 const IMAGE_STYLES = [
   { value: 'realistic', label: 'Realistic Cinematic' },
@@ -39,7 +47,12 @@ const ASPECT_RATIOS = [
 ];
 
 const LOGO_PLACEMENTS = [
-  { value: 'persona_default', label: 'Persona Default' },
+  // NOTE: value must be 'persona-default' (hyphen) to match the backend's
+  // exact string check (logoPlacement === 'persona-default') in index.js.
+  // Using underscore here previously caused the persona's actual saved
+  // placement to be silently ignored.
+  { value: 'persona-default', label: 'Persona Default' },
+  { value: 'none', label: 'No logo' },
   { value: 'top_left', label: 'Top Left' },
   { value: 'top_right', label: 'Top Right' },
   { value: 'bottom_left', label: 'Bottom Left' },
@@ -49,6 +62,8 @@ const LOGO_PLACEMENTS = [
 
 const IMAGE_STAGE_ESTIMATES_MS = 180000;
 
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/api\/?$/, '');
+
 const formatRemainingTime = (milliseconds) => {
   const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
   if (totalSeconds < 60) return `${totalSeconds}s`;
@@ -57,8 +72,6 @@ const formatRemainingTime = (milliseconds) => {
   return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`;
 };
 
-// Builds platform share-intent URLs. These are plain links (no Web Share API),
-// so they work over HTTP and on desktop, unlike navigator.share.
 const getShareLinks = (imageUrl, caption) => {
   const encodedUrl = encodeURIComponent(imageUrl);
   const encodedText = encodeURIComponent(caption);
@@ -73,18 +86,14 @@ const getShareLinks = (imageUrl, caption) => {
 export default function ImageStudio() {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('realistic');
+  const [platform, setPlatform] = useState('instagram');
   const [lighting, setLighting] = useState('cinematic');
   const [aspectRatio, setAspectRatio] = useState('1:1');
-  const [logoPlacement, setLogoPlacement] = useState('persona_default'); 
-  // 🟢 State tracking hook for the selected company persona ID
+  const [logoPlacement, setLogoPlacement] = useState('persona-default'); 
   const [selectedPersona, setSelectedPersona] = useState(''); 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSharePopover, setShowSharePopover] = useState(false);
 
-  // Job state (isPolling, pollingStatus, stageStartedAt, generatedImage) now lives in
-  // GenerationJobsContext instead of local useState, so it survives navigating away
-  // from this page and back. The variable names below are kept the same as before
-  // so the rest of this component (JSX, handlers) doesn't need to change.
   const { getJob, setJob, clearJob } = useGenerationJobs();
   const imageJob = getJob('image');
 
@@ -96,7 +105,6 @@ export default function ImageStudio() {
 
   const hasResumedRef = useRef(false);
 
-  // 🟢 Dynamic fetch supporting robust unwrapping fallbacks for formatting edge cases
   const { data: personasList, isLoading: loadingPersonas } = useQuery({
     queryKey: ['companyPersonasOverviewList'],
     queryFn: async () => {
@@ -114,13 +122,21 @@ export default function ImageStudio() {
     }
   });
 
-  // 🟢 Effect to fallback assign an initial default persona once the lists load cleanly
   useEffect(() => {
     if (personasList?.length > 0 && !selectedPersona) {
       const defaultActive = personasList.find(p => p.isActive || p.active) || personasList[0];
       setSelectedPersona(defaultActive.id || defaultActive._id);
     }
   }, [personasList, selectedPersona]);
+
+  // Resolve the selected persona ID into its full object. The backend's
+  // /api/generate-image route only reads req.body.companyPersona (a full
+  // object with logoUrl already on it) - it does not look up persona_id
+  // server-side - so we must resolve it to the full object here before
+  // sending, rather than sending the bare ID alone.
+  const selectedPersonaObject = personasList?.find(
+    (p) => (p.id || p._id) === selectedPersona
+  ) || null;
 
   useEffect(() => {
     if (!isPolling || !stageStartedAt) {
@@ -139,9 +155,6 @@ export default function ImageStudio() {
 
   const displayRemainingMs = Math.max(0, IMAGE_STAGE_ESTIMATES_MS - stageElapsedMs);
 
-  // Shared status-handling logic, used both when a generation is freshly started
-  // and when we resume tracking a job that was already in flight (e.g. the user
-  // navigated away from Image Studio and came back while it was still rendering).
   const attachPoller = useCallback((jobId) => {
     createGenerationPoller(
       jobId,
@@ -188,8 +201,6 @@ export default function ImageStudio() {
     );
   }, [prompt, style, aspectRatio, setJob]);
 
-  // On mount: if a job was already in flight when the user navigated away, resume
-  // polling it here instead of starting fresh. Runs once per mount.
   useEffect(() => {
     if (hasResumedRef.current) return;
     hasResumedRef.current = true;
@@ -205,13 +216,17 @@ export default function ImageStudio() {
     mutationFn: async (params) => {
       setJob('image', { pollingStatus: 'preparing' });
       const finalBuiltPrompt = `${params.prompt}, ${params.style} style, ${params.lighting} lighting, ultra-detailed masterwork`;
-      
+
+      const companyPersonaPayload = buildCompanyPersonaPayload(params.personaObject);
+
       const response = await startAsyncImageGeneration({
         topic: finalBuiltPrompt,
         style: params.style,
+        platform: params.platform,
         aspectRatio: params.aspectRatio,      
         aspect_ratio: params.aspectRatio,     
-        persona_id: params.personaId,         // 🟢 Forwarded selected persona parameter fields
+        companyPersona: companyPersonaPayload,
+        logoPlacement: params.logoPlacement,
         logo_placement: params.logoPlacement, 
       });
       return response;
@@ -244,10 +259,11 @@ export default function ImageStudio() {
       style: style,
       lighting: lighting,
       aspectRatio: aspectRatio,
-      personaId: selectedPersona, // 🟢 Passed into core mutation payload
+      platform: platform,
+      personaObject: selectedPersonaObject,
       logoPlacement: logoPlacement 
     });
-  }, [prompt, style, lighting, aspectRatio, selectedPersona, logoPlacement, generateMutation]);
+  }, [prompt, style, lighting, aspectRatio, platform, selectedPersonaObject, logoPlacement, generateMutation]);
 
   const handleGenerateClick = () => {
     if (!prompt.trim()) return;
@@ -257,21 +273,30 @@ export default function ImageStudio() {
   const handleDownload = async () => {
     if (!generatedImage) return;
     try {
-      const response = await fetch(generatedImage, { method: 'GET', mode: 'cors' });
-      if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+      const token = tokenStorage.getUserToken();
+      const filename = `studio-asset-${Date.now()}.png`;
+      const downloadUrl = `${API_ORIGIN}/api/download-asset?url=${encodeURIComponent(generatedImage)}&filename=${encodeURIComponent(filename)}`;
+
+      const response = await fetch(downloadUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'X-Auth-Token': token,
+        },
+      });
+      if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
 
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = `studio-asset-${Date.now()}.png`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('Download failed:', error);
-      // Fallback: open the asset in a new tab so the user can save it manually
       window.open(generatedImage, '_blank', 'noopener,noreferrer');
     }
   };
@@ -290,8 +315,6 @@ export default function ImageStudio() {
     }
 
     if (!success) {
-      // navigator.clipboard is unavailable on plain HTTP origins (non-secure context).
-      // Fall back to the legacy execCommand approach via a hidden textarea.
       const textarea = document.createElement('textarea');
       textarea.value = generatedImage;
       textarea.style.position = 'fixed';
@@ -382,6 +405,16 @@ export default function ImageStudio() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="platform">Target Platform Layout</Label>
+                <Select value={platform} onValueChange={setPlatform} disabled={isPolling}>
+                  <SelectTrigger id="platform"><SelectValue placeholder="Select network shell" /></SelectTrigger>
+                  <SelectContent>
+                    {PLATFORMS.map((p) => (<SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="aspectRatio">Canvas Layout Dimensions</Label>
                 <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={isPolling}>
                   <SelectTrigger id="aspectRatio">
@@ -396,7 +429,6 @@ export default function ImageStudio() {
                 </Select>
               </div>
 
-              {/* 🟢 NEW DYNAMIC INTERACTIVE PERSONA SELECTOR */}
               <div className="space-y-2">
                 <Label htmlFor="companyPersona" className="flex items-center gap-1.5">
                   <Building2 className="w-3.5 h-3.5 text-muted-foreground" /> Active Brand Persona Profile

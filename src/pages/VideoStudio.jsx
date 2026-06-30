@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useGenerationJobs } from '@/contexts/GenerationJobsContext';
+import { buildCompanyPersonaPayload } from '@/utils/personaPayload';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,14 +31,22 @@ const VIDEO_STYLES = [
   { value: 'minimalist', label: 'Clean Editorial Minimalist' },
 ];
 
+// Note: 1:1 (Square) intentionally excluded - Azure Sora's video API only
+// supports '720x1280', '1280x720', '1024x1792', '1792x1024' (all rectangular,
+// no square option exists). Requesting a square size returns a hard error
+// from Azure, so we don't offer it in the UI at all.
 const ASPECT_RATIOS = [
-  { value: '1:1', label: 'Square (1:1)', description: 'Perfect for feed posts' },
   { value: '16:9', label: 'Landscape (16:9)', description: 'Standard widescreen' },
   { value: '9:16', label: 'Portrait (9:16)', description: 'Optimized for Reels & Shorts' }
 ];
 
 const LOGO_PLACEMENTS = [
-  { value: 'persona_default', label: 'Persona Default' },
+  // NOTE: value must be 'persona-default' (hyphen) to match the backend's
+  // exact string check (logoPlacement === 'persona-default') in index.js.
+  // Using underscore here previously caused the persona's actual saved
+  // placement to be silently ignored.
+  { value: 'persona-default', label: 'Persona Default' },
+  { value: 'none', label: 'No logo' },
   { value: 'top_left', label: 'Top Left' },
   { value: 'top_right', label: 'Top Right' },
   { value: 'bottom_left', label: 'Bottom Left' },
@@ -46,6 +56,8 @@ const LOGO_PLACEMENTS = [
 
 const ESTIMATED_TOTAL_MS = 600000; // 10 minutes total video processing allocation
 
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/api\/?$/, '');
+
 const formatRemainingTime = (milliseconds) => {
   const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
   if (totalSeconds < 60) return `${totalSeconds}s`;
@@ -54,17 +66,27 @@ const formatRemainingTime = (milliseconds) => {
   return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`;
 };
 
+// Builds platform share-intent URLs. These are plain links (no Web Share API),
+// so they work over HTTP and on desktop, unlike navigator.share.
+const getShareLinks = (videoUrl, caption) => {
+  const encodedUrl = encodeURIComponent(videoUrl);
+  const encodedText = encodeURIComponent(caption);
+  return {
+    whatsapp: `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+  };
+};
+
 export default function VideoStudio() {
   const [prompt, setPrompt] = useState('');
   const [platform, setPlatform] = useState('instagram');
   const [style, setStyle] = useState('cinematic');
   const [aspectRatio, setAspectRatio] = useState('9:16'); 
-  const [logoPlacement, setLogoPlacement] = useState('persona_default');
+  const [logoPlacement, setLogoPlacement] = useState('persona-default');
   const [selectedPersona, setSelectedPersona] = useState(''); 
-  const [generatedVideo, setGeneratedVideo] = useState(null);
-  const [isPolling, setIsPolling] = useState(false);
-  const [pollingStatus, setPollingStatus] = useState(null);
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [showSharePopover, setShowSharePopover] = useState(false);
   
   const [pan, setPan] = useState(0);
   const [zoom, setZoom] = useState(1);
@@ -77,8 +99,20 @@ export default function VideoStudio() {
   const [volume, setVolume] = useState(1);
   const videoRef = useRef(null);
 
-  const [stageStartedAt, setStageStartedAt] = useState(null);
+  // Job state (isPolling, pollingStatus, stageStartedAt, generatedVideo, errorMessage)
+  // now lives in GenerationJobsContext instead of local useState, so it survives
+  // navigating away from this page and back, same pattern as ImageStudio.jsx.
+  const { getJob, setJob, clearJob } = useGenerationJobs();
+  const videoJob = getJob('video');
+
+  const generatedVideo = videoJob?.generatedVideo || null;
+  const isPolling = videoJob?.isPolling || false;
+  const pollingStatus = videoJob?.pollingStatus || null;
+  const stageStartedAt = videoJob?.stageStartedAt || null;
+  const errorMessage = videoJob?.errorMessage || null;
   const [stageElapsedMs, setStageElapsedMs] = useState(0);
+
+  const hasResumedRef = useRef(false);
 
   const { data: personasList, isLoading: loadingPersonas } = useQuery({
     queryKey: ['companyPersonasOverviewList'],
@@ -104,6 +138,15 @@ export default function VideoStudio() {
     }
   }, [personasList, selectedPersona]);
 
+  // Resolve the selected persona ID into its full object. The backend's
+  // /api/generate-video route only reads req.body.companyPersona (a full
+  // object with logoUrl already on it) - it does not look up persona_id
+  // server-side - so we must resolve it to the full object here before
+  // sending, rather than sending the bare ID alone.
+  const selectedPersonaObject = personasList?.find(
+    (p) => (p.id || p._id) === selectedPersona
+  ) || null;
+
   useEffect(() => {
     if (!isPolling || !stageStartedAt) {
       setStageElapsedMs(0);
@@ -123,9 +166,78 @@ export default function VideoStudio() {
 
   const displayRemainingMs = Math.max(0, ESTIMATED_TOTAL_MS - stageElapsedMs);
 
+  // Shared polling logic, used both for a freshly started generation and for
+  // resuming a job that was already in flight when the user navigates back.
+  const attachPoller = useCallback((jobId) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const token = tokenStorage.getUserToken();
+        const statusResponse = await apiClient.get(
+          `/video-status/${encodeURIComponent(jobId)}`,
+          token
+        );
+
+        const statusCode = statusResponse.status;
+        setJob('video', { pollingStatus: statusCode });
+
+        if (statusCode === 'completed') {
+          clearInterval(pollInterval);
+
+          if (statusResponse.video_url) {
+            const videoEntry = {
+              topic: statusResponse.prompt || prompt,
+              content_type: "Video",
+              platform: platform,
+              variants: [{
+                content: statusResponse.prompt || prompt,
+                video_url: statusResponse.video_url,
+                title: platform + " Video"
+              }],
+              status: "completed"
+            };
+            addHistoryEntry(videoEntry).catch(err => console.error("Failed to save video to history:", err));
+
+            setJob('video', {
+              isPolling: false,
+              stageStartedAt: null,
+              pollingStatus: 'completed',
+              generatedVideo: statusResponse.video_url,
+              errorMessage: null,
+            });
+          } else {
+            setJob('video', { isPolling: false, stageStartedAt: null, pollingStatus: 'failed' });
+          }
+        } else if (statusCode === 'failed') {
+          clearInterval(pollInterval);
+          setJob('video', {
+            isPolling: false,
+            stageStartedAt: null,
+            pollingStatus: 'failed',
+            errorMessage: statusResponse.error || 'Video generation failed',
+          });
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }, 3000);
+  }, [prompt, platform, setJob]);
+
+  // On mount: if a job was already in flight when the user navigated away, resume
+  // polling it here instead of starting fresh. Runs once per mount.
+  useEffect(() => {
+    if (hasResumedRef.current) return;
+    hasResumedRef.current = true;
+
+    const existing = videoJob;
+    if (existing?.jobId && existing.isPolling && existing.pollingStatus !== 'completed' && existing.pollingStatus !== 'failed') {
+      attachPoller(existing.jobId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const generateMutation = useMutation({
     mutationFn: async (params) => {
-      setPollingStatus('preparing');
+      setJob('video', { pollingStatus: 'preparing' });
       const token = tokenStorage.getUserToken();
       if (!token) {
         throw new Error('User token not available');
@@ -134,12 +246,17 @@ export default function VideoStudio() {
       const activeStyleLabel = VIDEO_STYLES.find(s => s.value === params.style)?.label || params.style;
       const finalBuiltPrompt = `${params.prompt}, shot in a distinct ${activeStyleLabel} style environment`;
 
+      // Resolve persona ID to the full persona object the backend expects,
+      // instead of sending a bare persona_id (which the backend ignores).
+      const companyPersonaPayload = buildCompanyPersonaPayload(params.personaObject);
+
       const response = await apiClient.post('/generate-video', {
         topic: finalBuiltPrompt,
         platform: params.platform,
         contentType: params.style,
-        aspect_ratio: params.aspectRatio,     // 🟢 FIXED: Kept ONLY camelCase to comply with backend strict schema
-        persona_id: params.personaId,       
+        aspect_ratio: params.aspectRatio,     // backend strict schema expects snake_case
+        companyPersona: companyPersonaPayload,
+        logoPlacement: params.logoPlacement,
         logo_placement: params.logoPlacement, 
         cameraPan: params.pan,
         cameraZoom: params.zoom,
@@ -153,68 +270,28 @@ export default function VideoStudio() {
       const jobId = response.video_id || response.jobId || response.id || response.job_id;
 
       if (!jobId) {
-        setPollingStatus('failed');
-        setIsPolling(false);
-        setErrorMessage('No job ID returned from server');
+        setJob('video', { pollingStatus: 'failed', isPolling: false, errorMessage: 'No job ID returned from server' });
         return;
       }
 
-      setIsPolling(true);
-      setStageStartedAt(Date.now());
-      setPollingStatus('queued');
-      setErrorMessage(null);
+      setJob('video', {
+        jobId,
+        isPolling: true,
+        stageStartedAt: Date.now(),
+        pollingStatus: 'queued',
+        errorMessage: null,
+        generatedVideo: null,
+      });
 
-      const pollInterval = setInterval(async () => {
-        try {
-          const token = tokenStorage.getUserToken();
-          const statusResponse = await apiClient.get(
-            `/video-status/${encodeURIComponent(jobId)}`,
-            token
-          );
-
-          const statusCode = statusResponse.status;
-          setPollingStatus(statusCode);
-
-          if (statusCode === 'completed') {
-            clearInterval(pollInterval);
-            setIsPolling(false);
-            setStageStartedAt(null);
-            
-            if (statusResponse.video_url) {
-              setGeneratedVideo(statusResponse.video_url);
-              
-              const videoEntry = {
-                topic: statusResponse.prompt || prompt,
-                content_type: "Video",
-                platform: platform,
-                variants: [{
-                  content: statusResponse.prompt || prompt,
-                  video_url: statusResponse.video_url,
-                  title: platform + " Video"
-                }],
-                status: "completed"
-              };
-              addHistoryEntry(videoEntry).catch(err => console.error("Failed to save video to history:", err));
-              setPollingStatus('completed');
-              setErrorMessage(null);
-            }
-          } else if (statusCode === 'failed') {
-            clearInterval(pollInterval);
-            setIsPolling(false);
-            setStageStartedAt(null);
-            setPollingStatus('failed');
-            setErrorMessage(statusResponse.error || 'Video generation failed');
-          }
-        } catch (error) {
-          console.error('Polling error:', error);
-        }
-      }, 3000);
+      attachPoller(jobId);
     },
     onError: (error) => {
-      setIsPolling(false);
-      setStageStartedAt(null);
-      setPollingStatus('failed');
-      setErrorMessage(error.message || 'Video generation failed');
+      setJob('video', {
+        isPolling: false,
+        stageStartedAt: null,
+        pollingStatus: 'failed',
+        errorMessage: error.message || 'Video generation failed',
+      });
     },
   });
 
@@ -224,13 +301,13 @@ export default function VideoStudio() {
       platform: platform,
       style: style,
       aspectRatio: aspectRatio, 
-      personaId: selectedPersona, 
+      personaObject: selectedPersonaObject, 
       logoPlacement: logoPlacement, 
       pan: pan,
       zoom: zoom,
       motionStrength: motionStrength
     });
-  }, [prompt, platform, style, aspectRatio, selectedPersona, logoPlacement, pan, zoom, motionStrength, generateMutation]);
+  }, [prompt, platform, style, aspectRatio, selectedPersonaObject, logoPlacement, pan, zoom, motionStrength, generateMutation]);
 
   const handleAnimate = () => {
     if (!prompt.trim()) {
@@ -245,65 +322,81 @@ export default function VideoStudio() {
       alert('Please enter a prompt');
       return;
     }
-    setErrorMessage(null);
+    setJob('video', { errorMessage: null });
     setShowConfirmDialog(true);
   };
 
   const handleDownload = async () => {
     if (!generatedVideo) return;
     try {
-      const response = await fetch(generatedVideo, { mode: 'cors' });
-      if (!response.ok) throw new Error("Network request rejected by file provider");
+      const token = tokenStorage.getUserToken();
+      const filename = `creativeos-video-${Date.now()}.mp4`;
+      const downloadUrl = `${API_ORIGIN}/api/download-asset?url=${encodeURIComponent(generatedVideo)}&filename=${encodeURIComponent(filename)}`;
+
+      const response = await fetch(downloadUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'X-Auth-Token': token,
+        },
+      });
+      if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `creativeos-video-${Date.now()}.mp4`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      const a = document.createElement('a');
-      a.href = generatedVideo;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.setAttribute('download', `creativeos-video-${Date.now()}.mp4`);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      console.error('Download failed:', error);
+      // Fallback: open the asset in a new tab so the user can save it manually
+      window.open(generatedVideo, '_blank', 'noopener,noreferrer');
     }
   };
 
-  const handleShare = async () => {
+  const handleCopyLink = async () => {
     if (!generatedVideo) return;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Creative OS - Video Studio Export',
-          text: `Check out this brand cinematic update tracking for prompt: "${prompt}"`,
-          url: generatedVideo,
-        });
-      } catch (err) {
-        console.log('Share operations sheets closed:', err);
-      }
-    } else {
+    let success = false;
+
+    if (navigator.clipboard && window.isSecureContext) {
       try {
         await navigator.clipboard.writeText(generatedVideo);
-        alert('Asset link copied safely onto clipboard rows!');
+        success = true;
       } catch (err) {
-        console.error('Clipboard error:', err);
+        console.warn('Clipboard API failed, trying fallback:', err);
       }
     }
+
+    if (!success) {
+      // navigator.clipboard is unavailable on plain HTTP origins (non-secure context).
+      // Fall back to the legacy execCommand approach via a hidden textarea.
+      const textarea = document.createElement('textarea');
+      textarea.value = generatedVideo;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        success = document.execCommand('copy');
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    alert(success ? 'Link copied to clipboard!' : 'Could not copy automatically. Long-press or select the link text to copy it manually.');
+    setShowSharePopover(false);
   };
 
   const handleReset = () => {
-    setGeneratedVideo(null);
+    clearJob('video');
     setPrompt('');
-    setPollingStatus(null);
     setIsPlaying(false);
-    setErrorMessage(null);
-    setStageStartedAt(null);
+    setShowSharePopover(false);
   };
 
   const togglePlay = () => {
@@ -566,7 +659,41 @@ export default function VideoStudio() {
                   </div>
                   <div className="flex gap-2 w-full max-w-[440px]">
                     <Button onClick={handleDownload} className="flex-1 gap-1.5"><Download className="w-4 h-4" /> Download</Button>
-                    <Button onClick={handleShare} variant="secondary" className="flex-1 gap-1.5"><Share2 className="w-4 h-4" /> Share Asset</Button>
+
+                    <div className="relative flex-1">
+                      <Button
+                        onClick={() => setShowSharePopover((v) => !v)}
+                        variant="secondary"
+                        className="w-full gap-1.5"
+                      >
+                        <Share2 className="w-4 h-4" /> Share Asset
+                      </Button>
+                      {showSharePopover && (
+                        <div className="absolute bottom-full mb-2 left-0 right-0 bg-background border border-border rounded-lg shadow-lg p-2 space-y-1 z-10">
+                          {Object.entries(
+                            getShareLinks(generatedVideo, `Check out this video I made: ${prompt}`)
+                          ).map(([platformName, url]) => (
+                            <a
+                              key={platformName}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setShowSharePopover(false)}
+                              className="block w-full text-left text-sm px-3 py-2 rounded-md capitalize transition-colors hover:bg-primary hover:text-primary-foreground"
+                            >
+                              {platformName}
+                            </a>
+                          ))}
+                          <button
+                            onClick={handleCopyLink}
+                            className="block w-full text-left text-sm px-3 py-2 rounded-md transition-colors hover:bg-primary hover:text-primary-foreground"
+                          >
+                            Copy link
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <Button onClick={handleReset} variant="outline" className="px-3"><RefreshCw className="w-4 h-4" /></Button>
                   </div>
                 </div>
