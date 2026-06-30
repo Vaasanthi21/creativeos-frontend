@@ -2955,33 +2955,33 @@ export const BrandSetup = () => {
             
             <button
               onClick={() => quickAction('knowledge')}
-              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-slate-700 hover:to-slate-900 hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
+              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
             >
-              <Plus size={12} className="text-slate-500 group-hover:text-white transition-colors" />
+              <Plus size={12} className="text-[#f25b18] group-hover:text-white transition-colors" />
               <span>Add Knowledge Source</span>
             </button>
             
             <button
               onClick={() => quickAction('persona')}
-              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-slate-700 hover:to-slate-900 hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
+              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
             >
-              <UserPlus size={12} className="text-slate-500 group-hover:text-white transition-colors" />
+              <UserPlus size={12} className="text-[#f25b18] group-hover:text-white transition-colors" />
               <span>Create Target Persona</span>
             </button>
             
             <button
               onClick={() => quickAction('company')}
-              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-slate-700 hover:to-slate-900 hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
+              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
             >
-              <Building size={12} className="text-slate-500 group-hover:text-white transition-colors" />
+              <Building size={12} className="text-[#f25b18] group-hover:text-white transition-colors" />
               <span>Edit Company Profile</span>
             </button>
             
             <button
               onClick={() => quickAction('refresh')}
-              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-slate-700 hover:to-slate-900 hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
+              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
             >
-              <Loader2 size={12} className={`text-slate-500 group-hover:text-white transition-colors ${extractMutation.isPending ? "animate-spin" : ""}`} />
+              <Loader2 size={12} className={`text-[#f25b18] group-hover:text-white transition-colors ${extractMutation.isPending ? "animate-spin" : ""}`} />
               <span>Refresh AI Understanding</span>
             </button>
           </div>
