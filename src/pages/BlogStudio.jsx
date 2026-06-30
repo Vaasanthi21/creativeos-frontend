@@ -22,13 +22,6 @@ import {
 export const BlogStudio = () => {
   const [showWorkflowHelper, setShowWorkflowHelper] = React.useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  
-  const [showTour, setShowTour] = React.useState(false);
-  React.useEffect(() => {
-    if (!localStorage.getItem("hasSeenBlogTour")) {
-      setShowTour(true);
-    }
-  }, []);
   const view = searchParams.get('view') || 'list';
   const id = searchParams.get('id');
 
@@ -341,69 +334,7 @@ export const BlogStudio = () => {
             onBack={handleBack}
           />
         )}
-      </div>
-
-      {showTour && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border p-8 rounded-3xl max-w-md w-full shadow-2xl relative space-y-6 animate-in fade-in zoom-in-95 duration-200 text-left">
-            <div className="text-center space-y-4">
-              <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
-                <BookOpen size={28} />
-              </div>
-              <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
-                Welcome to Blog Studio!
-              </h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Take a quick 3-step tour of the SEO blog creation workflow:
-              </p>
-            </div>
-
-            <div className="space-y-4 border-t border-b border-border/60 py-5">
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                  1
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Train AI (Brand Setup)</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Crawl your website or upload company documents to index your brand voice and target personas.</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                  2
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Generate SEO Blogs</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Select from suggested topics or define custom angles to draft structured articles grounded in your references.</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                  3
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Social Adaptations & Preview</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Generate platform-adapted variants (LinkedIn, Medium, Substack) and preview formatting before exporting.</p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                localStorage.setItem("hasSeenBlogTour", "true");
-                setShowTour(false);
-              }}
-              className="w-full py-3 bg-primary text-primary-foreground font-bold rounded-xl text-xs shadow-md transition-all duration-200 hover:bg-primary/95 active:scale-[0.99]"
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>    </div>
   );
 };
 

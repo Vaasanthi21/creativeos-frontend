@@ -177,14 +177,6 @@ export default function Generate() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const token = tokenStorage.getUserToken();
-  
-  const [showTour, setShowTour] = React.useState(false);
-  React.useEffect(() => {
-    if (!localStorage.getItem("hasSeenCreativeTour")) {
-      setShowTour(true);
-    }
-  }, []);
-
   const platform = useMemo(
     () => platforms.find((item) => item.id === activePersona) || platforms[0],
     [activePersona],
@@ -1228,68 +1220,6 @@ export default function Generate() {
         variant={exportVariant}
         open={!!exportVariant}
         onClose={() => setExportVariant(null)}
-      />
-
-      {showTour && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border p-8 rounded-3xl max-w-md w-full shadow-2xl relative space-y-6 animate-in fade-in zoom-in-95 duration-200 text-left">
-            <div className="text-center space-y-4">
-              <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
-                <Sparkles size={28} />
-              </div>
-              <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
-                Welcome to Creative Studio!
-              </h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Take a quick 3-step tour of the content creation workflow:
-              </p>
-            </div>
-
-            <div className="space-y-4 border-t border-b border-border/60 py-5">
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                  1
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Select Platform & Persona</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Choose your target social network and company brand persona to guide the AI.</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                  2
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Configure Details</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Provide a topic, keywords, tone, and select whether you want a single post or batch generation.</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                  3
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Generate & Adapt</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Generate posts, tweak with the editor, and simulate social media previews before publishing.</p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                localStorage.setItem("hasSeenCreativeTour", "true");
-                setShowTour(false);
-              }}
-              className="w-full py-3 bg-primary text-primary-foreground font-bold rounded-xl text-xs shadow-md transition-all duration-200 hover:bg-primary/95 active:scale-[0.99]"
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      />    </div>
   );
 }
