@@ -433,7 +433,7 @@ export const BrandSetup = () => {
   };
 
   const openEditPersonaModal = (p) => {
-    setEditPersonaId(p._id);
+    setEditPersonaId(p.id || p._id);
     setPersonaName(p.personaName || p.name || '');
     setTone(p.tone || p.voice || '');
     setWritingStyle(p.writingStyle || '');
@@ -1561,7 +1561,7 @@ export const BrandSetup = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {personasData.map((p) => (
-                      <div key={p._id} className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-sm hover:border-slate-350 transition-all">
+                      <div key={p.id || p._id} className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-sm hover:border-slate-350 transition-all">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <h5 className="font-display font-bold text-foreground text-sm truncate">{p.personaName || p.name}</h5>
@@ -1603,7 +1603,7 @@ export const BrandSetup = () => {
                               <Edit2 size={12} />
                             </button>
                             <button
-                              onClick={() => handleDeletePersona(p._id)}
+                              onClick={() => handleDeletePersona(p.id || p._id)}
                               className="p-1 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg text-red-500 transition-all cursor-pointer flex items-center"
                               title="Delete"
                             >
@@ -2677,7 +2677,7 @@ export const BrandSetup = () => {
                                 <span>Edit</span>
                               </button>
                               <button
-                                onClick={() => handleDeletePersona(p._id)}
+                                onClick={() => handleDeletePersona(p.id || p._id)}
                                 className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500 hover:text-foreground border border-red-500/20 text-red-500 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
                               >
                                 <Trash2 size={10} />
