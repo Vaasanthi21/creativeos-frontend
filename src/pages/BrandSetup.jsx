@@ -298,7 +298,7 @@ export const BrandSetup = () => {
     mutationFn: async (id) => {
       await api.delete(`/knowledge/${id}`);
     },
-    onSuccess: () => {
+    onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['knowledge'] });
       triggerToast('Reference source removed.');
       if (selectedDocId === id) {
@@ -658,10 +658,10 @@ export const BrandSetup = () => {
   };
 
   const handleViewText = (doc) => {
-    setSelectedDocId(doc._id);
-    setSelectedFileName(doc.fileName);
-    setSelectedText(doc.summaryText || doc.extractedText);
-    setSummaryTextVal(doc.summaryText || doc.extractedText || '');
+    setSelectedDocId(doc.id || doc._id);
+    setSelectedFileName(doc.fileName || doc.file_name || doc.name || 'Source');
+    setSelectedText(doc.summaryText || doc.summary_text || doc.summary || doc.extractedText || doc.extracted_text || doc.content);
+    setSummaryTextVal(doc.summaryText || doc.summary_text || doc.summary || doc.extractedText || doc.extracted_text || doc.content || '');
     setIsEditingSummary(false);
   };
 
@@ -680,7 +680,7 @@ export const BrandSetup = () => {
   // Get primary document for the main AI summary context
   const getPrimaryDoc = () => {
     if (!documentsData || documentsData.length === 0) return null;
-    const urlDoc = documentsData.find(d => d.fileType === 'url');
+    const urlDoc = documentsData.find(d => (d.fileType || d.file_type) === 'url');
     return urlDoc || documentsData[0];
   };
 
@@ -709,7 +709,7 @@ export const BrandSetup = () => {
       }, 100);
     } else if (actionType === 'refresh') {
       if (primaryDoc) {
-        extractMutation.mutate(primaryDoc._id);
+        extractMutation.mutate(primaryDoc.id || primaryDoc._id);
       } else {
         setErrorAlert('Please add a website URL or reference document first to extract information.');
       }
@@ -1704,44 +1704,50 @@ export const BrandSetup = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {documentsData.map((doc) => (
-                        <div key={doc._id} className="p-3 bg-card border border-border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:border-slate-350 transition-all shadow-sm">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="p-2 rounded bg-slate-100 text-slate-600 shrink-0">
-                              {doc.fileType === 'url' ? <Globe size={14} /> : <FileText size={14} />}
+                      {documentsData.map((doc) => {
+                        const docId = doc.id || doc._id;
+                        const docFileName = doc.fileName || doc.file_name || doc.name || 'Source';
+                        const docFileType = doc.fileType || doc.file_type || 'url';
+                        const docExtractedText = doc.extractedText || doc.extracted_text || doc.content || '';
+                        return (
+                          <div key={docId} className="p-3 bg-card border border-border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:border-slate-350 transition-all shadow-sm">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="p-2 rounded bg-slate-100 text-slate-600 shrink-0">
+                                {docFileType === 'url' ? <Globe size={14} /> : <FileText size={14} />}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-foreground truncate" title={docFileName}>{docFileName}</p>
+                                <span className="text-[9px] text-muted-foreground block mt-0.5">
+                                  {docFileType.toUpperCase()} • {docExtractedText ? `${docExtractedText.length.toLocaleString()} chars` : '0 chars'}
+                                </span>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <p className="font-bold text-foreground truncate" title={doc.fileName}>{doc.fileName}</p>
-                              <span className="text-[9px] text-muted-foreground block mt-0.5">
-                                {doc.fileType.toUpperCase()} • {doc.extractedText ? `${doc.extractedText.length.toLocaleString()} chars` : '0 chars'}
-                              </span>
-                            </div>
-                          </div>
 
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => handleViewText(doc)}
-                              className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 border border-border text-foreground font-bold rounded text-[10px] flex items-center gap-1 cursor-pointer"
-                            >
-                              <Eye size={10} />
-                              <span>View Summary</span>
-                            </button>
-                            <button
-                              onClick={() => extractMutation.mutate(doc._id)}
-                              className="px-2.5 py-1 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded text-[10px] flex items-center gap-1 cursor-pointer"
-                            >
-                              <Sparkles size={10} />
-                              <span>Extract Context</span>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteDoc(doc._id)}
-                              className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-muted-foreground border border-transparent hover:border-red-100 transition-all cursor-pointer"
-                            >
-                              <Trash2 size={12} />
-                            </button>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => handleViewText(doc)}
+                                className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 border border-border text-foreground font-bold rounded text-[10px] flex items-center gap-1 cursor-pointer"
+                              >
+                                <Eye size={10} />
+                                <span>View Summary</span>
+                              </button>
+                              <button
+                                onClick={() => extractMutation.mutate(docId)}
+                                className="px-2.5 py-1 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded text-[10px] flex items-center gap-1 cursor-pointer"
+                              >
+                                <Sparkles size={10} />
+                                <span>Extract Context</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDoc(docId)}
+                                className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-muted-foreground border border-transparent hover:border-red-100 transition-all cursor-pointer"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -2132,7 +2138,7 @@ export const BrandSetup = () => {
                             </button>
                             <button
                               onClick={() => {
-                                updateSummaryMutation.mutate({ id: primaryDoc._id, summaryText: summaryTextVal });
+                                updateSummaryMutation.mutate({ id: primaryDoc.id || primaryDoc._id, summaryText: summaryTextVal });
                               }}
                               disabled={updateSummaryMutation.isPending}
                               className="px-3.5 py-1.5 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer"
@@ -2158,7 +2164,7 @@ export const BrandSetup = () => {
                       {/* Re-extract Company / Personas */}
                       <div className="flex gap-2">
                         <button
-                          onClick={() => extractMutation.mutate(primaryDoc._id)}
+                          onClick={() => extractMutation.mutate(primaryDoc.id || primaryDoc._id)}
                           disabled={extractMutation.isPending}
                           className="px-3 py-2 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer shrink-0 transition-all"
                         >
@@ -2166,7 +2172,7 @@ export const BrandSetup = () => {
                           <span>Re-extract Company</span>
                         </button>
                         <button
-                          onClick={() => extractMutation.mutate(primaryDoc._id)}
+                          onClick={() => extractMutation.mutate(primaryDoc.id || primaryDoc._id)}
                           disabled={extractMutation.isPending}
                           className="px-3 py-2 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer shrink-0 transition-all"
                         >
@@ -2575,7 +2581,7 @@ export const BrandSetup = () => {
                   <div className="flex gap-2">
                     {primaryDoc && (
                       <button
-                        onClick={() => extractMutation.mutate(primaryDoc._id)}
+                        onClick={() => extractMutation.mutate(primaryDoc.id || primaryDoc._id)}
                         disabled={extractMutation.isPending}
                         className="px-3.5 py-2 border border-border bg-card hover:bg-slate-50 text-foreground font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm cursor-pointer"
                       >
@@ -2834,63 +2840,70 @@ export const BrandSetup = () => {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {documentsData.map((doc) => (
-                        <div key={doc._id} className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-sm hover:border-slate-350 transition-all">
-                          <div className="space-y-2 min-w-0">
-                            
-                            {/* File Name & Type */}
-                            <div className="flex items-start gap-2.5">
-                              <div className="p-2 rounded bg-slate-100 text-slate-600 shrink-0">
-                                {doc.fileType === 'url' ? <Globe size={14} /> : <FileText size={14} />}
+                      {documentsData.map((doc) => {
+                        const docId = doc.id || doc._id;
+                        const docFileName = doc.fileName || doc.file_name || doc.name || 'Source';
+                        const docFileType = doc.fileType || doc.file_type || 'url';
+                        const docExtractedText = doc.extractedText || doc.extracted_text || doc.content || '';
+                        const docCreatedAt = doc.createdAt || doc.created_at || doc.updatedAt || doc.updated_at;
+                        return (
+                          <div key={docId} className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-sm hover:border-slate-350 transition-all">
+                            <div className="space-y-2 min-w-0">
+                              
+                              {/* File Name & Type */}
+                              <div className="flex items-start gap-2.5">
+                                <div className="p-2 rounded bg-slate-100 text-slate-600 shrink-0">
+                                  {docFileType === 'url' ? <Globe size={14} /> : <FileText size={14} />}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-foreground truncate text-xs" title={docFileName}>{docFileName}</p>
+                                  <span className="text-[9px] font-bold text-primary uppercase block mt-0.5">{docFileType} Source</span>
+                                </div>
                               </div>
-                              <div className="min-w-0">
-                                <p className="font-bold text-foreground truncate text-xs" title={doc.fileName}>{doc.fileName}</p>
-                                <span className="text-[9px] font-bold text-primary uppercase block mt-0.5">{doc.fileType} Source</span>
+
+                              {/* Details meta */}
+                              <div className="text-[10px] text-muted-foreground space-y-1">
+                                <p className="flex items-center gap-1">
+                                  <BookOpen size={10} />
+                                  <span>{docExtractedText ? `${docExtractedText.length.toLocaleString()} characters` : '0 characters'}</span>
+                                </p>
+                                <p className="flex items-center gap-1">
+                                  <Calendar size={10} />
+                                  <span>Indexed {docCreatedAt ? new Date(docCreatedAt).toLocaleDateString() : 'Today'}</span>
+                                </p>
                               </div>
+
                             </div>
 
-                            {/* Details meta */}
-                            <div className="text-[10px] text-muted-foreground space-y-1">
-                              <p className="flex items-center gap-1">
-                                <BookOpen size={10} />
-                                <span>{doc.extractedText ? `${doc.extractedText.length.toLocaleString()} characters` : '0 characters'}</span>
-                              </p>
-                              <p className="flex items-center gap-1">
-                                <Calendar size={10} />
-                                <span>Indexed {new Date(doc.createdAt).toLocaleDateString()}</span>
-                              </p>
-                            </div>
-
-                          </div>
-
-                          {/* Footer Actions */}
-                          <div className="flex justify-end items-center gap-1.5 pt-2.5 border-t border-slate-100">
-                            <button
-                              onClick={() => handleViewText(doc)}
-                              className="px-2 py-1 bg-slate-50 hover:bg-slate-100 border border-border rounded text-[10px] text-foreground font-bold flex items-center gap-0.5 cursor-pointer"
-                            >
-                              <Eye size={10} />
-                              <span>View Summary</span>
-                            </button>
-                            {doc.fileType === 'url' && (
+                            {/* Footer Actions */}
+                            <div className="flex justify-end items-center gap-1.5 pt-2.5 border-t border-slate-100">
                               <button
-                                onClick={() => extractMutation.mutate(doc._id)}
-                                className="px-2 py-1 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 rounded text-[10px] text-primary font-bold flex items-center gap-0.5 cursor-pointer transition-all"
+                                onClick={() => handleViewText(doc)}
+                                className="px-2 py-1 bg-slate-50 hover:bg-slate-100 border border-border rounded text-[10px] text-foreground font-bold flex items-center gap-0.5 cursor-pointer"
                               >
-                                <Sparkles size={10} />
-                                <span>Re-extract</span>
+                                <Eye size={10} />
+                                <span>View Summary</span>
                               </button>
-                            )}
-                            <button
-                              onClick={() => handleDeleteDoc(doc._id)}
-                              className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-muted-foreground border border-transparent hover:border-red-100 transition-all cursor-pointer"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
+                              {docFileType === 'url' && (
+                                <button
+                                  onClick={() => extractMutation.mutate(docId)}
+                                  className="px-2 py-1 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 rounded text-[10px] text-primary font-bold flex items-center gap-0.5 cursor-pointer transition-all"
+                                >
+                                  <Sparkles size={10} />
+                                  <span>Re-extract</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteDoc(docId)}
+                                className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-muted-foreground border border-transparent hover:border-red-100 transition-all cursor-pointer"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
 
-                        </div>
-                      ))}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
