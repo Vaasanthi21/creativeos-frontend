@@ -152,6 +152,11 @@ export const BrandSetup = () => {
   // Determine initial view mode: redirect to choose screen only when no company details are extracted or generated
   useEffect(() => {
     if (companyData && personasData) {
+      // 🚀 Do not override setup states when the user is in progress of manual or AI setup
+      if (['manual_setup', 'ai_setup', 'processing'].includes(viewMode)) {
+        return;
+      }
+
       if (initializedCompanyId !== companyData._id) {
         const hasCompanyDetails = 
           companyData.companyName && 
@@ -167,9 +172,11 @@ export const BrandSetup = () => {
         setInitializedCompanyId(companyData._id);
       }
     } else if (companyError) {
-      setViewMode('choose');
+      if (!['manual_setup', 'ai_setup', 'processing'].includes(viewMode)) {
+        setViewMode('choose');
+      }
     }
-  }, [companyData, personasData, companyError, initializedCompanyId]);
+  }, [companyData, personasData, companyError, initializedCompanyId, viewMode]);
 
   // Clean up timers on unmount
   useEffect(() => {
