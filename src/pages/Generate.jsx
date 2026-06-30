@@ -1173,7 +1173,7 @@ export default function Generate() {
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                   Enhance Content
                 </p>
-                <h3 className="mt-2 text-sm font-semibold text-foreground">
+                <h3 className="font-display mt-2 text-sm font-semibold text-foreground">
                   Open the refinement page for chat-based enhancement
                 </h3>
                 <p className="mt-1 text-xs text-muted-foreground">

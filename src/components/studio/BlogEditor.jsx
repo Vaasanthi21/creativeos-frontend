@@ -202,7 +202,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
     return (
       <div className="bg-card rounded-3xl p-12 border border-red-500/20 text-center space-y-4 max-w-lg mx-auto">
         <AlertCircle size={40} className="text-red-400 mx-auto" />
-        <h3 className="text-xl font-bold text-red-200">Failed to Load Blog</h3>
+        <h3 className="font-display text-xl font-bold text-red-200">Failed to Load Blog</h3>
         <p className="text-xs text-muted-foreground">{error.message || 'Unknown network error.'}</p>
       </div>
     );
@@ -258,7 +258,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
             <Sparkles size={28} className="absolute inset-0 m-auto text-background animate-pulse" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold tracking-tight text-foreground animate-pulse">Running AI Synthesis Engine</h3>
+            <h3 className="font-display text-xl font-bold tracking-tight text-foreground animate-pulse">Running AI Synthesis Engine</h3>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               Regenerating canonical drafts and tuning SEO scorecards...
             </p>
@@ -270,7 +270,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Metadata config form */}
             <div className="bg-card rounded-2xl p-6 border border-border space-y-4">
-              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-2 flex items-center gap-2 border-b border-border pb-3">
+              <h3 className="font-display text-sm font-bold text-foreground uppercase tracking-wider mb-2 flex items-center gap-2 border-b border-border pb-3">
                 <Sliders size={16} className="text-primary" />
                 <span>Metadata Configurations</span>
               </h3>
@@ -345,7 +345,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
             {/* SEO scorecard */}
             <div className="bg-card rounded-2xl p-6 border border-border space-y-4 flex flex-col justify-between">
               <div>
-                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-2 flex items-center gap-2 border-b border-border pb-3">
+                <h3 className="font-display text-sm font-bold text-foreground uppercase tracking-wider mb-2 flex items-center gap-2 border-b border-border pb-3">
                   <Gauge size={16} className="text-primary" />
                   <span>SEO Scorecard</span>
                 </h3>
@@ -489,7 +489,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
             <div className="lg:col-span-1 space-y-6 flex flex-col justify-start">
               {/* Version History */}
               <div className="bg-card rounded-2xl p-6 border border-border flex flex-col max-h-[280px]">
-                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-border pb-2">
+                <h3 className="font-display text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-border pb-2">
                   <History size={16} className="text-accent" />
                   <span>Version History</span>
                 </h3>
@@ -527,7 +527,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
 
               {/* Structural Outline */}
               <div className="bg-card rounded-2xl p-6 border border-border flex flex-col max-h-[320px]">
-                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-border pb-2">
+                <h3 className="font-display text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-border pb-2">
                   <FileText size={16} className="text-accent" />
                   <span>AI Structural Outline</span>
                 </h3>
@@ -564,7 +564,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
                 <div className="px-6 py-4 border-b border-border bg-white/5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
                   <div className="flex items-center gap-2 text-foreground">
                     <FileEdit size={18} className="text-accent" />
-                    <h3 className="text-sm font-bold tracking-tight">Canonical Markdown Editor</h3>
+                    <h3 className="font-display text-sm font-bold tracking-tight">Canonical Markdown Editor</h3>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">

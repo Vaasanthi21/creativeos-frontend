@@ -175,7 +175,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
     return (
       <div className="bg-card rounded-3xl p-12 border border-red-500/20 text-center space-y-4 max-w-lg mx-auto">
         <AlertCircle size={40} className="text-red-400 mx-auto" />
-        <h3 className="text-xl font-bold text-red-200">Failed to Load Blogs</h3>
+        <h3 className="font-display text-xl font-bold text-red-200">Failed to Load Blogs</h3>
         <p className="text-xs text-muted-foreground">{error.message || 'Unknown network error.'}</p>
       </div>
     );
@@ -241,7 +241,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
         <div className="bg-card rounded-3xl p-8 border border-border bg-card relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 pointer-events-none" />
           <div className="space-y-3 max-w-xl text-left">
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground leading-tight">
+            <h1 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight text-foreground leading-tight">
               Create SEO-Optimized Blogs Guided by Your Brand Context
             </h1>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -277,7 +277,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
           <div className="md:col-span-2 bg-card rounded-3xl p-6 border border-border bg-card flex flex-col justify-between space-y-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <h3 className="font-display text-sm font-bold text-foreground flex items-center gap-2">
                   <Building2 size={16} className="text-primary" />
                   <span>AI Readiness Checklist</span>
                 </h3>
@@ -368,7 +368,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
             {!hasDocuments && (
               <div className="p-4 bg-amber-500/[0.02] border border-amber-500/20 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-amber-300">Grounding Documents are Optional</h4>
+                  <h4 className="font-display text-xs font-bold text-amber-300">Grounding Documents are Optional</h4>
                   <p className="text-[10px] text-muted-foreground leading-normal">
                     You can generate blogs without uploading documents, but uploading company case studies, whitepapers, or APIs keeps references accurate and factual.
                   </p>
@@ -389,7 +389,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
           <div className="bg-card rounded-3xl p-6 border border-border bg-card flex flex-col justify-between text-left relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent pointer-events-none" />
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <h3 className="font-display text-sm font-bold text-foreground flex items-center gap-2">
                 <Sparkles size={16} className="text-accent" />
                 <span>AI Output Estimate</span>
               </h3>
@@ -529,7 +529,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto text-slate-500">
             <Search size={32} />
           </div>
-          <h3 className="text-lg font-bold text-muted-foreground">No matching blogs found</h3>
+          <h3 className="font-display text-lg font-bold text-muted-foreground">No matching blogs found</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
             We couldn't find any blogs matching "{searchQuery}" under the tab "{activeTab}". Try clearing your filters or search query.
           </p>
@@ -576,7 +576,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                           {topicName}
                         </span>
                       )}
-                      <h3 className="text-sm font-bold text-foreground line-clamp-2 min-h-[2.5rem]" title={blog.title}>
+                      <h3 className="font-display text-sm font-bold text-foreground line-clamp-2 min-h-[2.5rem]" title={blog.title}>
                         {blog.title || 'Untitled Blog Post'}
                       </h3>
                     </div>

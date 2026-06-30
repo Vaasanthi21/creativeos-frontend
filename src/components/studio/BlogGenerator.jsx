@@ -404,7 +404,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-bold tracking-tight text-foreground animate-pulse">Running AI Synthesis Engine</h3>
+            <h3 className="font-display text-xl font-bold tracking-tight text-foreground animate-pulse">Running AI Synthesis Engine</h3>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               Grounded GPT-5.4 models are outline scripting, drafting canonical contents, tuning word count, and validating SEO scorecards...
             </p>
@@ -483,7 +483,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
           </div>
 
           <div className="space-y-2 max-w-md mx-auto">
-            <h3 className="text-xl font-bold tracking-tight text-foreground">AI Grounding Recommendation</h3>
+            <h3 className="font-display text-xl font-bold tracking-tight text-foreground">AI Grounding Recommendation</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Uploading reference documents (PDFs, TXT, DOCX) to the Knowledge Base helps ground the AI generator in your actual company metrics, products, and insights. This prevents hallucinations and produces much higher-quality blogs.
             </p>
@@ -528,7 +528,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-card rounded-2xl p-6 border border-border space-y-4">
               <div className="flex justify-between items-center border-b border-border pb-3">
-                <h3 className="text-sm font-bold flex items-center gap-2">
+                <h3 className="font-display text-sm font-bold flex items-center gap-2">
                   <Compass size={16} className="text-primary" />
                   <span>{!selectedTopicId ? 'Create Blog Topic' : 'Topic Context & Research'}</span>
                 </h3>
@@ -858,7 +858,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
             {/* Persona preview */}
             {activeTopic && (
               <div className="bg-card rounded-2xl p-6 border border-border space-y-4 animate-fade-in">
-                <h3 className="text-sm font-bold flex items-center gap-2 border-b border-border pb-3">
+                <h3 className="font-display text-sm font-bold flex items-center gap-2 border-b border-border pb-3">
                   <User size={16} className="text-accent" />
                   <span>Target Audience Persona</span>
                 </h3>
@@ -876,7 +876,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
           {/* Grounding Context variables details */}
           <div className="space-y-6">
             <div className="bg-card rounded-2xl p-6 border border-border space-y-6">
-              <h3 className="text-sm font-bold border-b border-border pb-3">
+              <h3 className="font-display text-sm font-bold border-b border-border pb-3">
                 Grounding Parameters
               </h3>
 
@@ -886,7 +886,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                   <Building size={16} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-foreground">Company profile (active)</h4>
+                  <h4 className="font-display font-bold text-foreground">Company profile (active)</h4>
                   <p className="text-muted-foreground text-[10px] mt-0.5">{company?.companyName || 'Configured in Settings'}</p>
                 </div>
               </div>
@@ -897,7 +897,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                   <FileText size={16} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-foreground">Grounding files ({knowledgeFiles.length} loaded)</h4>
+                  <h4 className="font-display font-bold text-foreground">Grounding files ({knowledgeFiles.length} loaded)</h4>
                   <p className="text-muted-foreground text-[10px] mt-0.5">Reference documents uploaded in Knowledge Base.</p>
                 </div>
               </div>
@@ -936,7 +936,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
             {/* Modal Header */}
             <div className="p-6 border-b border-border flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <h3 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
                   <Search size={20} className="text-primary" />
                   <span>Synthesized Market Research Report</span>
                 </h3>
@@ -957,7 +957,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
               
               {/* Keywords Table */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Targeted Keywords Audited</h4>
+                <h4 className="font-display text-xs font-bold text-slate-700 uppercase tracking-wider">Targeted Keywords Audited</h4>
                 {researchData.keywords && researchData.keywords.length > 0 ? (
                   <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white">
                     <table className="min-w-full divide-y divide-slate-100 text-xs text-left">
@@ -988,7 +988,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
               {/* Trending News Summary */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Trending News & Industry Gaps</h4>
+                <h4 className="font-display text-xs font-bold text-slate-700 uppercase tracking-wider">Trending News & Industry Gaps</h4>
                 <div 
                   className="text-xs leading-relaxed text-slate-650 space-y-3 bg-white p-4 rounded-xl border border-slate-200"
                   dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(researchData.news) }}
@@ -997,7 +997,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
               {/* Competitor Analysis */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Competitor Content Gap Audits</h4>
+                <h4 className="font-display text-xs font-bold text-slate-700 uppercase tracking-wider">Competitor Content Gap Audits</h4>
                 <div 
                   className="text-xs leading-relaxed text-slate-650 space-y-3 bg-white p-4 rounded-xl border border-slate-200"
                   dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(researchData.competitorAnalysis) }}

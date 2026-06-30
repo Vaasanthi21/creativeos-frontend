@@ -644,7 +644,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
       if (!blogRecord) return;
       const strippedContent = stripLeadingTitle(blogRecord.content, blogRecord.title);
       let plainText = `# ${blogRecord.title}\n\n`;
-      let htmlText = `<h1>${blogRecord.title}</h1>\n`;
+      let htmlText = `<h1 className="font-display">${blogRecord.title}</h1>\n`;
       if (resolvedCoverImageUrl) {
         plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
         htmlText += `<img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
@@ -666,7 +666,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
 
         if (renderedRecord.title) {
           plainPart += `${renderedRecord.title}\n\n`;
-          htmlPart += `<h1>${renderedRecord.title}</h1>\n`;
+          htmlPart += `<h1 className="font-display">${renderedRecord.title}</h1>\n`;
         }
         if (resolvedCoverImageUrl) {
           plainPart += `[Image Attachment: ${resolvedCoverImageUrl}]\n\n`;
@@ -691,10 +691,10 @@ export const BlogPreview = ({ blogId, onBack }) => {
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         const copyWithCodeBlockTables = convertTablesToCodeBlocks(strippedCopy);
         plainText = `# ${titleText}\n\n`;
-        htmlText = `<h1>${titleText}</h1>\n`;
+        htmlText = `<h1 className="font-display">${titleText}</h1>\n`;
         if (subtitle) {
           plainText += `${subtitle}\n\n`;
-          htmlText += `<h2>${subtitle}</h2>\n`;
+          htmlText += `<h2 className="font-display">${subtitle}</h2>\n`;
         }
         if (resolvedCoverImageUrl) {
           plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
@@ -708,10 +708,10 @@ export const BlogPreview = ({ blogId, onBack }) => {
         const displaySubtitle = renderedRecord.metaDescription || extractedSub;
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         plainText = `# ${titleText}\n\n`;
-        htmlText = `<h1>${titleText}</h1>\n`;
+        htmlText = `<h1 className="font-display">${titleText}</h1>\n`;
         if (displaySubtitle) {
           plainText += `${displaySubtitle}\n\n`;
-          htmlText += `<h2>${displaySubtitle}</h2>\n`;
+          htmlText += `<h2 className="font-display">${displaySubtitle}</h2>\n`;
         }
         if (resolvedCoverImageUrl) {
           plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
@@ -724,10 +724,10 @@ export const BlogPreview = ({ blogId, onBack }) => {
         const { subtitle, cleanCopy } = extractSubtitle(renderedRecord.copy);
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         plainText = `# ${titleText}\n\n`;
-        htmlText = `<h1>${titleText}</h1>\n`;
+        htmlText = `<h1 className="font-display">${titleText}</h1>\n`;
         if (subtitle) {
           plainText += `${subtitle}\n\n`;
-          htmlText += `<h2>${subtitle}</h2>\n`;
+          htmlText += `<h2 className="font-display">${subtitle}</h2>\n`;
         }
         if (resolvedCoverImageUrl) {
           plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
@@ -1016,7 +1016,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
     </div>
   </div>
   
-  <h1>${titleText}</h1>
+  <h1 className="font-display">${titleText}</h1>
   
   <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; margin-bottom: 24px;">
     ${hashtagsList.map(tag => `<span style="font-size: 0.7rem; color: #94a3b8; padding: 2px 8px; background-color: rgba(255, 255, 255, 0.05); border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05); font-family: monospace;">#${tag}</span>`).join('')}
@@ -1113,8 +1113,8 @@ export const BlogPreview = ({ blogId, onBack }) => {
   </style>
 </head>
 <body>
-  <h1>${titleText}</h1>
-  ${subtitleText ? `<h2 style="font-size: 1.4rem; font-weight: 400; color: #6b7280; margin-top: 4px; margin-bottom: 20px; font-family: Georgia, Cambria, 'Times New Roman', Times, serif; line-height: 1.4;">${subtitleText}</h2>` : ''}
+  <h1 className="font-display">${titleText}</h1>
+  ${subtitleText ? `<h2 style="font-size: 1.4rem; font-weight: 400; color: #6b7280; margin-top: 4px; margin-bottom: 20px; font-family: Georgia, Cambria, 'Times New Roman', Times, serif; line-height: 1.4;" className="font-display">${subtitleText}</h2>` : ''}
   ${resolvedCoverImageUrl ? `<img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-top:16px; margin-bottom:24px; display:block;" />` : ''}
   ${bodyHtml}
 </body>
@@ -1151,7 +1151,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
     return (
       <div className="bg-card rounded-3xl p-12 border border-red-500/20 text-center space-y-4 max-w-lg mx-auto">
         <AlertCircle size={40} className="text-red-400 mx-auto" />
-        <h3 className="text-xl font-bold text-red-200">Failed to Load Blog</h3>
+        <h3 className="font-display text-xl font-bold text-red-200">Failed to Load Blog</h3>
         <p className="text-xs text-muted-foreground">{error?.message || 'Blog not found'}</p>
       </div>
     );
@@ -1228,7 +1228,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
               )}
             </div>
             <div className="text-left">
-              <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+              <h4 className="font-display text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
                 <span>Cover Image Assistant</span>
                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-muted-foreground font-mono font-medium lowercase">
                   {getPlatformDisplaySize()}
@@ -1282,7 +1282,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                   <span className="inline-block text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground border border-border uppercase tracking-widest font-mono mb-2">
                     Canonical Article Draft
                   </span>
-                  <h3 className="text-2xl font-bold text-foreground tracking-tight">{blogRecord.title}</h3>
+                  <h3 className="font-display text-2xl font-bold text-foreground tracking-tight">{blogRecord.title}</h3>
                   <p className="text-xs text-muted-foreground mt-2 font-mono leading-relaxed">Meta Description: {blogRecord.metaDescription}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 self-start">
@@ -1377,7 +1377,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="text-xl font-bold tracking-tight text-foreground animate-pulse">Adapting Content for {resolvedPlatformName}</h3>
+                    <h3 className="font-display text-xl font-bold tracking-tight text-foreground animate-pulse">Adapting Content for {resolvedPlatformName}</h3>
                     <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                       Restructuring canonical Markdown copy for <strong>{resolvedPlatformName}</strong> specific settings...
                     </p>
@@ -1426,7 +1426,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                     <Zap size={32} />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-xl font-bold text-gradient">Adaptation Required</h3>
+                    <h3 className="font-display text-xl font-bold text-gradient">Adaptation Required</h3>
                     <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                       No customized post rendered for <strong>{resolvedPlatformName}</strong> yet. Adapt the canonical content dynamically.
                     </p>
@@ -1557,7 +1557,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                       activeTab === 'linkedin' || activeTab === 'medium' || activeTab === 'devto' || activeTab === 'substack' ? 'max-w-2xl' : 'max-w-4xl'
                     } mx-auto space-y-4 text-left`}>
                       <div className="flex justify-between items-center border-b border-border pb-3">
-                        <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">Edit {resolvedPlatformName} Post</h4>
+                        <h4 className="font-display text-sm font-bold text-foreground uppercase tracking-wider">Edit {resolvedPlatformName} Post</h4>
                         <button
                           onClick={() => setIsEditing(false)}
                           className="p-1.5 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
