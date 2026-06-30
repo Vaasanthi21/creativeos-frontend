@@ -219,7 +219,7 @@ export const BrandSetup = () => {
     },
     onSuccess: (updatedData) => {
       queryClient.setQueryData(['company'], updatedData);
-      triggerToast('Company profile successfully saved!');
+      triggerToast('Saved company profile successfully');
       setIsEditingCompany(false);
     },
     onError: (err) => {
