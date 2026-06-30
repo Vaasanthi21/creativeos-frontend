@@ -2939,17 +2939,17 @@ export const BrandSetup = () => {
           <div className="flex flex-wrap gap-2.5">
             <button
               onClick={() => quickAction('generate')}
-              className="px-4 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
+              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-primary hover:to-accent hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
             >
-              <Sparkles size={12} />
+              <Sparkles size={12} className="text-primary group-hover:text-white transition-colors" />
               <span>Generate Blog Post</span>
             </button>
 
             <button
               onClick={() => quickAction('content')}
-              className="px-4 py-2.5 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
+              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
             >
-              <Sparkles size={12} />
+              <Sparkles size={12} className="text-[#f25b18] group-hover:text-white transition-colors" />
               <span>Generate Content</span>
             </button>
             
