@@ -434,11 +434,11 @@ export const BrandSetup = () => {
 
   const openEditPersonaModal = (p) => {
     setEditPersonaId(p._id);
-    setPersonaName(p.personaName || '');
-    setTone(p.tone || '');
+    setPersonaName(p.personaName || p.name || '');
+    setTone(p.tone || p.voice || '');
     setWritingStyle(p.writingStyle || '');
-    setAudienceType(p.audienceType || '');
-    setDescription(p.description || '');
+    setAudienceType(p.audienceType || p.audience || '');
+    setDescription(p.description || p.notes || '');
     setPersonaModalOpen(true);
   };
 
@@ -458,11 +458,16 @@ export const BrandSetup = () => {
       return;
     }
     const payload = {
+      name: personaName.trim(),
       personaName: personaName.trim(),
+      company: companyData?._id || companyData?.companyName || '',
       tone: tone.trim(),
+      voice: tone.trim(),
       writingStyle: writingStyle.trim(),
       audienceType: audienceType.trim(),
-      description: description.trim()
+      audience: audienceType.trim(),
+      description: description.trim(),
+      notes: description.trim()
     };
 
     if (editPersonaId) {
@@ -1559,18 +1564,18 @@ export const BrandSetup = () => {
                       <div key={p._id} className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-sm hover:border-slate-350 transition-all">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <h5 className="font-display font-bold text-foreground text-sm truncate">{p.personaName}</h5>
+                            <h5 className="font-display font-bold text-foreground text-sm truncate">{p.personaName || p.name}</h5>
                             <span className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[9px] font-bold uppercase tracking-wider">
-                              {p.audienceType || 'Target'}
+                              {p.audienceType || p.audience || 'Target'}
                             </span>
                           </div>
                           <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
-                            {p.description || 'No bio specified.'}
+                            {p.description || p.notes || 'No bio specified.'}
                           </p>
                           <div className="grid grid-cols-2 gap-2 text-[10px] bg-slate-50/50 p-2 rounded-lg border border-border">
                             <div>
                               <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Tone</span>
-                              <span className="font-semibold text-primary truncate block">{p.tone}</span>
+                              <span className="font-semibold text-primary truncate block">{p.tone || p.voice}</span>
                             </div>
                             <div>
                               <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Style</span>
@@ -2613,7 +2618,8 @@ export const BrandSetup = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {personasData.map((p) => {
-                      const initials = p.personaName ? p.personaName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'P';
+                      const displayName = p.personaName || p.name || 'Persona';
+                      const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'P';
                       return (
                         <div key={p._id} className="bg-card border border-border rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-sm hover:border-slate-350 transition-all">
                           <div className="space-y-3.5">
@@ -2624,20 +2630,20 @@ export const BrandSetup = () => {
                                 {initials}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <h5 className="font-display font-bold text-foreground text-xs truncate leading-tight" title={p.personaName}>
-                                  {p.personaName}
+                                <h5 className="font-display font-bold text-foreground text-xs truncate leading-tight" title={displayName}>
+                                  {displayName}
                                 </h5>
                                 <span className="text-[9px] text-accent font-bold uppercase tracking-wider truncate block mt-0.5">
-                                  {p.audienceType || 'Audience'}
+                                  {p.audienceType || p.audience || 'Audience'}
                                 </span>
                               </div>
                             </div>
-
+ 
                             {/* Attributes snippet */}
                             <div className="grid grid-cols-2 gap-2 text-[10px] pt-1">
                               <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Tone</span>
-                                <span className="font-semibold text-primary truncate block">{p.tone}</span>
+                                <span className="font-semibold text-primary truncate block">{p.tone || p.voice}</span>
                               </div>
                               <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Writing Style</span>
@@ -3223,18 +3229,18 @@ export const BrandSetup = () => {
               <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-white">
                 <div className="flex items-center gap-4 border-b border-border pb-4">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-primary/10 to-accent/20 border border-primary/20 flex items-center justify-center font-extrabold text-primary text-sm shadow-sm select-none">
-                    {viewPersonaDetails.personaName ? viewPersonaDetails.personaName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'P'}
+                    {(viewPersonaDetails.personaName || viewPersonaDetails.name) ? (viewPersonaDetails.personaName || viewPersonaDetails.name).split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'P'}
                   </div>
                   <div className="text-left">
-                    <h4 className="font-display font-extrabold text-foreground text-base">{viewPersonaDetails.personaName}</h4>
-                    <p className="text-xs text-accent font-bold uppercase tracking-wider">{viewPersonaDetails.audienceType || 'Audience'}</p>
+                    <h4 className="font-display font-extrabold text-foreground text-base">{viewPersonaDetails.personaName || viewPersonaDetails.name}</h4>
+                    <p className="text-xs text-accent font-bold uppercase tracking-wider">{viewPersonaDetails.audienceType || viewPersonaDetails.audience || 'Audience'}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-left">
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Tone of Voice</span>
-                    <p className="font-semibold text-primary">{viewPersonaDetails.tone || '—'}</p>
+                    <p className="font-semibold text-primary">{viewPersonaDetails.tone || viewPersonaDetails.voice || '—'}</p>
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Writing Style</span>
@@ -3244,7 +3250,7 @@ export const BrandSetup = () => {
 
                 <div className="space-y-2 text-left">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Description & Biography</span>
-                  <p className="text-slate-750 bg-slate-50/50 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{viewPersonaDetails.description || '—'}</p>
+                  <p className="text-slate-750 bg-slate-50/50 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{viewPersonaDetails.description || viewPersonaDetails.notes || '—'}</p>
                 </div>
               </div>
 
