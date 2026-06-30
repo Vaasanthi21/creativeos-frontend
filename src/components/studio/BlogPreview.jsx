@@ -1140,19 +1140,19 @@ export const BlogPreview = ({ blogId, onBack }) => {
 
   if (blogLoading) {
     return (
-      <div className="glass-card rounded-3xl p-12 border border-white/5 flex flex-col items-center justify-center min-h-[400px] gap-3">
+      <div className="bg-card rounded-3xl p-12 border border-border flex flex-col items-center justify-center min-h-[400px] gap-3">
         <Loader2 className="animate-spin text-primary" size={32} />
-        <p className="text-sm font-semibold tracking-wider text-slate-400">Loading preview center...</p>
+        <p className="text-sm font-semibold tracking-wider text-muted-foreground">Loading preview center...</p>
       </div>
     );
   }
 
   if (isError || !blogRecord) {
     return (
-      <div className="glass-card rounded-3xl p-12 border border-red-500/20 text-center space-y-4 max-w-lg mx-auto">
+      <div className="bg-card rounded-3xl p-12 border border-red-500/20 text-center space-y-4 max-w-lg mx-auto">
         <AlertCircle size={40} className="text-red-400 mx-auto" />
         <h3 className="text-xl font-bold text-red-200">Failed to Load Blog</h3>
-        <p className="text-xs text-slate-400">{error?.message || 'Blog not found'}</p>
+        <p className="text-xs text-muted-foreground">{error?.message || 'Blog not found'}</p>
       </div>
     );
   }
@@ -1161,7 +1161,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
     <div className="space-y-6">
       {/* Floating Success Notification */}
       {showToast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 glass-card bg-white/95 border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-card bg-white/95 border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
             <Check size={14} />
           </div>
@@ -1170,10 +1170,10 @@ export const BlogPreview = ({ blogId, onBack }) => {
       )}
 
       {/* Preview Header & Back Button */}
-      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+      <div className="flex items-center justify-between border-b border-border pb-4">
         <button
           onClick={onBack}
-          className="px-3 py-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+          className="px-3 py-2 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
         >
           <ArrowLeft size={13} />
           <span>Back to directory</span>
@@ -1183,7 +1183,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
 
       <div className="space-y-6">
         {/* Platform Tab Selector */}
-        <div className="flex overflow-x-auto scrollbar-none border border-white/5 rounded-2xl bg-background/50 p-1.5 shrink-0 w-full max-w-4xl gap-1 mx-auto whitespace-nowrap">
+        <div className="flex overflow-x-auto scrollbar-none border border-border rounded-2xl bg-cardackground/50 p-1.5 shrink-0 w-full max-w-4xl gap-1 mx-auto whitespace-nowrap">
           {['canonical', 'linkedin', 'medium', 'blog', 'devto', 'substack'].map((tab) => {
             const label =
               tab === 'canonical'
@@ -1208,7 +1208,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                 className={`flex-1 py-3 text-center text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                   activeTab === tab
                     ? 'bg-gradient-to-r from-primary/10 to-primary/20 text-primary border border-primary/20 shadow-glow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                    : 'text-muted-foreground hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 {label}
@@ -1218,9 +1218,9 @@ export const BlogPreview = ({ blogId, onBack }) => {
         </div>
 
         {/* Cover Image Assistant Panel */}
-        <div className="glass-card rounded-2xl border border-white/5 p-4 w-full max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.02] select-none mx-auto">
+        <div className="bg-card rounded-2xl border border-border p-4 w-full max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.02] select-none mx-auto">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-primary relative overflow-hidden shrink-0 select-none">
+            <div className="w-12 h-12 rounded-xl bg-white/5 border border-border flex items-center justify-center text-primary relative overflow-hidden shrink-0 select-none">
               {resolvedCoverImageUrl ? (
                 <img src={resolvedCoverImageUrl} alt="Cover preview" className="w-full h-full object-cover" />
               ) : (
@@ -1228,13 +1228,13 @@ export const BlogPreview = ({ blogId, onBack }) => {
               )}
             </div>
             <div className="text-left">
-              <h4 className="text-xs font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
                 <span>Cover Image Assistant</span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-mono font-medium lowercase">
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-muted-foreground font-mono font-medium lowercase">
                   {getPlatformDisplaySize()}
                 </span>
               </h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 {resolvedCoverImageUrl
                   ? `Loaded cover visual for this topic/platform. Will embed in downloaded files.`
                   : `No tailored cover image found. Generate one matching active platform rules.`}
@@ -1246,7 +1246,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
             {resolvedCoverImageUrl && (
               <button
                 onClick={handleDownloadCoverImage}
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 hover:border-white/20 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-muted-foreground border border-border hover:border-border font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <Download size={13} />
                 <span>Download Image</span>
@@ -1276,33 +1276,33 @@ export const BlogPreview = ({ blogId, onBack }) => {
         <div className="min-h-[480px]">
           {/* A. CANONICAL PREVIEW TAB */}
           {activeTab === 'canonical' && (
-            <div className="glass-card rounded-3xl border border-white/5 p-8 w-full max-w-4xl space-y-6 mx-auto">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/5 pb-4 gap-4">
+            <div className="bg-card rounded-3xl border border-border p-8 w-full max-w-4xl space-y-6 mx-auto">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border pb-4 gap-4">
                 <div>
-                  <span className="inline-block text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-slate-400 border border-white/10 uppercase tracking-widest font-mono mb-2">
+                  <span className="inline-block text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground border border-border uppercase tracking-widest font-mono mb-2">
                     Canonical Article Draft
                   </span>
-                  <h3 className="text-2xl font-bold text-white tracking-tight">{blogRecord.title}</h3>
-                  <p className="text-xs text-slate-400 mt-2 font-mono leading-relaxed">Meta Description: {blogRecord.metaDescription}</p>
+                  <h3 className="text-2xl font-bold text-foreground tracking-tight">{blogRecord.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-2 font-mono leading-relaxed">Meta Description: {blogRecord.metaDescription}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 self-start">
                   <button
                     onClick={handleCopy}
-                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 hover:border-white/20 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-muted-foreground border border-border hover:border-border font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
                   >
                     <Share2 size={13} />
                     <span>Copy</span>
                   </button>
                   <button
                     onClick={handleDownloadMD}
-                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 hover:border-white/20 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-muted-foreground border border-border hover:border-border font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
                   >
                     <Download size={13} />
                     <span>MD</span>
                   </button>
                   <button
                     onClick={handleDownloadHTML}
-                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 hover:border-white/20 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-muted-foreground border border-border hover:border-border font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
                   >
                     <Download size={13} />
                     <span>HTML</span>
@@ -1311,7 +1311,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
               </div>
 
               {/* Canonical SEO scorecard */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-white/5 border border-white/5 rounded-2xl text-center text-xs">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-white/5 border border-border rounded-2xl text-center text-xs">
                 <div>
                   <span className="text-[9px] text-slate-500 font-bold uppercase block">SEO Score</span>
                   <span className={`text-base font-extrabold font-mono ${
@@ -1322,32 +1322,32 @@ export const BlogPreview = ({ blogId, onBack }) => {
                 </div>
                 <div>
                   <span className="text-[9px] text-slate-500 font-bold uppercase block">Words</span>
-                  <span className="text-base font-extrabold font-mono text-slate-300">
+                  <span className="text-base font-extrabold font-mono text-muted-foreground">
                     {blogRecord.content ? blogRecord.content.trim().split(/\s+/).filter(Boolean).length : 0}
                   </span>
                 </div>
                 <div>
                   <span className="text-[9px] text-slate-500 font-bold uppercase block">Readability</span>
-                  <span className="text-base font-extrabold font-mono text-slate-300">
+                  <span className="text-base font-extrabold font-mono text-muted-foreground">
                     {blogRecord.seoAnalysis?.readabilityScore || 0}
                   </span>
                 </div>
                 <div>
                   <span className="text-[9px] text-slate-500 font-bold uppercase block">Density</span>
-                  <span className="text-base font-extrabold font-mono text-slate-300">
+                  <span className="text-base font-extrabold font-mono text-muted-foreground">
                     {blogRecord.seoAnalysis?.keywordDensity !== undefined ? `${blogRecord.seoAnalysis.keywordDensity}%` : '0%'}
                   </span>
                 </div>
               </div>
               
               {resolvedCoverImageUrl && (
-                <div className="w-full rounded-2xl overflow-hidden border border-white/5 max-h-[300px] bg-slate-950 select-none mb-6">
+                <div className="w-full rounded-2xl overflow-hidden border border-border max-h-[300px] bg-slate-950 select-none mb-6">
                   <img src={resolvedCoverImageUrl} alt="Canonical Cover" className="w-full h-full object-cover" />
                 </div>
               )}
               
               <div 
-                className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed max-h-[420px] overflow-y-auto pr-2 scrollbar-glass"
+                className="prose prose-invert max-w-none text-muted-foreground text-sm leading-relaxed max-h-[420px] overflow-y-auto pr-2 scrollbar-glass"
                 dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(stripLeadingTitle(blogRecord.content, blogRecord.title)) }}
               />
             </div>
@@ -1357,7 +1357,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
           {activeTab !== 'canonical' && (
             <div className="w-full">
               {(adaptTaskId && tasks[adaptTaskId]?.status === 'running') ? (
-                <div className="glass-card rounded-3xl p-12 border border-white/5 flex flex-col items-center justify-center text-center space-y-8 min-h-[460px] relative overflow-hidden bg-[#0B0F19]/90 w-full max-w-3xl mx-auto">
+                <div className="bg-card rounded-3xl p-12 border border-border flex flex-col items-center justify-center text-center space-y-8 min-h-[460px] relative overflow-hidden bg-card w-full max-w-3xl mx-auto">
                   <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/5 pointer-events-none" />
                   
                   {/* Progress Circular Loader */}
@@ -1365,7 +1365,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                     {activeProgressStep < 5 ? (
                       <>
                         <div className="absolute inset-0 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
-                        <div className="absolute inset-2 bg-[#0B0F19] rounded-full flex items-center justify-center text-primary font-extrabold text-xs">
+                        <div className="absolute inset-2 bg-card rounded-full flex items-center justify-center text-primary font-extrabold text-xs">
                           {activeProgressStep * 20}%
                         </div>
                       </>
@@ -1377,14 +1377,14 @@ export const BlogPreview = ({ blogId, onBack }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="text-xl font-bold tracking-tight text-white animate-pulse">Adapting Content for {resolvedPlatformName}</h3>
-                    <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                    <h3 className="text-xl font-bold tracking-tight text-foreground animate-pulse">Adapting Content for {resolvedPlatformName}</h3>
+                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                       Restructuring canonical Markdown copy for <strong>{resolvedPlatformName}</strong> specific settings...
                     </p>
                   </div>
 
                   {/* Progress Steps Checklist */}
-                  <div className="glass-card rounded-2xl p-6 border border-white/5 text-left space-y-3.5 max-w-sm w-full mx-auto bg-black/30">
+                  <div className="bg-card rounded-2xl p-6 border border-border text-left space-y-3.5 max-w-sm w-full mx-auto bg-card">
                     {[
                       { id: 0, label: 'Reading Canonical Blog Draft' },
                       { id: 1, label: `Aligning Style with ${resolvedPlatformName} Spec` },
@@ -1416,18 +1416,18 @@ export const BlogPreview = ({ blogId, onBack }) => {
                   </div>
                 </div>
               ) : renderedLoading ? (
-                <div className="glass-card rounded-3xl p-12 border border-white/5 flex flex-col items-center justify-center min-h-[400px] gap-3">
+                <div className="bg-card rounded-3xl p-12 border border-border flex flex-col items-center justify-center min-h-[400px] gap-3">
                   <Loader2 className="animate-spin text-primary" size={32} />
-                  <p className="text-sm font-semibold tracking-wider text-slate-400">Loading platform rendering...</p>
+                  <p className="text-sm font-semibold tracking-wider text-muted-foreground">Loading platform rendering...</p>
                 </div>
               ) : !renderedRecord ? (
-                <div className="glass-card rounded-3xl p-12 border border-white/5 flex flex-col items-center justify-center text-center space-y-6 min-h-[400px] w-full max-w-xl mx-auto">
+                <div className="bg-card rounded-3xl p-12 border border-border flex flex-col items-center justify-center text-center space-y-6 min-h-[400px] w-full max-w-xl mx-auto">
                   <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary animate-pulse">
                     <Zap size={32} />
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-xl font-bold text-gradient">Adaptation Required</h3>
-                    <p className="text-sm text-slate-400 max-w-sm mx-auto">
+                    <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                       No customized post rendered for <strong>{resolvedPlatformName}</strong> yet. Adapt the canonical content dynamically.
                     </p>
                   </div>
@@ -1449,7 +1449,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                       <>
                         <button
                           onClick={() => setIsEditing(true)}
-                          className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 hover:border-white/20 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer mr-auto"
+                          className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-muted-foreground border border-border hover:border-border font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer mr-auto"
                         >
                           <FileText size={13} />
                           <span>Edit Platform Copy</span>
@@ -1470,21 +1470,21 @@ export const BlogPreview = ({ blogId, onBack }) => {
                     )}
                     <button
                       onClick={handleCopy}
-                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 hover:border-white/20 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-muted-foreground border border-border hover:border-border font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
                     >
                       <Share2 size={13} />
                       <span>Copy</span>
                     </button>
                     <button
                       onClick={handleDownloadMD}
-                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 hover:border-white/20 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-muted-foreground border border-border hover:border-border font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
                     >
                       <Download size={13} />
                       <span>MD</span>
                     </button>
                     <button
                       onClick={handleDownloadHTML}
-                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 hover:border-white/20 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-muted-foreground border border-border hover:border-border font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
                     >
                       <Download size={13} />
                       <span>HTML</span>
@@ -1500,7 +1500,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                   </div>
 
                   {/* Adapted SEO scorecard */}
-                  <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-white/5 border border-white/5 rounded-2xl text-center text-xs ${
+                  <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-white/5 border border-border rounded-2xl text-center text-xs ${
                     activeTab === 'linkedin' || activeTab === 'medium' || activeTab === 'devto' || activeTab === 'substack' ? 'max-w-2xl' : 'max-w-4xl'
                   } mx-auto`}>
                     <div>
@@ -1513,37 +1513,37 @@ export const BlogPreview = ({ blogId, onBack }) => {
                     </div>
                     <div>
                       <span className="text-[9px] text-slate-500 font-bold uppercase block">Words</span>
-                      <span className="text-base font-extrabold font-mono text-slate-300">
+                      <span className="text-base font-extrabold font-mono text-muted-foreground">
                         {renderedRecord.copy ? renderedRecord.copy.trim().split(/\s+/).filter(Boolean).length : 0}
                       </span>
                     </div>
                     <div>
                       <span className="text-[9px] text-slate-500 font-bold uppercase block">Readability</span>
-                      <span className="text-base font-extrabold font-mono text-slate-300">
+                      <span className="text-base font-extrabold font-mono text-muted-foreground">
                         {renderedRecord.seoAnalysis?.readabilityScore || 0}
                       </span>
                     </div>
                     <div>
                       <span className="text-[9px] text-slate-500 font-bold uppercase block">Density</span>
-                      <span className="text-base font-extrabold font-mono text-slate-300">
+                      <span className="text-base font-extrabold font-mono text-muted-foreground">
                         {renderedRecord.seoAnalysis?.keywordDensity !== undefined ? `${renderedRecord.seoAnalysis.keywordDensity}%` : '0%'}
                       </span>
                     </div>
                   </div>
 
                   {!isEditing && (
-                    <div className={`p-4 bg-white/[0.02] border border-white/5 rounded-2xl text-left text-xs ${
+                    <div className={`p-4 bg-white/[0.02] border border-border rounded-2xl text-left text-xs ${
                       activeTab === 'linkedin' || activeTab === 'medium' || activeTab === 'devto' || activeTab === 'substack' ? 'max-w-2xl' : 'max-w-4xl'
                     } mx-auto space-y-2`}>
                       {renderedRecord.metaDescription && activeTab !== 'substack' && (
-                        <p className="text-slate-400 font-mono leading-relaxed">
-                          <strong className="text-slate-300 font-semibold uppercase text-[9px] block mb-0.5">Meta Description:</strong>
+                        <p className="text-muted-foreground font-mono leading-relaxed">
+                          <strong className="text-muted-foreground font-semibold uppercase text-[9px] block mb-0.5">Meta Description:</strong>
                           {renderedRecord.metaDescription}
                         </p>
                       )}
                       {renderedRecord.hashtags && renderedRecord.hashtags.length > 0 && (
-                        <p className="text-slate-400 font-mono leading-relaxed">
-                          <strong className="text-slate-300 font-semibold uppercase text-[9px] block mb-0.5">Hashtags:</strong>
+                        <p className="text-muted-foreground font-mono leading-relaxed">
+                          <strong className="text-muted-foreground font-semibold uppercase text-[9px] block mb-0.5">Hashtags:</strong>
                           <span className="text-primary font-semibold">
                             {renderedRecord.hashtags.map(tag => `#${tag}`).join(' ')}
                           </span>
@@ -1553,65 +1553,65 @@ export const BlogPreview = ({ blogId, onBack }) => {
                   )}
                   
                   {isEditing ? (
-                    <div className={`glass-card rounded-3xl border border-white/5 p-6 md:p-8 w-full ${
+                    <div className={`bg-card rounded-3xl border border-border p-6 md:p-8 w-full ${
                       activeTab === 'linkedin' || activeTab === 'medium' || activeTab === 'devto' || activeTab === 'substack' ? 'max-w-2xl' : 'max-w-4xl'
                     } mx-auto space-y-4 text-left`}>
-                      <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                        <h4 className="text-sm font-bold text-white uppercase tracking-wider">Edit {resolvedPlatformName} Post</h4>
+                      <div className="flex justify-between items-center border-b border-border pb-3">
+                        <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">Edit {resolvedPlatformName} Post</h4>
                         <button
                           onClick={() => setIsEditing(false)}
-                          className="p-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+                          className="p-1.5 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
                         >
                           <X size={14} />
                         </button>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">Title / Headline Hook</label>
+                        <label className="text-[10px] uppercase font-bold text-muted-foreground">Title / Headline Hook</label>
                         <input
                           type="text"
                           value={editTitle}
                           onChange={(e) => setEditTitle(e.target.value)}
-                          className="w-full px-4 py-2.5 bg-background/60 border border-white/10 rounded-xl text-white text-xs font-semibold focus:outline-none focus:border-primary transition-colors"
+                          className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-foreground text-xs font-semibold focus:outline-none focus:border-primary transition-colors"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">Body Copy (Markdown)</label>
+                        <label className="text-[10px] uppercase font-bold text-muted-foreground">Body Copy (Markdown)</label>
                         <textarea
                           rows={12}
                           value={editCopy}
                           onChange={(e) => setEditCopy(e.target.value)}
-                          className="w-full p-4 bg-background/60 border border-white/10 rounded-xl text-white text-xs font-mono leading-relaxed focus:outline-none focus:border-primary transition-colors resize-none"
+                          className="w-full p-4 bg-cardackground/60 border border-border rounded-xl text-white text-xs font-mono leading-relaxed focus:outline-none focus:border-primary transition-colors resize-none"
                         />
                       </div>
 
                       {['linkedin', 'devto'].includes(activeTab) && (
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400">Hashtags (Comma Separated)</label>
+                          <label className="text-[10px] uppercase font-bold text-muted-foreground">Hashtags (Comma Separated)</label>
                           <input
                             type="text"
                             value={editHashtags.join(', ')}
                             onChange={(e) => setEditHashtags(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-                            className="w-full px-4 py-2.5 bg-background/60 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
+                            className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
                           />
                         </div>
                       )}
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">Meta Description</label>
+                        <label className="text-[10px] uppercase font-bold text-muted-foreground">Meta Description</label>
                         <textarea
                           rows={2}
                           value={editMetaDescription}
                           onChange={(e) => setEditMetaDescription(e.target.value)}
-                          className="w-full px-4 py-2.5 bg-background/60 border border-white/10 rounded-xl text-white text-xs font-semibold focus:outline-none focus:border-primary transition-colors resize-none"
+                          className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-white text-xs font-semibold focus:outline-none focus:border-primary transition-colors resize-none"
                         />
                       </div>
 
-                      <div className="pt-4 flex justify-end gap-2 border-t border-white/5 mt-2">
+                      <div className="pt-4 flex justify-end gap-2 border-t border-border mt-2">
                         <button
                           onClick={() => setIsEditing(false)}
-                          className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 hover:border-white/20 font-bold rounded-xl text-xs transition-all cursor-pointer"
+                          className="px-4 py-2 bg-white/5 hover:bg-white/10 text-muted-foreground border border-border hover:border-border font-bold rounded-xl text-xs transition-all cursor-pointer"
                         >
                           Cancel
                         </button>

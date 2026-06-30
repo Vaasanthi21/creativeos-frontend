@@ -426,7 +426,7 @@ export default function GenerationForm({
                         variant="outline"
                         size="sm"
                         className="mt-3 gap-2"
-                        onClick={() => navigate("/personas")}
+                        onClick={() => navigate("/brand-setup")}
                       >
                         <Plus className="h-4 w-4" />
                         Add Persona

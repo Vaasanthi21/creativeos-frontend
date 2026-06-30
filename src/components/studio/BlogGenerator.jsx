@@ -358,7 +358,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
     <div className="space-y-6">
       {/* Floating Success Notification */}
       {showToast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 glass-card bg-white/95 border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-card bg-white/95 border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
             <CheckCircle2 size={14} />
           </div>
@@ -367,14 +367,14 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
       )}
 
       {/* Back button and title */}
-      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+      <div className="flex items-center justify-between border-b border-border pb-4">
         <button
           onClick={() => {
             localStorage.removeItem('selected-topic-id');
             onBack();
           }}
           disabled={isGenerating}
-          className="px-3 py-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          className="px-3 py-2 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
         >
           <ArrowLeft size={13} />
           <span>Back to directory</span>
@@ -384,7 +384,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
       {isGenerating ? (
         /* Live Synthesis Loader Console */
-        <div className="glass-card rounded-3xl p-12 border border-white/5 flex flex-col items-center justify-center text-center space-y-8 min-h-[500px] relative overflow-hidden bg-[#0B0F19]/90">
+        <div className="bg-card rounded-3xl p-12 border border-border flex flex-col items-center justify-center text-center space-y-8 min-h-[500px] relative overflow-hidden bg-card">
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/5 pointer-events-none" />
           
           {/* Progress Circular Loader */}
@@ -392,7 +392,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
             {activeProgressStep < 5 ? (
               <>
                 <div className="absolute inset-0 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
-                <div className="absolute inset-2 bg-[#0B0F19] rounded-full flex items-center justify-center text-primary font-extrabold text-xs">
+                <div className="absolute inset-2 bg-card rounded-full flex items-center justify-center text-primary font-extrabold text-xs">
                   {activeProgressStep * 20}%
                 </div>
               </>
@@ -404,14 +404,14 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-bold tracking-tight text-white animate-pulse">Running AI Synthesis Engine</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            <h3 className="text-xl font-bold tracking-tight text-foreground animate-pulse">Running AI Synthesis Engine</h3>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               Grounded GPT-5.4 models are outline scripting, drafting canonical contents, tuning word count, and validating SEO scorecards...
             </p>
           </div>
 
           {/* Progress Steps Checklist */}
-          <div className="glass-card rounded-2xl p-6 border border-white/5 text-left space-y-3.5 max-w-sm w-full mx-auto bg-black/30">
+          <div className="bg-card rounded-2xl p-6 border border-border text-left space-y-3.5 max-w-sm w-full mx-auto bg-card">
             {[
               { id: 0, label: 'Analyzing Brand & Persona Context' },
               { id: 1, label: 'Mapping SEO Keywords & Trends' },
@@ -443,8 +443,8 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
           </div>
 
           {/* Telemetry Console logs */}
-          <div className="w-full max-w-md p-4 rounded-xl bg-black/60 border border-white/5 text-left font-mono text-[10px] text-primary space-y-1.5 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-white/5 pb-2 mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+          <div className="w-full max-w-md p-4 rounded-xl bg-cardlack/60 border border-border text-left font-mono text-[10px] text-primary space-y-1.5 shadow-2xl">
+            <div className="flex justify-between items-center border-b border-border pb-2 mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
               <span>SYSTEM GENERATION LOGS</span>
               <span className="animate-pulse text-emerald-400">● RUNNING</span>
             </div>
@@ -475,7 +475,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
         </div>
       ) : (knowledgeFiles.length === 0 && !bypassKnowledgeCheck) ? (
         /* Recommendation state when no knowledge files are uploaded */
-        <div className="glass-card rounded-3xl p-12 border border-white/5 flex flex-col items-center justify-center text-center space-y-6 min-h-[400px] relative overflow-hidden bg-[#0B0F19]/90">
+        <div className="bg-card rounded-3xl p-12 border border-border flex flex-col items-center justify-center text-center space-y-6 min-h-[400px] relative overflow-hidden bg-card">
           <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/5 to-primary/5 pointer-events-none" />
           
           <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center shadow-glow-sm">
@@ -483,25 +483,25 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
           </div>
 
           <div className="space-y-2 max-w-md mx-auto">
-            <h3 className="text-xl font-bold tracking-tight text-white">AI Grounding Recommendation</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-xl font-bold tracking-tight text-foreground">AI Grounding Recommendation</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Uploading reference documents (PDFs, TXT, DOCX) to the Knowledge Base helps ground the AI generator in your actual company metrics, products, and insights. This prevents hallucinations and produces much higher-quality blogs.
             </p>
           </div>
 
           {/* Validation Summary */}
-          <div className="w-full max-w-xs mx-auto p-4 bg-white/5 border border-white/5 rounded-2xl text-left space-y-2 text-xs">
+          <div className="w-full max-w-xs mx-auto p-4 bg-white/5 border border-border rounded-2xl text-left space-y-2 text-xs">
             <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1">Brand Setup Status</div>
-            <div className="flex justify-between items-center text-slate-300">
+            <div className="flex justify-between items-center text-muted-foreground">
               <span className="flex items-center gap-1.5"><CheckCircle2 size={13} className="text-emerald-400" /> Company Profile</span>
               <span className="font-semibold text-emerald-400">✓ Ready</span>
             </div>
-            <div className="flex justify-between items-center text-slate-300">
+            <div className="flex justify-between items-center text-muted-foreground">
               <span className="flex items-center gap-1.5"><CheckCircle2 size={13} className="text-emerald-400" /> Audience Personas</span>
               <span className="font-semibold text-emerald-400">✓ Ready</span>
             </div>
-            <div className="flex justify-between items-center text-slate-300 border-t border-white/5 pt-2 mt-2">
-              <span className="flex items-center gap-1.5 text-slate-400"><BookOpen size={13} /> Knowledge Documents</span>
+            <div className="flex justify-between items-center text-muted-foreground border-t border-border pt-2 mt-2">
+              <span className="flex items-center gap-1.5 text-muted-foreground"><BookOpen size={13} /> Knowledge Documents</span>
               <span className="font-semibold text-amber-400">Optional (Missing)</span>
             </div>
           </div>
@@ -515,7 +515,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
             </button>
             <button
               onClick={() => setBypassKnowledgeCheck(true)}
-              className="w-full sm:w-auto px-5 py-2.5 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white font-semibold rounded-xl transition-all flex items-center justify-center text-xs cursor-pointer"
+              className="w-full sm:w-auto px-5 py-2.5 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground font-semibold rounded-xl transition-all flex items-center justify-center text-xs cursor-pointer"
             >
               <span>Continue Anyway</span>
             </button>
@@ -526,8 +526,8 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main selection form */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
-              <div className="flex justify-between items-center border-b border-white/5 pb-3">
+            <div className="bg-card rounded-2xl p-6 border border-border space-y-4">
+              <div className="flex justify-between items-center border-b border-border pb-3">
                 <h3 className="text-sm font-bold flex items-center gap-2">
                   <Compass size={16} className="text-primary" />
                   <span>{!selectedTopicId ? 'Create Blog Topic' : 'Topic Context & Research'}</span>
@@ -536,7 +536,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                   <button
                     type="button"
                     onClick={() => setSelectedTopicId('')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-xs font-bold rounded-lg transition-all text-slate-300 hover:text-white cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-xs font-bold rounded-lg transition-all text-muted-foreground hover:text-foreground cursor-pointer"
                   >
                     <ArrowLeft size={12} />
                     <span>Change Topic</span>
@@ -557,7 +557,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
                   {/* Topic Name */}
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-400 flex items-center">
+                    <label className="text-xs font-semibold text-muted-foreground flex items-center">
                       Topic Name <span className="text-rose-500 font-bold ml-1">*</span>
                     </label>
                     <input
@@ -566,13 +566,13 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                       value={newTopicName}
                       onChange={(e) => setNewTopicName(e.target.value)}
                       placeholder="e.g. Q3 Enterprise Expansion"
-                      className="w-full px-4 py-2.5 bg-background/60 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                      className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-foreground text-sm focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
 
                   {/* Topic Detail */}
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-400 flex items-center">
+                    <label className="text-xs font-semibold text-muted-foreground flex items-center">
                       Target Core Topic Details <span className="text-rose-500 font-bold ml-1">*</span>
                     </label>
                     <input
@@ -581,24 +581,24 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                       value={newTopicDetail}
                       onChange={(e) => setNewTopicDetail(e.target.value)}
                       placeholder="e.g. AI-driven marketing automation value propositions"
-                      className="w-full px-4 py-2.5 bg-background/60 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                      className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-foreground text-sm focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
 
                   {/* Target Audience Persona selection dropdown */}
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-400 flex items-center">
+                    <label className="text-xs font-semibold text-muted-foreground flex items-center">
                       Target Audience Persona <span className="text-rose-500 font-bold ml-1">*</span>
                     </label>
                     <select
                       required
                       value={newTopicPersonaId}
                       onChange={(e) => setNewTopicPersonaId(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-background/60 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                      className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-foreground text-sm focus:outline-none focus:border-primary transition-colors cursor-pointer"
                     >
-                      <option value="" className="bg-background text-slate-500">-- Select Brand Persona --</option>
+                      <option value="" className="bg-cardackground text-slate-500">-- Select Brand Persona --</option>
                       {personas?.map(p => (
-                        <option key={p._id} value={p._id} className="bg-background text-white">
+                        <option key={p._id} value={p._id} className="bg-cardackground text-white">
                           {p.personaName} ({p.tone})
                         </option>
                       ))}
@@ -607,7 +607,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
                   {/* Targeted Platforms Grid Checklist */}
                   <div className="space-y-2 pt-1">
-                    <label className="text-xs font-semibold text-slate-400 flex items-center">
+                    <label className="text-xs font-semibold text-muted-foreground flex items-center">
                       Target Multi-Channel Platforms <span className="text-rose-500 font-bold ml-1">*</span>
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -621,7 +621,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                             className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all capitalize text-center ${
                               active
                                 ? 'bg-primary/10 border-primary/40 text-primary shadow-glow'
-                                : 'bg-background/40 border-white/5 text-slate-400 hover:border-white/20'
+                                : 'bg-cardackground/40 border-border text-muted-foreground hover:border-border'
                             }`}
                           >
                             {plat.replace('-', ' ')}
@@ -634,7 +634,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                   {/* SEO Keywords Tag Manager */}
                   <div className="space-y-1.5 pt-1">
                     <div className="flex justify-between items-center">
-                      <label className="text-xs font-semibold text-slate-400">Target SEO Keywords</label>
+                      <label className="text-xs font-semibold text-muted-foreground">Target SEO Keywords</label>
                       <button
                         type="button"
                         onClick={handleSuggestKeywords}
@@ -660,7 +660,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                         value={newTopicKeywordInput}
                         onChange={(e) => setNewTopicKeywordInput(e.target.value)}
                         placeholder="Add keywords (press enter)"
-                        className="flex-1 px-3 py-2 bg-background/60 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-primary"
+                        className="flex-1 px-3 py-2 bg-cardackground/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             handleAddKeyword(e);
@@ -670,7 +670,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                       <button
                         type="button"
                         onClick={handleAddKeyword}
-                        className="px-3 py-2 bg-white/5 border border-white/10 hover:border-primary hover:text-primary transition-all rounded-xl flex items-center justify-center shrink-0"
+                        className="px-3 py-2 bg-white/5 border border-border hover:border-primary hover:text-primary transition-all rounded-xl flex items-center justify-center shrink-0"
                       >
                         <Plus size={16} />
                       </button>
@@ -680,13 +680,13 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                       {newTopicKeywords.map(kw => (
                         <div
                           key={kw}
-                          className="flex items-center gap-1 pl-2 pr-1 py-0.5 bg-white/5 border border-white/10 rounded-md text-[10px] text-slate-300"
+                          className="flex items-center gap-1 pl-2 pr-1 py-0.5 bg-white/5 border border-border rounded-md text-[10px] text-muted-foreground"
                         >
                           <span>#{kw}</span>
                           <button
                             type="button"
                             onClick={() => handleRemoveKeyword(kw)}
-                            className="p-0.5 hover:bg-white/10 rounded-md text-slate-400 hover:text-white"
+                            className="p-0.5 hover:bg-white/10 rounded-md text-muted-foreground hover:text-foreground"
                           >
                             <X size={8} />
                           </button>
@@ -697,13 +697,13 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
                   {/* Objectives Details */}
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-400">Topic Objectives & Details</label>
+                    <label className="text-xs font-semibold text-muted-foreground">Topic Objectives & Details</label>
                     <textarea
                       rows={3}
                       value={newTopicGoal}
                       onChange={(e) => setNewTopicGoal(e.target.value)}
                       placeholder="Describe your goals, messaging strategies..."
-                      className="w-full px-4 py-3 bg-background/60 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-primary resize-none placeholder:text-slate-600"
+                      className="w-full px-4 py-3 bg-cardackground/60 border border-border rounded-xl text-white text-sm focus:outline-none focus:border-primary resize-none placeholder:text-slate-600"
                     />
                   </div>
 
@@ -734,8 +734,8 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                         <Sparkles size={11} className="animate-pulse" />
                         <span>Targeted AI Content Copy Angle Active:</span>
                       </p>
-                      <p className="font-medium text-white leading-relaxed italic">"{initialCustomAngle}"</p>
-                      <p className="text-[10px] text-slate-400 mt-1">The AI content generation pipeline will prioritize this strategic angle and title structure.</p>
+                      <p className="font-medium text-foreground leading-relaxed italic">"{initialCustomAngle}"</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">The AI content generation pipeline will prioritize this strategic angle and title structure.</p>
                     </div>
                   )}
 
@@ -743,16 +743,16 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                   {selectedTopicId && (
                     <div className="pt-2 animate-fade-in">
                       {researchLoading ? (
-                        <div className="flex items-center justify-center p-8 bg-white/5 border border-white/5 rounded-xl gap-2 text-xs text-slate-300">
+                        <div className="flex items-center justify-center p-8 bg-white/5 border border-border rounded-xl gap-2 text-xs text-muted-foreground">
                           <Loader2 className="animate-spin text-primary animate-pulse" size={16} />
                           <span>Checking topic market research records...</span>
                         </div>
                       ) : generateResearchMutation.isPending ? (
-                        <div className="p-8 bg-white/5 border border-white/5 rounded-xl text-center space-y-4">
+                        <div className="p-8 bg-white/5 border border-border rounded-xl text-center space-y-4">
                           <Loader2 className="animate-spin text-primary mx-auto animate-pulse" size={24} />
                           <div className="space-y-1">
-                            <p className="text-xs font-bold text-white">Running Agentic SEO & Market Research...</p>
-                            <p className="text-[10px] text-slate-400 leading-relaxed max-w-sm mx-auto">
+                            <p className="text-xs font-bold text-foreground">Running Agentic SEO & Market Research...</p>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed max-w-sm mx-auto">
                               Our agents are auditing search volumes, extracting competitor voids, and synthesizing strategic blog copy angles...
                             </p>
                           </div>
@@ -764,7 +764,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                               <AlertCircle size={14} />
                               <span>No SEO Market Research Sourced</span>
                             </p>
-                            <p className="text-[10px] text-slate-400">Run market research to identify SEO keywords, competitor voids, and angles.</p>
+                            <p className="text-[10px] text-muted-foreground">Run market research to identify SEO keywords, competitor voids, and angles.</p>
                           </div>
                           <button
                             type="button"
@@ -783,14 +783,14 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                                 <CheckCircle2 size={14} />
                                 <span>Agentic Market Research Active</span>
                               </p>
-                              <p className="text-[10px] text-slate-400">
+                              <p className="text-[10px] text-muted-foreground">
                                 Keywords: {researchData.keywords?.slice(0, 3).map(k => k.keyword).join(', ')}...
                               </p>
                             </div>
                             <button
                               type="button"
                               onClick={() => setShowResearchModal(true)}
-                              className="px-3.5 py-2 border border-slate-700/50 hover:border-slate-600 bg-white/5 hover:bg-white/10 transition-all text-slate-300 hover:text-white font-bold rounded-xl flex items-center gap-1.5 text-xs cursor-pointer active:scale-[0.97]"
+                              className="px-3.5 py-2 border border-slate-700/50 hover:border-slate-600 bg-white/5 hover:bg-white/10 transition-all text-muted-foreground hover:text-foreground font-bold rounded-xl flex items-center gap-1.5 text-xs cursor-pointer active:scale-[0.97]"
                             >
                               <Eye size={13} />
                               <span>View Synthesized Research</span>
@@ -800,16 +800,16 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                           {/* Suggested Copy Angle Dropdown */}
                           <div className="space-y-4 pt-2">
                             <div className="space-y-1">
-                              <label className="text-xs font-semibold text-slate-400">Suggested Copy Angle (from Market Research)</label>
+                              <label className="text-xs font-semibold text-muted-foreground">Suggested Copy Angle (from Market Research)</label>
                               {researchData.suggestedAngles && researchData.suggestedAngles.length > 0 ? (
                                 <select
                                   value={selectedAngle}
                                   onChange={(e) => setSelectedAngle(e.target.value)}
-                                  className="w-full px-4 py-3 bg-background/60 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                                  className="w-full px-4 py-3 bg-cardackground/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer"
                                 >
-                                  <option value="" className="bg-background text-slate-400">-- Select a suggested angle --</option>
+                                  <option value="" className="bg-cardackground text-muted-foreground">-- Select a suggested angle --</option>
                                   {researchData.suggestedAngles.map((angle, index) => (
-                                    <option key={index} value={angle} className="bg-background text-white truncate">
+                                    <option key={index} value={angle} className="bg-cardackground text-white truncate">
                                       {angle}
                                     </option>
                                   ))}
@@ -823,13 +823,13 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
                             {/* Copy Angle Editor */}
                             <div className="space-y-1">
-                              <label className="text-xs font-semibold text-slate-400">Active Content Angle / Theme Hook</label>
+                              <label className="text-xs font-semibold text-muted-foreground">Active Content Angle / Theme Hook</label>
                               <textarea
                                 rows={2}
                                 value={selectedAngle}
                                 onChange={(e) => setSelectedAngle(e.target.value)}
                                 placeholder="Specify a custom strategic focus, angle, or hooks..."
-                                className="w-full px-4 py-2.5 bg-background/60 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors resize-none leading-relaxed"
+                                className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors resize-none leading-relaxed"
                               />
                               <p className="text-[9px] text-slate-500">
                                 The AI content generation pipeline will prioritize this strategic angle. You can select one from the dropdown or type a custom one.
@@ -843,11 +843,11 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
                   {activeTopic && (
                     <div className="space-y-3 pt-3 animate-fade-in text-xs">
-                      <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2">
-                        <p className="font-bold text-white uppercase text-[9px] tracking-wider text-primary">Topic details:</p>
-                        <p className="text-slate-300"><span className="font-semibold text-slate-400">Topic focus:</span> {activeTopic.topic}</p>
-                        <p className="text-slate-300"><span className="font-semibold text-slate-400">Target goal:</span> {activeTopic.goal || 'General Brand growth'}</p>
-                        <p className="text-slate-300"><span className="font-semibold text-slate-400">SEO Keywords:</span> {activeTopic.keywords?.join(', ')}</p>
+                      <div className="p-4 rounded-xl bg-white/5 border border-border space-y-2">
+                        <p className="font-bold text-foreground uppercase text-[9px] tracking-wider text-primary">Topic details:</p>
+                        <p className="text-muted-foreground"><span className="font-semibold text-muted-foreground">Topic focus:</span> {activeTopic.topic}</p>
+                        <p className="text-muted-foreground"><span className="font-semibold text-muted-foreground">Target goal:</span> {activeTopic.goal || 'General Brand growth'}</p>
+                        <p className="text-muted-foreground"><span className="font-semibold text-muted-foreground">SEO Keywords:</span> {activeTopic.keywords?.join(', ')}</p>
                       </div>
                     </div>
                   )}
@@ -857,17 +857,17 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
             {/* Persona preview */}
             {activeTopic && (
-              <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4 animate-fade-in">
-                <h3 className="text-sm font-bold flex items-center gap-2 border-b border-white/5 pb-3">
+              <div className="bg-card rounded-2xl p-6 border border-border space-y-4 animate-fade-in">
+                <h3 className="text-sm font-bold flex items-center gap-2 border-b border-border pb-3">
                   <User size={16} className="text-accent" />
                   <span>Target Audience Persona</span>
                 </h3>
 
-                <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2 text-xs">
-                  <p className="font-bold text-white text-sm">{activeTopic.personaId?.personaName || 'Unknown Persona'}</p>
-                  <p className="text-slate-300"><span className="font-semibold text-slate-400">Writing Tone:</span> {activeTopic.personaId?.tone || 'Analytical'}</p>
-                  <p className="text-slate-300"><span className="font-semibold text-slate-400">Style:</span> {activeTopic.personaId?.writingStyle || 'Technical'}</p>
-                  <p className="text-slate-300"><span className="font-semibold text-slate-400">Audience:</span> {activeTopic.personaId?.audienceType || 'Cloud engineers'}</p>
+                <div className="p-4 rounded-xl bg-white/5 border border-border space-y-2 text-xs">
+                  <p className="font-bold text-foreground text-sm">{activeTopic.personaId?.personaName || 'Unknown Persona'}</p>
+                  <p className="text-muted-foreground"><span className="font-semibold text-muted-foreground">Writing Tone:</span> {activeTopic.personaId?.tone || 'Analytical'}</p>
+                  <p className="text-muted-foreground"><span className="font-semibold text-muted-foreground">Style:</span> {activeTopic.personaId?.writingStyle || 'Technical'}</p>
+                  <p className="text-muted-foreground"><span className="font-semibold text-muted-foreground">Audience:</span> {activeTopic.personaId?.audienceType || 'Cloud engineers'}</p>
                 </div>
               </div>
             )}
@@ -875,8 +875,8 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
           {/* Grounding Context variables details */}
           <div className="space-y-6">
-            <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6">
-              <h3 className="text-sm font-bold border-b border-white/5 pb-3">
+            <div className="bg-card rounded-2xl p-6 border border-border space-y-6">
+              <h3 className="text-sm font-bold border-b border-border pb-3">
                 Grounding Parameters
               </h3>
 
@@ -886,8 +886,8 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                   <Building size={16} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-white">Company profile (active)</h4>
-                  <p className="text-slate-400 text-[10px] mt-0.5">{company?.companyName || 'Configured in Settings'}</p>
+                  <h4 className="font-bold text-foreground">Company profile (active)</h4>
+                  <p className="text-muted-foreground text-[10px] mt-0.5">{company?.companyName || 'Configured in Settings'}</p>
                 </div>
               </div>
 
@@ -897,8 +897,8 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                   <FileText size={16} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-white">Grounding files ({knowledgeFiles.length} loaded)</h4>
-                  <p className="text-slate-400 text-[10px] mt-0.5">Reference documents uploaded in Knowledge Base.</p>
+                  <h4 className="font-bold text-foreground">Grounding files ({knowledgeFiles.length} loaded)</h4>
+                  <p className="text-muted-foreground text-[10px] mt-0.5">Reference documents uploaded in Knowledge Base.</p>
                 </div>
               </div>
 
@@ -930,13 +930,13 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
       {/* Research Viewer Modal Overlay */}
       {showResearchModal && researchData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in select-text">
-          <div className="w-full max-w-3xl glass-card rounded-2xl border border-white/10 shadow-2xl relative flex flex-col max-h-[85vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in select-text">
+          <div className="w-full max-w-3xl bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[85vh]">
             
             {/* Modal Header */}
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+            <div className="p-6 border-b border-border flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                   <Search size={20} className="text-primary" />
                   <span>Synthesized Market Research Report</span>
                 </h3>
@@ -946,7 +946,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
               </div>
               <button
                 onClick={() => setShowResearchModal(false)}
-                className="p-1 hover:bg-white/5 text-slate-400 hover:text-white rounded-lg transition-colors"
+                className="p-1 hover:bg-white/5 text-muted-foreground hover:text-foreground rounded-lg transition-colors"
               >
                 <X size={20} />
               </button>
@@ -982,7 +982,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                     </table>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 italic">No keyword metrics resolved.</p>
+                  <p className="text-xs text-muted-foreground italic">No keyword metrics resolved.</p>
                 )}
               </div>
 
@@ -1007,7 +1007,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-white/5 flex justify-end">
+            <div className="p-4 border-t border-border flex justify-end">
               <button
                 onClick={() => setShowResearchModal(false)}
                 className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all text-background font-bold rounded-xl text-xs shadow-glow cursor-pointer"

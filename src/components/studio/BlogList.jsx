@@ -164,19 +164,19 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
 
   if (isListLoading) {
     return (
-      <div className="glass-card rounded-3xl p-12 border border-white/5 flex flex-col items-center justify-center min-h-[300px] gap-3">
+      <div className="bg-card rounded-3xl p-12 border border-border flex flex-col items-center justify-center min-h-[300px] gap-3">
         <Loader2 className="animate-spin text-primary" size={32} />
-        <p className="text-sm font-semibold tracking-wider text-slate-400">Loading blogs directory...</p>
+        <p className="text-sm font-semibold tracking-wider text-muted-foreground">Loading blogs directory...</p>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="glass-card rounded-3xl p-12 border border-red-500/20 text-center space-y-4 max-w-lg mx-auto">
+      <div className="bg-card rounded-3xl p-12 border border-red-500/20 text-center space-y-4 max-w-lg mx-auto">
         <AlertCircle size={40} className="text-red-400 mx-auto" />
         <h3 className="text-xl font-bold text-red-200">Failed to Load Blogs</h3>
-        <p className="text-xs text-slate-400">{error.message || 'Unknown network error.'}</p>
+        <p className="text-xs text-muted-foreground">{error.message || 'Unknown network error.'}</p>
       </div>
     );
   }
@@ -238,13 +238,13 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
           }
         `}</style>
         {/* Welcome Section */}
-        <div className="glass-card rounded-3xl p-8 border border-white/5 bg-[#0B0F19]/80 relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="bg-card rounded-3xl p-8 border border-border bg-card relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 pointer-events-none" />
           <div className="space-y-3 max-w-xl text-left">
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white leading-tight">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground leading-tight">
               Create SEO-Optimized Blogs Guided by Your Brand Context
             </h1>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Generate factually accurate, brand-aligned blog posts using advanced AI models grounded in your company's profile, personas, and custom knowledge documents.
             </p>
           </div>
@@ -274,15 +274,15 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
         {/* Brand Checklist & AI Quality Panel */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* AI Readiness Card */}
-          <div className="md:col-span-2 glass-card rounded-3xl p-6 border border-white/5 bg-[#0B0F19]/60 flex flex-col justify-between space-y-6">
+          <div className="md:col-span-2 bg-card rounded-3xl p-6 border border-border bg-card flex flex-col justify-between space-y-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <Building2 size={16} className="text-primary" />
                   <span>AI Readiness Checklist</span>
                 </h3>
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Align your AI assistant with your brand details and target demographics to ensure high-fidelity outputs.
               </p>
 
@@ -304,7 +304,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                       <AlertCircle size={14} className="text-red-400 animate-pulse" />
                     )}
                   </div>
-                  <div className="font-semibold text-xs text-white mb-1">
+                  <div className="font-semibold text-xs text-foreground mb-1">
                     {isProfileComplete ? '✓ Configured' : 'Missing Details'}
                   </div>
                   <div className="text-[10px] text-slate-500 leading-normal">
@@ -329,7 +329,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                       <AlertCircle size={14} className="text-red-400 animate-pulse" />
                     )}
                   </div>
-                  <div className="font-semibold text-xs text-white mb-1">
+                  <div className="font-semibold text-xs text-foreground mb-1">
                     {hasPersonas ? `✓ ${personasData.length} Persona${personasData.length > 1 ? 's' : ''}` : 'Missing Personas'}
                   </div>
                   <div className="text-[10px] text-slate-500 leading-normal">
@@ -343,7 +343,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                   className={`p-4 border rounded-2xl text-left cursor-pointer transition-all ${
                     hasDocuments 
                       ? 'bg-emerald-500/[0.02] border-emerald-500/20 hover:border-emerald-500/30' 
-                      : 'bg-white/[0.02] border-white/10 hover:border-white/20'
+                      : 'bg-white/[0.02] border-border hover:border-border'
                   }`}
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -351,10 +351,10 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                     {hasDocuments ? (
                       <CheckCircle2 size={14} className="text-emerald-400" />
                     ) : (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-slate-400 font-bold uppercase tracking-wider">Optional</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-muted-foreground font-bold uppercase tracking-wider">Optional</span>
                     )}
                   </div>
-                  <div className="font-semibold text-xs text-white mb-1">
+                  <div className="font-semibold text-xs text-foreground mb-1">
                     {hasDocuments ? `${documentsData.length} Documents` : 'No Documents'}
                   </div>
                   <div className="text-[10px] text-slate-500 leading-normal">
@@ -369,7 +369,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
               <div className="p-4 bg-amber-500/[0.02] border border-amber-500/20 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
                 <div className="space-y-1">
                   <h4 className="text-xs font-bold text-amber-300">Grounding Documents are Optional</h4>
-                  <p className="text-[10px] text-slate-400 leading-normal">
+                  <p className="text-[10px] text-muted-foreground leading-normal">
                     You can generate blogs without uploading documents, but uploading company case studies, whitepapers, or APIs keeps references accurate and factual.
                   </p>
                 </div>
@@ -386,25 +386,25 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
           </div>
 
           {/* AI Quality Estimate Card */}
-          <div className="glass-card rounded-3xl p-6 border border-white/5 bg-[#0B0F19]/60 flex flex-col justify-between text-left relative overflow-hidden">
+          <div className="bg-card rounded-3xl p-6 border border-border bg-card flex flex-col justify-between text-left relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent pointer-events-none" />
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Sparkles size={16} className="text-accent" />
                 <span>AI Output Estimate</span>
               </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Evaluates predicted content accuracy, context alignment, and hallucination safety based on current brand state.
               </p>
             </div>
 
-            <div className="space-y-4 pt-4 border-t border-white/5 mt-4">
+            <div className="space-y-4 pt-4 border-t border-border mt-4">
               <div className="flex items-center gap-3">
                 <div className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${qualityBadgeBg}`}>
                   {qualityText}
                 </div>
               </div>
-              <p className="text-[11px] text-slate-300 font-semibold leading-relaxed">
+              <p className="text-[11px] text-muted-foreground font-semibold leading-relaxed">
                 {qualityDesc}
               </p>
             </div>
@@ -478,7 +478,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
             placeholder="Search by title, category, author, or topic..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-background/60 border border-white/5 hover:border-white/10 focus:border-primary rounded-xl text-white placeholder:text-slate-500 focus:outline-none text-xs transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 bg-cardackground/60 border border-border hover:border-border focus:border-primary rounded-xl text-foreground placeholder:text-slate-500 focus:outline-none text-xs transition-colors"
           />
         </div>
 
@@ -493,7 +493,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
       </div>
 
       {/* Tabs Filter */}
-      <div className="flex border-b border-white/5 gap-1 pb-px overflow-x-auto scrollbar-none">
+      <div className="flex border-b border-border gap-1 pb-px overflow-x-auto scrollbar-none">
         {['All', 'Drafts', 'Archived'].map((tab) => {
           const isActive = activeTab === tab;
           const count = tab === 'All' 
@@ -509,12 +509,12 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
               className={`flex items-center gap-2 px-4 py-3 border-b-2 text-xs font-semibold transition-all shrink-0 ${
                 isActive
                   ? 'border-primary text-primary bg-primary/5 font-bold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-white/5'
               }`}
             >
               <span>{tab}</span>
               <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                isActive ? 'bg-primary/20 text-primary' : 'bg-white/5 text-slate-400'
+                isActive ? 'bg-primary/20 text-primary' : 'bg-white/5 text-muted-foreground'
               }`}>
                 {count}
               </span>
@@ -525,11 +525,11 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
 
       {/* Grid List */}
       {filteredBlogs.length === 0 ? (
-        <div className="glass-card rounded-3xl p-12 border border-white/5 text-center py-20 space-y-4 animate-fade-in">
+        <div className="bg-card rounded-3xl p-12 border border-border text-center py-20 space-y-4 animate-fade-in">
           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto text-slate-500">
             <Search size={32} />
           </div>
-          <h3 className="text-lg font-bold text-slate-300">No matching blogs found</h3>
+          <h3 className="text-lg font-bold text-muted-foreground">No matching blogs found</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
             We couldn't find any blogs matching "{searchQuery}" under the tab "{activeTab}". Try clearing your filters or search query.
           </p>
@@ -538,7 +538,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
               setSearchQuery('');
               setActiveTab('All');
             }}
-            className="px-4 py-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-semibold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
+            className="px-4 py-2 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground text-xs font-semibold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
           >
             Clear Search & Filters
           </button>
@@ -564,7 +564,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                         {statusLabel}
                       </span>
                       <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-                        <Calendar size={11} className="text-slate-400" />
+                        <Calendar size={11} className="text-muted-foreground" />
                         {new Date(blog.createdAt).toLocaleDateString()}
                       </span>
                     </div>
@@ -584,11 +584,11 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                     {/* Author / Category details */}
                     <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 pt-1 border-t border-border/40">
                       <div>
-                        <span className="text-slate-400 block text-[9px] uppercase font-semibold">Author</span>
+                        <span className="text-muted-foreground block text-[9px] uppercase font-semibold">Author</span>
                         <span className="text-slate-600 truncate block">{blog.author || 'Unassigned'}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[9px] uppercase font-semibold">Category</span>
+                        <span className="text-muted-foreground block text-[9px] uppercase font-semibold">Category</span>
                         <span className="text-slate-600 truncate block">{blog.keywordCategory || 'General'}</span>
                       </div>
                     </div>
@@ -627,7 +627,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                           e.stopPropagation();
                           onOpenPreview(blog._id);
                         }}
-                        className="px-3 py-1.5 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground rounded-xl text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
                         title="Open Adaptations & Simulator Previews"
                       >
                         <Eye size={12} />
@@ -656,13 +656,13 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex flex-col items-center justify-center border-t border-white/5 pt-6 gap-3">
+            <div className="flex flex-col items-center justify-center border-t border-border pt-6 gap-3">
               <div className="flex items-center gap-1.5 justify-center">
                 {/* First Page */}
                 <button
                   onClick={() => setCurrentPage(1)}
                   disabled={currentPage === 1}
-                  className="p-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                  className="p-2 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                   title="First Page"
                 >
                   <ChevronsLeft size={14} />
@@ -672,7 +672,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                 <button
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="p-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                  className="p-2 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                   title="Previous Page"
                 >
                   <ChevronLeft size={14} />
@@ -688,7 +688,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                         active
                           ? "bg-gradient-to-r from-primary to-accent text-background border-transparent shadow-glow-sm font-bold"
-                          : "border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300"
+                          : "border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground"
                       }`}
                     >
                       {pageNum}
@@ -700,7 +700,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                 <button
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="p-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                  className="p-2 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                   title="Next Page"
                 >
                   <ChevronRight size={14} />
@@ -710,16 +710,16 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                 <button
                   onClick={() => setCurrentPage(totalPages)}
                   disabled={currentPage === totalPages}
-                  className="p-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                  className="p-2 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                   title="Last Page"
                 >
                   <ChevronsRight size={14} />
                 </button>
               </div>
 
-              <span className="text-xs text-slate-400">
-                Showing <strong className="text-white">{(currentPage - 1) * itemsPerPage + 1}</strong> to{" "}
-                <strong className="text-white">
+              <span className="text-xs text-muted-foreground">
+                Showing <strong className="text-foreground">{(currentPage - 1) * itemsPerPage + 1}</strong> to{" "}
+                <strong className="text-foreground">
                   {Math.min(currentPage * itemsPerPage, filteredBlogs.length)}
                 </strong>{" "}
                 of <strong className="text-white">{filteredBlogs.length}</strong> posts

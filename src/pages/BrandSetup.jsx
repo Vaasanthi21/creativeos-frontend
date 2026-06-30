@@ -166,8 +166,10 @@ export const BrandSetup = () => {
         }
         setInitializedCompanyId(companyData._id);
       }
+    } else if (companyError) {
+      setViewMode('choose');
     }
-  }, [companyData, personasData, initializedCompanyId]);
+  }, [companyData, personasData, companyError, initializedCompanyId]);
 
   // Clean up timers on unmount
   useEffect(() => {
@@ -208,7 +210,7 @@ export const BrandSetup = () => {
       setIsEditingCompany(false);
     },
     onError: (err) => {
-      setErrorAlert(err.response?.data?.error || 'Failed to save company profile.');
+      setErrorAlert(err.data?.error || err.message || 'Failed to save company profile.');
     }
   });
 
@@ -224,7 +226,7 @@ export const BrandSetup = () => {
       closePersonaModal();
     },
     onError: (err) => {
-      setErrorAlert(err.response?.data?.error || 'Failed to create persona.');
+      setErrorAlert(err.data?.error || err.message || 'Failed to create persona.');
     }
   });
 
@@ -240,7 +242,7 @@ export const BrandSetup = () => {
       closePersonaModal();
     },
     onError: (err) => {
-      setErrorAlert(err.response?.data?.error || 'Failed to update persona.');
+      setErrorAlert(err.data?.error || err.message || 'Failed to update persona.');
     }
   });
 
@@ -254,7 +256,7 @@ export const BrandSetup = () => {
       triggerToast('Persona removed.');
     },
     onError: (err) => {
-      setErrorAlert(err.response?.data?.error || 'Failed to delete persona.');
+      setErrorAlert(err.data?.error || err.message || 'Failed to delete persona.');
     }
   });
 
@@ -279,7 +281,7 @@ export const BrandSetup = () => {
       setUploadProgress(null);
     },
     onError: (err) => {
-      setErrorAlert(err.response?.data?.error || 'Failed to upload document.');
+      setErrorAlert(err.data?.error || err.message || 'Failed to upload document.');
       setUploadProgress(null);
     }
   });
@@ -297,7 +299,7 @@ export const BrandSetup = () => {
       }
     },
     onError: (err) => {
-      setErrorAlert(err.response?.data?.error || 'Failed to remove source.');
+      setErrorAlert(err.data?.error || err.message || 'Failed to remove source.');
     }
   });
 
@@ -314,7 +316,7 @@ export const BrandSetup = () => {
       setIsEditingSummary(false);
     },
     onError: (err) => {
-      setErrorAlert(err.response?.data?.error || 'Failed to update summary.');
+      setErrorAlert(err.data?.error || err.message || 'Failed to update summary.');
     }
   });
 
@@ -366,7 +368,7 @@ export const BrandSetup = () => {
       triggerToast('Website crawled & brand context generated successfully!');
     },
     onError: (err) => {
-      stopProgressSimulationError(err.response?.data?.error || 'Failed to crawl website.');
+      stopProgressSimulationError(err.data?.error || err.message || 'Failed to crawl website.');
     }
   });
 
@@ -385,7 +387,7 @@ export const BrandSetup = () => {
       triggerToast('AI Brand Context & Personas extracted successfully!');
     },
     onError: (err) => {
-      stopProgressSimulationError(err.response?.data?.error || 'Failed to extract brand details.');
+      stopProgressSimulationError(err.data?.error || err.message || 'Failed to extract brand details.');
     }
   });
 
@@ -757,7 +759,7 @@ export const BrandSetup = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
         <Loader2 className="animate-spin text-primary" size={36} />
-        <p className="text-sm font-semibold tracking-wider text-muted-foreground">Initializing Brand Workspace...</p>
+        <p className="font-display text-sm font-semibold tracking-wider text-muted-foreground">Initializing Brand Workspace...</p>
       </div>
     );
   }
@@ -773,7 +775,7 @@ export const BrandSetup = () => {
           <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
             <Building2 size={32} />
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
             Teach AI About Your Company
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
@@ -785,14 +787,14 @@ export const BrandSetup = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
           
           {/* Card 1: AI Setup (Recommended) */}
-          <div className="glass-card rounded-3xl p-8 border border-primary/20 flex flex-col justify-between space-y-6 relative overflow-hidden group hover:shadow-glow-sm transition-all duration-300">
+          <div className="bg-card rounded-3xl p-8 border border-primary/20 flex flex-col justify-between space-y-6 relative overflow-hidden group hover:shadow-glow-sm transition-all duration-300">
             <div className="absolute top-0 right-0 px-4 py-1.5 bg-primary/10 border-b border-l border-primary/20 rounded-bl-2xl text-[10px] font-extrabold uppercase tracking-wider text-primary">
               Recommended
             </div>
             
             <div className="space-y-4">
               <div className="text-3xl">🤖</div>
-              <h3 className="text-xl font-bold text-foreground">AI Assisted Setup</h3>
+              <h3 className="font-display text-xl font-bold text-foreground">AI Assisted Setup</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Connect your website URL and upload key company docs. The AI will parse your site, generate profiles, extract audience personas, and build a tailored knowledge base automatically.
               </p>
@@ -824,17 +826,17 @@ export const BrandSetup = () => {
 
             <button
               onClick={() => setViewMode('ai_setup')}
-              className="w-full py-3 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl transition-all duration-300 shadow-sm hover:opacity-90 active:scale-[0.98] cursor-pointer"
+              className="w-full py-3 bg-gradient-to-r from-primary to-accent text-foreground font-extrabold rounded-xl transition-all duration-300 shadow-sm hover:opacity-90 active:scale-[0.98] cursor-pointer"
             >
               Start AI Setup
             </button>
           </div>
 
           {/* Card 2: Manual Setup */}
-          <div className="glass-card rounded-3xl p-8 border border-border flex flex-col justify-between space-y-6 group hover:border-slate-300 transition-all duration-300">
+          <div className="bg-card rounded-3xl p-8 border border-border flex flex-col justify-between space-y-6 group hover:border-slate-300 transition-all duration-300">
             <div className="space-y-4">
               <div className="text-3xl">✍</div>
-              <h3 className="text-xl font-bold text-foreground">Manual Setup</h3>
+              <h3 className="font-display text-xl font-bold text-foreground">Manual Setup</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Input your company details, write descriptions, define keywords, upload logos, create target personas, and add knowledge grounding files manually.
               </p>
@@ -890,7 +892,7 @@ export const BrandSetup = () => {
 
         {/* Title */}
         <div>
-          <h2 className="text-2xl font-extrabold tracking-tight text-foreground">🤖 AI Assisted Brand Setup</h2>
+          <h2 className="font-display text-2xl font-extrabold tracking-tight text-foreground">🤖 AI Assisted Brand Setup</h2>
           <p className="text-xs text-muted-foreground mt-1">
             Provide your website and files so the AI can automatically extract company details and create audience personas.
           </p>
@@ -903,7 +905,7 @@ export const BrandSetup = () => {
               <AlertCircle size={20} className="shrink-0 text-red-500" />
               <span>{errorAlert}</span>
             </div>
-            <button onClick={() => setErrorAlert('')} className="text-slate-400 hover:text-slate-600">
+            <button onClick={() => setErrorAlert('')} className="text-muted-foreground hover:text-slate-600">
               <X size={16} />
             </button>
           </div>
@@ -913,9 +915,9 @@ export const BrandSetup = () => {
         <div className="flex flex-col md:flex-row md:items-stretch gap-6 relative">
           
           {/* Section A: Crawl URL */}
-          <div className="flex-1 glass-card rounded-2xl p-6 border border-border flex flex-col justify-between space-y-4">
+          <div className="flex-1 bg-card rounded-2xl p-6 border border-border flex flex-col justify-between space-y-4">
             <div>
-              <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+              <h4 className="font-display text-sm font-bold text-foreground flex items-center gap-1.5">
                 <Globe size={16} className="text-primary" />
                 <span>Analyze Corporate Website</span>
               </h4>
@@ -941,15 +943,15 @@ export const BrandSetup = () => {
           <div className="flex md:flex-col items-center justify-center my-2 md:my-0 relative shrink-0 min-w-[40px]">
             <div className="hidden md:block w-px h-full bg-slate-200"></div>
             <div className="block md:hidden w-full h-px bg-slate-200"></div>
-            <span className="absolute px-3 py-1 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-400 shadow-sm uppercase tracking-wider select-none">
+            <span className="absolute px-3 py-1 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-muted-foreground shadow-sm uppercase tracking-wider select-none">
               or
             </span>
           </div>
 
           {/* Section B: Document Upload */}
-          <div className="flex-1 glass-card rounded-2xl p-6 border border-border flex flex-col justify-between space-y-4">
+          <div className="flex-1 bg-card rounded-2xl p-6 border border-border flex flex-col justify-between space-y-4">
             <div>
-              <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+              <h4 className="font-display text-sm font-bold text-foreground flex items-center gap-1.5">
                 <FileText size={16} className="text-primary" />
                 <span>Upload Reference Grounding Files</span>
               </h4>
@@ -1046,7 +1048,7 @@ export const BrandSetup = () => {
               }
             }}
             disabled={crawlMutation.isPending || extractMutation.isPending}
-            className="px-6 py-3 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+            className="px-6 py-3 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
           >
             {(crawlMutation.isPending || extractMutation.isPending) ? (
               <>
@@ -1086,7 +1088,7 @@ export const BrandSetup = () => {
           {activeProgressStep < 5 ? (
             <>
               <div className="absolute inset-0 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
-              <div className="absolute inset-2 bg-background rounded-full flex items-center justify-center text-primary font-bold text-xs">
+              <div className="absolute inset-2 bg-cardackground rounded-full flex items-center justify-center text-primary font-bold text-xs">
                 {activeProgressStep * 20}%
               </div>
             </>
@@ -1099,21 +1101,21 @@ export const BrandSetup = () => {
 
         {/* Title */}
         <div className="space-y-2">
-          <h3 className="text-xl font-bold text-foreground">{processingTitle}</h3>
+          <h3 className="font-display text-xl font-bold text-foreground">{processingTitle}</h3>
           <p className="text-xs text-muted-foreground">
             Please wait while the AI synthesizes your website structure and documents.
           </p>
         </div>
 
         {/* Progress Checklist */}
-        <div className="glass-card rounded-2xl p-6 border border-border text-left space-y-3.5 max-w-sm mx-auto">
+        <div className="bg-card rounded-2xl p-6 border border-border text-left space-y-3.5 max-w-sm mx-auto">
           {steps.map((step) => {
             const isCompleted = activeProgressStep > step.id || activeProgressStep === 5;
             const isActive = activeProgressStep === step.id && activeProgressStep < 5;
             return (
               <div key={step.id} className="flex items-center justify-between text-xs">
                 <span className={`font-semibold ${
-                  isCompleted ? 'text-emerald-600' : isActive ? 'text-primary' : 'text-slate-400'
+                  isCompleted ? 'text-emerald-600' : isActive ? 'text-primary' : 'text-muted-foreground'
                 }`}>
                   {step.label}
                 </span>
@@ -1141,7 +1143,7 @@ export const BrandSetup = () => {
                 setProcessingError('');
                 setViewMode('ai_setup');
               }}
-              className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-lg text-xs"
+              className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-lg text-xs"
             >
               Try Again
             </button>
@@ -1169,7 +1171,7 @@ export const BrandSetup = () => {
         {/* Header */}
         <div className="flex justify-between items-center border-b border-border pb-4">
           <div>
-            <h2 className="text-2xl font-extrabold tracking-tight text-foreground">✍ Manual Brand Setup</h2>
+            <h2 className="font-display text-2xl font-extrabold tracking-tight text-foreground">✍ Manual Brand Setup</h2>
             <p className="text-xs text-muted-foreground mt-1">Configure company profiles, design audience personas, and upload sources.</p>
           </div>
           <button
@@ -1188,7 +1190,7 @@ export const BrandSetup = () => {
               <AlertCircle size={18} className="shrink-0 text-red-500" />
               <span>{errorAlert}</span>
             </div>
-            <button onClick={() => setErrorAlert('')} className="text-slate-400 hover:text-slate-600 font-bold text-sm select-none cursor-pointer">
+            <button onClick={() => setErrorAlert('')} className="text-muted-foreground hover:text-slate-600 font-bold text-sm select-none cursor-pointer">
               &times;
             </button>
           </div>
@@ -1198,7 +1200,7 @@ export const BrandSetup = () => {
         <div className="space-y-4">
           
           {/* ACCORDION 1: Company Profile */}
-          <div id="accordion-profile" className="glass-card rounded-2xl border border-border overflow-hidden">
+          <div id="accordion-profile" className="bg-card rounded-2xl border border-border overflow-hidden">
             <button
               onClick={() => handleSetOpenAccordion('profile', true)}
               className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/50 transition-colors text-left"
@@ -1297,7 +1299,7 @@ export const BrandSetup = () => {
                               <button
                                 type="button"
                                 onClick={handleLogoDeleteTrigger}
-                                className="absolute -top-1.5 -right-1.5 p-0.5 bg-red-500 hover:bg-red-600 text-white rounded-full border border-white flex items-center justify-center cursor-pointer"
+                                className="absolute -top-1.5 -right-1.5 p-0.5 bg-red-500 hover:bg-red-600 text-foreground rounded-full border border-white flex items-center justify-center cursor-pointer"
                               >
                                 <X size={8} />
                               </button>
@@ -1317,13 +1319,13 @@ export const BrandSetup = () => {
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-[10px] text-slate-400 italic">No colors extracted</p>
+                                <p className="text-[10px] text-muted-foreground italic">No colors extracted</p>
                               )}
                               <p className="text-[10px] text-muted-foreground truncate">{brandColorsDescription || 'Logo synchronized.'}</p>
                             </div>
                           </div>
                         ) : (
-                          <div className="text-center text-slate-400 py-3 text-xs italic">No logo uploaded yet</div>
+                          <div className="text-center text-muted-foreground py-3 text-xs italic">No logo uploaded yet</div>
                         )}
                       </div>
 
@@ -1370,7 +1372,7 @@ export const BrandSetup = () => {
                             onClick={() => {
                               setBrandColors(brandColors.filter((_, i) => i !== idx));
                             }}
-                            className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg cursor-pointer"
+                            className="p-1 hover:bg-red-50 text-muted-foreground hover:text-red-500 rounded-lg cursor-pointer"
                             title="Remove color"
                           >
                             <X size={12} />
@@ -1444,7 +1446,7 @@ export const BrandSetup = () => {
                       <button
                         type="button"
                         onClick={handleAddCompetitor}
-                        className="px-3 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 transition-all rounded-xl flex items-center justify-center cursor-pointer"
+                        className="px-3 bg-primary/10 hover:bg-primary text-primary hover:text-foreground border border-primary/20 transition-all rounded-xl flex items-center justify-center cursor-pointer"
                       >
                         <Plus size={16} />
                       </button>
@@ -1452,7 +1454,7 @@ export const BrandSetup = () => {
 
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {competitors.length === 0 ? (
-                        <span className="text-[10px] text-slate-400 italic">No competitors added yet.</span>
+                        <span className="text-[10px] text-muted-foreground italic">No competitors added yet.</span>
                       ) : (
                         competitors.map((comp) => (
                           <div
@@ -1463,7 +1465,7 @@ export const BrandSetup = () => {
                             <button
                               type="button"
                               onClick={() => handleRemoveCompetitor(comp)}
-                              className="p-0.5 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600 cursor-pointer"
+                              className="p-0.5 hover:bg-slate-200 rounded text-muted-foreground hover:text-slate-600 cursor-pointer"
                             >
                               <X size={10} />
                             </button>
@@ -1478,7 +1480,7 @@ export const BrandSetup = () => {
                     <button
                       type="submit"
                       disabled={updateCompanyMutation.isPending}
-                      className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-white font-bold rounded-xl shadow-sm text-xs cursor-pointer flex items-center gap-1.5"
+                      className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-foreground font-bold rounded-xl shadow-sm text-xs cursor-pointer flex items-center gap-1.5"
                     >
                       {updateCompanyMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
                       <span>Save Company Profile</span>
@@ -1498,7 +1500,7 @@ export const BrandSetup = () => {
           </div>
 
           {/* ACCORDION 2: Audience Personas */}
-          <div id="accordion-personas" className="glass-card rounded-2xl border border-border overflow-hidden">
+          <div id="accordion-personas" className="bg-card rounded-2xl border border-border overflow-hidden">
             <button
               onClick={() => handleSetOpenAccordion('personas', true)}
               className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/50 transition-colors text-left"
@@ -1520,10 +1522,10 @@ export const BrandSetup = () => {
                 
                 {/* Header Actions */}
                 <div className="flex justify-between items-center">
-                  <h4 className="text-xs font-bold text-foreground">Active Personas List</h4>
+                  <h4 className="font-display text-xs font-bold text-foreground">Active Personas List</h4>
                   <button
                     onClick={openCreatePersonaModal}
-                    className="px-3.5 py-2 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm cursor-pointer"
+                    className="px-3.5 py-2 bg-gradient-to-r from-primary to-accent text-foreground font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm cursor-pointer"
                   >
                     <UserPlus size={14} />
                     <span>Create Persona</span>
@@ -1550,7 +1552,7 @@ export const BrandSetup = () => {
                       <div key={p._id} className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-sm hover:border-slate-350 transition-all">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <h5 className="font-bold text-foreground text-sm truncate">{p.personaName}</h5>
+                            <h5 className="font-display font-bold text-foreground text-sm truncate">{p.personaName}</h5>
                             <span className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[9px] font-bold uppercase tracking-wider">
                               {p.audienceType || 'Target'}
                             </span>
@@ -1560,11 +1562,11 @@ export const BrandSetup = () => {
                           </p>
                           <div className="grid grid-cols-2 gap-2 text-[10px] bg-slate-50/50 p-2 rounded-lg border border-border">
                             <div>
-                              <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wide">Tone</span>
+                              <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Tone</span>
                               <span className="font-semibold text-primary truncate block">{p.tone}</span>
                             </div>
                             <div>
-                              <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wide">Style</span>
+                              <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Style</span>
                               <span className="font-semibold text-slate-650 truncate block">{p.writingStyle || '—'}</span>
                             </div>
                           </div>
@@ -1618,7 +1620,7 @@ export const BrandSetup = () => {
           </div>
 
           {/* ACCORDION 3: Knowledge Base */}
-          <div id="accordion-knowledge" className="glass-card rounded-2xl border border-border overflow-hidden">
+          <div id="accordion-knowledge" className="bg-card rounded-2xl border border-border overflow-hidden">
             <button
               onClick={() => handleSetOpenAccordion('knowledge', true)}
               className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/50 transition-colors text-left"
@@ -1641,7 +1643,7 @@ export const BrandSetup = () => {
                 {/* File Upload box */}
                 <div className="bg-card rounded-xl p-5 border border-border flex flex-col justify-between min-h-[180px] space-y-4 shadow-sm w-full">
                   <div>
-                    <h5 className="font-bold text-foreground text-xs">Upload Grounding Document (Optional)</h5>
+                    <h5 className="font-display font-bold text-foreground text-xs">Upload Grounding Document (Optional)</h5>
                     <p className="text-[11px] text-muted-foreground mt-0.5">Upload PDFs, Word files, or TXT notes to ground the blog engine (Optional).</p>
                   </div>
 
@@ -1682,10 +1684,10 @@ export const BrandSetup = () => {
 
                 {/* Sourced files list */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-foreground">AI Knowledge Sources</h4>
+                  <h4 className="font-display text-xs font-bold text-foreground">AI Knowledge Sources</h4>
 
                   {documentsData.length === 0 ? (
-                    <div className="p-6 bg-slate-50/50 border border-dashed border-border rounded-xl text-center text-xs text-slate-400 italic">
+                    <div className="p-6 bg-slate-50/50 border border-dashed border-border rounded-xl text-center text-xs text-muted-foreground italic">
                       No reference documents uploaded. This step is optional – you can proceed without uploading documents.
                     </div>
                   ) : (
@@ -1714,14 +1716,14 @@ export const BrandSetup = () => {
                             </button>
                             <button
                               onClick={() => extractMutation.mutate(doc._id)}
-                              className="px-2.5 py-1 bg-primary/10 hover:bg-primary hover:text-white border border-primary/20 text-primary font-bold rounded text-[10px] flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded text-[10px] flex items-center gap-1 cursor-pointer"
                             >
                               <Sparkles size={10} />
                               <span>Extract Context</span>
                             </button>
                             <button
                               onClick={() => handleDeleteDoc(doc._id)}
-                              className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-slate-400 border border-transparent hover:border-red-100 transition-all cursor-pointer"
+                              className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-muted-foreground border border-transparent hover:border-red-100 transition-all cursor-pointer"
                             >
                               <Trash2 size={12} />
                             </button>
@@ -1736,7 +1738,7 @@ export const BrandSetup = () => {
                 <div className="pt-4 border-t border-border flex justify-end">
                   <button
                     onClick={handleFinishManualSetup}
-                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer"
+                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer"
                   >
                     Finish Setup & Open Brand Workspace
                   </button>
@@ -1750,15 +1752,15 @@ export const BrandSetup = () => {
 
         {/* Persona CRUD Form Modal */}
         {personaModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
               <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
-                <h3 className="text-lg font-bold text-foreground">
+                <h3 className="font-display text-lg font-bold text-foreground">
                   {editPersonaId ? 'Modify Content Persona' : 'Design Content Persona'}
                 </h3>
                 <button
                   onClick={closePersonaModal}
-                  className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -1835,7 +1837,7 @@ export const BrandSetup = () => {
                   <button
                     type="submit"
                     disabled={createPersonaMutation.isPending || updatePersonaMutation.isPending}
-                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-white font-bold rounded-xl shadow-sm flex items-center gap-1.5 text-xs cursor-pointer"
+                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-foreground font-bold rounded-xl shadow-sm flex items-center gap-1.5 text-xs cursor-pointer"
                   >
                     {(createPersonaMutation.isPending || updatePersonaMutation.isPending) ? (
                       <>
@@ -1857,16 +1859,16 @@ export const BrandSetup = () => {
 
         {/* View Document Summary / Edit Modal */}
         {selectedText !== null && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-2xl bg-white border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
               <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">AI Grounding Summary Context</h3>
+                  <h3 className="font-display text-lg font-bold text-foreground">AI Grounding Summary Context</h3>
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5 max-w-md">{selectedFileName}</p>
                 </div>
                 <button
                   onClick={() => { setSelectedText(null); setIsEditingSummary(false); }}
-                  className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -1887,7 +1889,7 @@ export const BrandSetup = () => {
                       dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(selectedText) }}
                     />
                   ) : (
-                    <p className="text-xs text-slate-400 italic">No summary text parsed in this document.</p>
+                    <p className="text-xs text-muted-foreground italic">No summary text parsed in this document.</p>
                   )
                 )}
               </div>
@@ -1904,7 +1906,7 @@ export const BrandSetup = () => {
                     </button>
                     <button
                       onClick={() => updateSummaryMutation.mutate({ id: selectedDocId, summaryText: summaryTextVal })}
-                      className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 cursor-pointer"
                       disabled={updateSummaryMutation.isPending}
                     >
                       {updateSummaryMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : 'Save Summary'}
@@ -1920,7 +1922,7 @@ export const BrandSetup = () => {
                     </button>
                     <button
                       onClick={() => setSelectedText(null)}
-                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-xl text-xs shadow-sm cursor-pointer"
                     >
                       Done
                     </button>
@@ -1946,7 +1948,7 @@ export const BrandSetup = () => {
         
         {/* Toast Notification */}
         {showToast && (
-          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 glass-card bg-white/95 border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-card bg-white/95 border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
             <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
               <Check size={14} />
             </div>
@@ -1961,7 +1963,7 @@ export const BrandSetup = () => {
               <AlertCircle size={20} className="shrink-0 text-red-500" />
               <span>{errorAlert}</span>
             </div>
-            <button onClick={() => setErrorAlert('')} className="text-slate-400 hover:text-slate-600">
+            <button onClick={() => setErrorAlert('')} className="text-muted-foreground hover:text-slate-600">
               <X size={16} />
             </button>
           </div>
@@ -1970,7 +1972,7 @@ export const BrandSetup = () => {
         {/* Page Top Header */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Brand Workspace</h1>
+            <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">Brand Workspace</h1>
             <p className="text-xs text-muted-foreground mt-1">
               Your centralized center of AI brand voice, configurations, and reference knowledge grounding materials.
             </p>
@@ -1987,9 +1989,9 @@ export const BrandSetup = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Completion Status Panel */}
-          <div className="glass-card rounded-3xl p-6 border border-border flex flex-col justify-between space-y-4">
+          <div className="bg-card rounded-3xl p-6 border border-border flex flex-col justify-between space-y-4">
             <div>
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <h3 className="font-display text-sm font-bold text-foreground flex items-center gap-2">
                 <CheckCircle2 className={isBrandReady ? "text-emerald-500" : "text-amber-500"} size={18} />
                 <span>Completion Status</span>
               </h3>
@@ -2054,7 +2056,7 @@ export const BrandSetup = () => {
           </div>
 
           {/* Collapsible Section 1: AI Understanding (renders inline summary editing/saving) */}
-          <div className="lg:col-span-2 glass-card rounded-3xl border border-border flex flex-col justify-between relative overflow-hidden">
+          <div className="lg:col-span-2 bg-card rounded-3xl border border-border flex flex-col justify-between relative overflow-hidden">
             
             {/* Header */}
             <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
@@ -2121,7 +2123,7 @@ export const BrandSetup = () => {
                                 updateSummaryMutation.mutate({ id: primaryDoc._id, summaryText: summaryTextVal });
                               }}
                               disabled={updateSummaryMutation.isPending}
-                              className="px-3.5 py-1.5 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer"
+                              className="px-3.5 py-1.5 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer"
                             >
                               {updateSummaryMutation.isPending && <Loader2 size={10} className="animate-spin" />}
                               <span>Save Summary</span>
@@ -2146,7 +2148,7 @@ export const BrandSetup = () => {
                         <button
                           onClick={() => extractMutation.mutate(primaryDoc._id)}
                           disabled={extractMutation.isPending}
-                          className="px-3 py-2 bg-primary/10 hover:bg-primary hover:text-white border border-primary/20 text-primary font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer shrink-0 transition-all"
+                          className="px-3 py-2 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer shrink-0 transition-all"
                         >
                           <Building size={10} />
                           <span>Re-extract Company</span>
@@ -2154,7 +2156,7 @@ export const BrandSetup = () => {
                         <button
                           onClick={() => extractMutation.mutate(primaryDoc._id)}
                           disabled={extractMutation.isPending}
-                          className="px-3 py-2 bg-primary/10 hover:bg-primary hover:text-white border border-primary/20 text-primary font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer shrink-0 transition-all"
+                          className="px-3 py-2 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer shrink-0 transition-all"
                         >
                           <Users size={10} />
                           <span>Re-extract Personas</span>
@@ -2189,7 +2191,7 @@ export const BrandSetup = () => {
         <div className="space-y-4 pt-2">
           
           {/* Collapsible Section 2: Company Profile */}
-          <div id="section-company" className="glass-card rounded-3xl border border-border overflow-hidden">
+          <div id="section-company" className="bg-card rounded-3xl border border-border overflow-hidden">
             
             {/* Header toggle */}
             <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
@@ -2337,7 +2339,7 @@ export const BrandSetup = () => {
                               onClick={() => {
                                 setBrandColors(brandColors.filter((_, i) => i !== idx));
                               }}
-                              className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg cursor-pointer"
+                              className="p-1 hover:bg-red-50 text-muted-foreground hover:text-red-500 rounded-lg cursor-pointer"
                               title="Remove color"
                             >
                               <X size={12} />
@@ -2403,7 +2405,7 @@ export const BrandSetup = () => {
                       <button
                         type="submit"
                         disabled={updateCompanyMutation.isPending}
-                        className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer"
                       >
                         {updateCompanyMutation.isPending && <Loader2 size={12} className="animate-spin" />}
                         <span>Save Profile Changes</span>
@@ -2428,13 +2430,13 @@ export const BrandSetup = () => {
                             />
                           </div>
                         ) : (
-                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-muted-foreground">
                             <Building size={28} />
                           </div>
                         )}
 
                         <div className="space-y-1">
-                          <h4 className="font-bold text-foreground text-sm">{companyName || 'Brand Name'}</h4>
+                          <h4 className="font-display font-bold text-foreground text-sm">{companyName || 'Brand Name'}</h4>
                           <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{industry || 'SaaS'}</span>
                         </div>
 
@@ -2506,7 +2508,7 @@ export const BrandSetup = () => {
                       </button>
                       <button
                         onClick={() => setIsEditingCompany(true)}
-                        className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-lg text-xs shadow-md cursor-pointer"
+                        className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-lg text-xs shadow-md cursor-pointer"
                       >
                         Edit Profile
                       </button>
@@ -2521,7 +2523,7 @@ export const BrandSetup = () => {
           </div>
 
           {/* Collapsible Section 3: Audience Personas */}
-          <div id="section-personas" className="glass-card rounded-3xl border border-border overflow-hidden">
+          <div id="section-personas" className="bg-card rounded-3xl border border-border overflow-hidden">
             
             {/* Header toggle */}
             <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
@@ -2557,7 +2559,7 @@ export const BrandSetup = () => {
                 
                 {/* Actions header */}
                 <div className="flex justify-between items-center">
-                  <h4 className="text-xs font-bold text-foreground">Content Target Profiles</h4>
+                  <h4 className="font-display text-xs font-bold text-foreground">Content Target Profiles</h4>
                   <div className="flex gap-2">
                     {primaryDoc && (
                       <button
@@ -2571,7 +2573,7 @@ export const BrandSetup = () => {
                     )}
                     <button
                       onClick={openCreatePersonaModal}
-                      className="px-3.5 py-2 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl text-xs flex items-center gap-1 shadow-md cursor-pointer"
+                      className="px-3.5 py-2 bg-gradient-to-r from-primary to-accent text-foreground font-extrabold rounded-xl text-xs flex items-center gap-1 shadow-md cursor-pointer"
                     >
                       <UserPlus size={14} />
                       <span>Create Persona</span>
@@ -2595,7 +2597,7 @@ export const BrandSetup = () => {
                       </button>
                       <button
                         onClick={() => quickAction('knowledge')}
-                        className="px-4 py-2 bg-primary/10 hover:bg-primary hover:text-white border border-primary/20 text-primary font-bold rounded-xl text-[10px] cursor-pointer"
+                        className="px-4 py-2 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded-xl text-[10px] cursor-pointer"
                       >
                         Generate From Website
                       </button>
@@ -2615,7 +2617,7 @@ export const BrandSetup = () => {
                                 {initials}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <h5 className="font-bold text-foreground text-xs truncate leading-tight" title={p.personaName}>
+                                <h5 className="font-display font-bold text-foreground text-xs truncate leading-tight" title={p.personaName}>
                                   {p.personaName}
                                 </h5>
                                 <span className="text-[9px] text-accent font-bold uppercase tracking-wider truncate block mt-0.5">
@@ -2627,11 +2629,11 @@ export const BrandSetup = () => {
                             {/* Attributes snippet */}
                             <div className="grid grid-cols-2 gap-2 text-[10px] pt-1">
                               <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                                <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wide">Tone</span>
+                                <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Tone</span>
                                 <span className="font-semibold text-primary truncate block">{p.tone}</span>
                               </div>
                               <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                                <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wide">Writing Style</span>
+                                <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Writing Style</span>
                                 <span className="font-semibold text-slate-700 truncate block">{p.writingStyle || '—'}</span>
                               </div>
                             </div>
@@ -2663,7 +2665,7 @@ export const BrandSetup = () => {
                               </button>
                               <button
                                 onClick={() => handleDeletePersona(p._id)}
-                                className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/20 text-red-500 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
+                                className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500 hover:text-foreground border border-red-500/20 text-red-500 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
                               >
                                 <Trash2 size={10} />
                                 <span>Delete</span>
@@ -2683,7 +2685,7 @@ export const BrandSetup = () => {
           </div>
 
           {/* Collapsible Section 4: Knowledge Sources */}
-          <div id="section-knowledge" className="glass-card rounded-3xl border border-border overflow-hidden">
+          <div id="section-knowledge" className="bg-card rounded-3xl border border-border overflow-hidden">
             
             {/* Header toggle */}
             <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
@@ -2723,7 +2725,7 @@ export const BrandSetup = () => {
                   {/* Website link crawl */}
                   <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
-                      <h5 className="font-bold text-foreground text-xs flex items-center gap-1.5">
+                      <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <Globe size={14} className="text-primary" />
                         <span>Analyze Additional Web URL</span>
                       </h5>
@@ -2751,7 +2753,7 @@ export const BrandSetup = () => {
                             crawlMutation.mutate(websiteUrl);
                           }}
                           disabled={crawlMutation.isPending}
-                          className="px-3 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-extrabold rounded-xl text-[10px] flex items-center justify-center cursor-pointer shrink-0"
+                          className="px-3 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-extrabold rounded-xl text-[10px] flex items-center justify-center cursor-pointer shrink-0"
                         >
                           {crawlMutation.isPending ? <Loader2 size={10} className="animate-spin" /> : 'Analyze URL'}
                         </button>
@@ -2762,7 +2764,7 @@ export const BrandSetup = () => {
                   {/* Attachment uploader */}
                   <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
-                      <h5 className="font-bold text-foreground text-xs flex items-center gap-1.5">
+                      <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <FileText size={14} className="text-primary" />
                         <span>Attach Grounding PDF / DOCX</span>
                       </h5>
@@ -2811,10 +2813,10 @@ export const BrandSetup = () => {
 
                 {/* Sources list */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-foreground">Active Knowledge Repositories</h4>
+                  <h4 className="font-display text-xs font-bold text-foreground">Active Knowledge Repositories</h4>
 
                   {documentsData.length === 0 ? (
-                    <div className="p-8 border border-dashed border-border rounded-2xl bg-slate-50/50 text-center text-xs text-slate-400 italic">
+                    <div className="p-8 border border-dashed border-border rounded-2xl bg-slate-50/50 text-center text-xs text-muted-foreground italic">
                       No grounding files indexed. Upload key PDF, Word, or TXT assets (optional).
                     </div>
                   ) : (
@@ -2860,7 +2862,7 @@ export const BrandSetup = () => {
                             {doc.fileType === 'url' && (
                               <button
                                 onClick={() => extractMutation.mutate(doc._id)}
-                                className="px-2 py-1 bg-primary/10 hover:bg-primary hover:text-white border border-primary/20 rounded text-[10px] text-primary font-bold flex items-center gap-0.5 cursor-pointer transition-all"
+                                className="px-2 py-1 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 rounded text-[10px] text-primary font-bold flex items-center gap-0.5 cursor-pointer transition-all"
                               >
                                 <Sparkles size={10} />
                                 <span>Re-extract</span>
@@ -2868,7 +2870,7 @@ export const BrandSetup = () => {
                             )}
                             <button
                               onClick={() => handleDeleteDoc(doc._id)}
-                              className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-slate-400 border border-transparent hover:border-red-100 transition-all cursor-pointer"
+                              className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-muted-foreground border border-transparent hover:border-red-100 transition-all cursor-pointer"
                             >
                               <Trash2 size={12} />
                             </button>
@@ -2888,16 +2890,16 @@ export const BrandSetup = () => {
         </div>
 
         {/* Quick Actions Panel */}
-        <div className="glass-card rounded-3xl p-6 border border-border space-y-4 mt-6">
+        <div className="bg-card rounded-3xl p-6 border border-border space-y-4 mt-6">
           <div>
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">⚡ What would you like to do next?</h3>
+            <h3 className="font-display text-xs font-bold text-foreground uppercase tracking-wider">⚡ What would you like to do next?</h3>
             <p className="text-[10px] text-muted-foreground mt-0.5">Quick actions to navigate workspace settings</p>
           </div>
           
           <div className="flex flex-wrap gap-2.5">
             <button
               onClick={() => quickAction('generate')}
-              className="px-4 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
+              className="px-4 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
             >
               <Sparkles size={12} />
               <span>Generate Blog Post</span>
@@ -2936,15 +2938,15 @@ export const BrandSetup = () => {
 
         {/* Persona CRUD Form Modal */}
         {personaModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
               <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
-                <h3 className="text-lg font-bold text-foreground">
+                <h3 className="font-display text-lg font-bold text-foreground">
                   {editPersonaId ? 'Modify Content Persona' : 'Design Content Persona'}
                 </h3>
                 <button
                   onClick={closePersonaModal}
-                  className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -3021,7 +3023,7 @@ export const BrandSetup = () => {
                   <button
                     type="submit"
                     disabled={createPersonaMutation.isPending || updatePersonaMutation.isPending}
-                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-white font-bold rounded-xl shadow-sm flex items-center gap-1.5 text-xs cursor-pointer"
+                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-foreground font-bold rounded-xl shadow-sm flex items-center gap-1.5 text-xs cursor-pointer"
                   >
                     {(createPersonaMutation.isPending || updatePersonaMutation.isPending) ? (
                       <>
@@ -3043,16 +3045,16 @@ export const BrandSetup = () => {
 
         {/* View Document Summary / Edit Modal */}
         {selectedText !== null && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-2xl bg-white border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
               <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">AI Grounding Summary Context</h3>
+                  <h3 className="font-display text-lg font-bold text-foreground">AI Grounding Summary Context</h3>
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5 max-w-md">{selectedFileName}</p>
                 </div>
                 <button
                   onClick={() => { setSelectedText(null); setIsEditingSummary(false); }}
-                  className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-655 rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-655 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -3073,7 +3075,7 @@ export const BrandSetup = () => {
                       dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(selectedText) }}
                     />
                   ) : (
-                    <p className="text-xs text-slate-400 italic">No summary text parsed in this document.</p>
+                    <p className="text-xs text-muted-foreground italic">No summary text parsed in this document.</p>
                   )
                 )}
               </div>
@@ -3090,7 +3092,7 @@ export const BrandSetup = () => {
                     </button>
                     <button
                       onClick={() => updateSummaryMutation.mutate({ id: selectedDocId, summaryText: summaryTextVal })}
-                      className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 cursor-pointer"
                       disabled={updateSummaryMutation.isPending}
                     >
                       {updateSummaryMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : 'Save Summary'}
@@ -3106,7 +3108,7 @@ export const BrandSetup = () => {
                     </button>
                     <button
                       onClick={() => setSelectedText(null)}
-                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-xl text-xs shadow-sm cursor-pointer"
                     >
                       Done
                     </button>
@@ -3119,13 +3121,13 @@ export const BrandSetup = () => {
 
         {/* View Company Profile Details Read-Only Modal */}
         {isViewDetailsOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-3xl bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
               <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
-                <h3 className="text-lg font-bold text-foreground">Company Profile Details</h3>
+                <h3 className="font-display text-lg font-bold text-foreground">Company Profile Details</h3>
                 <button
                   onClick={() => setIsViewDetailsOpen(false)}
-                  className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-655 rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-655 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -3142,12 +3144,12 @@ export const BrandSetup = () => {
                       />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-muted-foreground">
                       <Building size={24} />
                     </div>
                   )}
                   <div>
-                    <h4 className="font-extrabold text-foreground text-base">{companyName}</h4>
+                    <h4 className="font-display font-extrabold text-foreground text-base">{companyName}</h4>
                     <p className="text-xs text-muted-foreground">{industry || 'SaaS'}</p>
                   </div>
                 </div>
@@ -3188,7 +3190,7 @@ export const BrandSetup = () => {
               <div className="p-4 border-t border-border flex justify-end bg-white rounded-b-2xl">
                 <button
                   onClick={() => setIsViewDetailsOpen(false)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-xl text-xs cursor-pointer"
+                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-bold rounded-xl text-xs cursor-pointer"
                 >
                   Close
                 </button>
@@ -3199,13 +3201,13 @@ export const BrandSetup = () => {
 
         {/* Persona Details Viewer Modal */}
         {viewPersonaDetails && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
               <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
-                <h3 className="text-lg font-bold text-foreground">Content Persona Details</h3>
+                <h3 className="font-display text-lg font-bold text-foreground">Content Persona Details</h3>
                 <button
                   onClick={() => setViewPersonaDetails(null)}
-                  className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -3217,7 +3219,7 @@ export const BrandSetup = () => {
                     {viewPersonaDetails.personaName ? viewPersonaDetails.personaName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'P'}
                   </div>
                   <div className="text-left">
-                    <h4 className="font-extrabold text-foreground text-base">{viewPersonaDetails.personaName}</h4>
+                    <h4 className="font-display font-extrabold text-foreground text-base">{viewPersonaDetails.personaName}</h4>
                     <p className="text-xs text-accent font-bold uppercase tracking-wider">{viewPersonaDetails.audienceType || 'Audience'}</p>
                   </div>
                 </div>
@@ -3242,7 +3244,7 @@ export const BrandSetup = () => {
               <div className="p-4 border-t border-border flex justify-end bg-white rounded-b-2xl">
                 <button
                   onClick={() => setViewPersonaDetails(null)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-xl text-xs cursor-pointer shadow-md hover:opacity-90"
+                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-bold rounded-xl text-xs cursor-pointer shadow-md hover:opacity-90"
                 >
                   Close
                 </button>

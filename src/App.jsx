@@ -10,7 +10,6 @@ import { BlogStudio } from './pages/BlogStudio';
 import Generate from './pages/Generate';
 import History from './pages/History';
 import Settings from './pages/Settings';
-import PersonaSelect from './pages/PersonaSelect';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import RefineContent from './pages/RefineContent';
@@ -94,7 +93,7 @@ const AuthenticatedApp = () => {
         <Route path="/linkedinads" element={<LinkedInAds />} />
         <Route path="/image-studio" element={<ImageStudio />} />
         <Route path="/video-studio" element={<VideoStudio />} />
-        <Route path="/personas" element={<PersonaSelect />} />
+        <Route path="/personas" element={<BrandSetup />} />
         <Route path="/publishing" element={<PublishingAccounts />} />
         <Route path="/ambassador" element={<AmbassadorPortal />} />
         <Route path="/wallet" element={<WalletPage />} />

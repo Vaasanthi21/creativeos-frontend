@@ -191,19 +191,19 @@ export const BlogEditor = ({ blogId, onBack }) => {
 
   if (isLoading) {
     return (
-      <div className="glass-card rounded-3xl p-12 border border-white/5 flex flex-col items-center justify-center min-h-[400px] gap-3">
+      <div className="bg-card rounded-3xl p-12 border border-border flex flex-col items-center justify-center min-h-[400px] gap-3">
         <Loader2 className="animate-spin text-primary" size={32} />
-        <p className="text-sm font-semibold tracking-wider text-slate-400">Loading editor...</p>
+        <p className="text-sm font-semibold tracking-wider text-muted-foreground">Loading editor...</p>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="glass-card rounded-3xl p-12 border border-red-500/20 text-center space-y-4 max-w-lg mx-auto">
+      <div className="bg-card rounded-3xl p-12 border border-red-500/20 text-center space-y-4 max-w-lg mx-auto">
         <AlertCircle size={40} className="text-red-400 mx-auto" />
         <h3 className="text-xl font-bold text-red-200">Failed to Load Blog</h3>
-        <p className="text-xs text-slate-400">{error.message || 'Unknown network error.'}</p>
+        <p className="text-xs text-muted-foreground">{error.message || 'Unknown network error.'}</p>
       </div>
     );
   }
@@ -229,7 +229,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
     <div className="space-y-6">
       {/* Floating Success Notification */}
       {showToast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 glass-card bg-white/95 border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-card bg-white/95 border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
             <Check size={14} />
           </div>
@@ -238,11 +238,11 @@ export const BlogEditor = ({ blogId, onBack }) => {
       )}
 
       {/* Editor Header Toolbar Controls */}
-      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+      <div className="flex items-center justify-between border-b border-border pb-4">
         <button
           onClick={onBack}
           disabled={isGenerating}
-          className="px-3 py-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          className="px-3 py-2 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
         >
           <ArrowLeft size={13} />
           <span>Back to directory</span>
@@ -251,15 +251,15 @@ export const BlogEditor = ({ blogId, onBack }) => {
       </div>
 
       {isGenerating ? (
-        <div className="glass-card rounded-3xl p-12 border border-white/5 flex flex-col items-center justify-center text-center space-y-6 min-h-[450px] relative overflow-hidden bg-background/80">
+        <div className="bg-card rounded-3xl p-12 border border-border flex flex-col items-center justify-center text-center space-y-6 min-h-[450px] relative overflow-hidden bg-cardackground/80">
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/5 pointer-events-none" />
           <div className="relative">
             <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center animate-spin duration-[3.5s] shadow-glow" />
             <Sparkles size={28} className="absolute inset-0 m-auto text-background animate-pulse" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold tracking-tight text-white animate-pulse">Running AI Synthesis Engine</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            <h3 className="text-xl font-bold tracking-tight text-foreground animate-pulse">Running AI Synthesis Engine</h3>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               Regenerating canonical drafts and tuning SEO scorecards...
             </p>
           </div>
@@ -269,71 +269,71 @@ export const BlogEditor = ({ blogId, onBack }) => {
           {/* Top workspace widgets */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Metadata config form */}
-            <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2 border-b border-white/5 pb-3">
+            <div className="bg-card rounded-2xl p-6 border border-border space-y-4">
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-2 flex items-center gap-2 border-b border-border pb-3">
                 <Sliders size={16} className="text-primary" />
                 <span>Metadata Configurations</span>
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1 md:col-span-2">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">SEO Post Title *</label>
+                  <label className="text-[10px] uppercase font-bold text-muted-foreground">SEO Post Title *</label>
                   <input
                     type="text"
                     required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-4 py-2 bg-background/60 border border-white/10 rounded-xl text-white text-xs font-semibold focus:outline-none focus:border-primary transition-colors"
+                    className="w-full px-4 py-2 bg-cardackground/60 border border-border rounded-xl text-foreground text-xs font-semibold focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
 
                 <div className="space-y-1 md:col-span-2">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Meta Description *</label>
+                  <label className="text-[10px] uppercase font-bold text-muted-foreground">Meta Description *</label>
                   <textarea
                     rows={2}
                     required
                     value={metaDescription}
                     onChange={(e) => setMetaDescription(e.target.value)}
-                    className="w-full px-4 py-2 bg-background/60 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors resize-none leading-relaxed"
+                    className="w-full px-4 py-2 bg-cardackground/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors resize-none leading-relaxed"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Target Keyword</label>
+                  <label className="text-[10px] uppercase font-bold text-muted-foreground">Target Keyword</label>
                   <input
                     type="text"
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
-                    className="w-full px-4 py-2 bg-background/60 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
+                    className="w-full px-4 py-2 bg-cardackground/60 border border-border rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Category</label>
+                  <label className="text-[10px] uppercase font-bold text-muted-foreground">Category</label>
                   <input
                     type="text"
                     value={keywordCategory}
                     onChange={(e) => setKeywordCategory(e.target.value)}
-                    className="w-full px-4 py-2 bg-background/60 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
+                    className="w-full px-4 py-2 bg-cardackground/60 border border-border rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Author</label>
+                  <label className="text-[10px] uppercase font-bold text-muted-foreground">Author</label>
                   <input
                     type="text"
                     value={author}
                     onChange={(e) => setAuthor(e.target.value)}
-                    className="w-full px-4 py-2 bg-background/60 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
+                    className="w-full px-4 py-2 bg-cardackground/60 border border-border rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Post Status</label>
+                  <label className="text-[10px] uppercase font-bold text-muted-foreground">Post Status</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full px-4 py-2 bg-background/60 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                    className="w-full px-4 py-2 bg-cardackground/60 border border-border rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer"
                   >
                     <option value="draft">Draft</option>
                     <option value="archived">Archived</option>
@@ -343,15 +343,15 @@ export const BlogEditor = ({ blogId, onBack }) => {
             </div>
 
             {/* SEO scorecard */}
-            <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4 flex flex-col justify-between">
+            <div className="bg-card rounded-2xl p-6 border border-border space-y-4 flex flex-col justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2 border-b border-white/5 pb-3">
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-2 flex items-center gap-2 border-b border-border pb-3">
                   <Gauge size={16} className="text-primary" />
                   <span>SEO Scorecard</span>
                 </h3>
 
                 <div className="grid grid-cols-4 gap-2 text-center">
-                  <div className="p-2 bg-white/5 border border-white/5 rounded-xl">
+                  <div className="p-2 bg-white/5 border border-border rounded-xl">
                     <span className="text-[9px] text-slate-500 font-bold uppercase block">SEO Score</span>
                     <span className={`text-base font-extrabold font-mono mt-0.5 ${
                       blogRecord.seoScore >= 80 ? 'text-emerald-400' : blogRecord.seoScore >= 50 ? 'text-amber-400' : 'text-rose-400'
@@ -360,7 +360,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
                     </span>
                   </div>
 
-                  <div className="p-2 bg-white/5 border border-white/5 rounded-xl">
+                  <div className="p-2 bg-white/5 border border-border rounded-xl">
                     <span className="text-[9px] text-slate-500 font-bold uppercase block">Words</span>
                     <span className={`text-base font-extrabold font-mono mt-0.5 ${
                       wordCountValid ? 'text-emerald-400' : 'text-rose-400'
@@ -369,29 +369,29 @@ export const BlogEditor = ({ blogId, onBack }) => {
                     </span>
                   </div>
 
-                  <div className="p-2 bg-white/5 border border-white/5 rounded-xl">
+                  <div className="p-2 bg-white/5 border border-border rounded-xl">
                     <span className="text-[9px] text-slate-500 font-bold uppercase block">Readability</span>
-                    <span className="text-base font-extrabold font-mono text-slate-300 mt-0.5">
+                    <span className="text-base font-extrabold font-mono text-muted-foreground mt-0.5">
                       {blogRecord.seoAnalysis?.readabilityScore || 0}
                     </span>
                   </div>
 
-                  <div className="p-2 bg-white/5 border border-white/5 rounded-xl">
+                  <div className="p-2 bg-white/5 border border-border rounded-xl">
                     <span className="text-[9px] text-slate-500 font-bold uppercase block">Density</span>
-                    <span className="text-base font-extrabold font-mono text-slate-300 mt-0.5">
+                    <span className="text-base font-extrabold font-mono text-muted-foreground mt-0.5">
                       {blogRecord.seoAnalysis?.keywordDensity !== undefined ? `${blogRecord.seoAnalysis.keywordDensity}%` : '0%'}
                     </span>
                   </div>
                 </div>
 
                 {/* Audit checklist */}
-                <div className="space-y-2 border-t border-white/5 pt-3 mt-4">
+                <div className="space-y-2 border-t border-border pt-3 mt-4">
                   <button
                     type="button"
                     onClick={() => setShowSeoDetails(!showSeoDetails)}
-                    className="w-full flex justify-between items-center text-[10px] hover:text-white transition-colors group focus:outline-none"
+                    className="w-full flex justify-between items-center text-[10px] hover:text-foreground transition-colors group focus:outline-none"
                   >
-                    <span className="font-bold text-slate-400 uppercase tracking-widest font-mono group-hover:text-slate-200">SEO checklist (13 Checks)</span>
+                    <span className="font-bold text-muted-foreground uppercase tracking-widest font-mono group-hover:text-foreground">SEO checklist (13 Checks)</span>
                     <div className="flex items-center gap-2">
                       <span className={`px-2 py-0.5 rounded text-[8px] font-bold font-mono ${
                         blogRecord?.seoScore >= 80 ? 'bg-emerald-500/10 text-emerald-400' :
@@ -400,7 +400,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
                       }`}>
                         {blogRecord?.seoScore >= 80 ? 'EXCELLENT' : blogRecord?.seoScore >= 50 ? 'GOOD' : 'NEEDS WORK'}
                       </span>
-                      {showSeoDetails ? <ChevronUp size={12} className="text-slate-400" /> : <ChevronDown size={12} className="text-slate-400" />}
+                      {showSeoDetails ? <ChevronUp size={12} className="text-muted-foreground" /> : <ChevronDown size={12} className="text-muted-foreground" />}
                     </div>
                   </button>
 
@@ -422,9 +422,9 @@ export const BlogEditor = ({ blogId, onBack }) => {
                           { label: 'External Links', value: (blogRecord?.seoAnalysis?.checks?.externalLinks || 0) >= 1, info: `Found ${blogRecord?.seoAnalysis?.checks?.externalLinks || 0}` },
                           { label: 'Image Alt Text Configured', value: !!blogRecord?.seoAnalysis?.checks?.imageAltText }
                         ].map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center bg-white/[0.02] border border-white/5 px-2.5 py-1.5 rounded-xl hover:bg-white/[0.04] transition-colors">
+                          <div key={idx} className="flex justify-between items-center bg-white/[0.02] border border-border px-2.5 py-1.5 rounded-xl hover:bg-white/[0.04] transition-colors">
                             <div className="flex flex-col text-left">
-                              <span className="text-slate-300 font-semibold text-[10px]">{item.label}</span>
+                              <span className="text-muted-foreground font-semibold text-[10px]">{item.label}</span>
                               {item.info && <span className="text-[8px] text-slate-500 font-mono font-medium">{item.info}</span>}
                             </div>
                             <span className={`text-[10px] font-bold ${item.value ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -436,9 +436,9 @@ export const BlogEditor = ({ blogId, onBack }) => {
 
                       {/* Actionable Google Recommendations */}
                       {blogRecord?.seoAnalysis?.recommendations && blogRecord.seoAnalysis.recommendations.length > 0 && (
-                        <div className="border-t border-white/5 pt-2.5 mt-2.5 space-y-1.5">
+                        <div className="border-t border-border pt-2.5 mt-2.5 space-y-1.5">
                           <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider block">Google Ranking Action Items:</span>
-                          <ul className="list-disc ml-4 space-y-1 text-[10px] text-slate-400 leading-normal max-h-32 overflow-y-auto pr-1">
+                          <ul className="list-disc ml-4 space-y-1 text-[10px] text-muted-foreground leading-normal max-h-32 overflow-y-auto pr-1">
                             {blogRecord.seoAnalysis.recommendations.map((rec, i) => (
                               <li key={i}>{rec}</li>
                             ))}
@@ -451,7 +451,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
               </div>
 
               {/* Action optimization */}
-              <div className="space-y-3 pt-3 border-t border-white/5 mt-4">
+              <div className="space-y-3 pt-3 border-t border-border mt-4">
                 <button
                   type="button"
                   onClick={handleOptimize}
@@ -473,7 +473,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
 
                 {latestOpt && (
                   <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl text-xs space-y-1">
-                    <div className="flex justify-between items-center text-[9px] uppercase tracking-wider font-mono text-slate-400">
+                    <div className="flex justify-between items-center text-[9px] uppercase tracking-wider font-mono text-muted-foreground">
                       <span>Latest Optimize</span>
                       <span className="text-primary font-bold">Score: {latestOpt.oldScore} ➔ {latestOpt.newScore}</span>
                     </div>
@@ -488,8 +488,8 @@ export const BlogEditor = ({ blogId, onBack }) => {
             {/* Outline & Versions */}
             <div className="lg:col-span-1 space-y-6 flex flex-col justify-start">
               {/* Version History */}
-              <div className="glass-card rounded-2xl p-6 border border-white/5 flex flex-col max-h-[280px]">
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-white/5 pb-2">
+              <div className="bg-card rounded-2xl p-6 border border-border flex flex-col max-h-[280px]">
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-border pb-2">
                   <History size={16} className="text-accent" />
                   <span>Version History</span>
                 </h3>
@@ -500,10 +500,10 @@ export const BlogEditor = ({ blogId, onBack }) => {
                       .sort((a, b) => b.version - a.version)
                       .slice(0, 5)
                       .map((ver, idx) => (
-                        <div key={ver.version} className="p-2.5 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between hover:border-white/10 transition-colors">
+                        <div key={ver.version} className="p-2.5 bg-white/5 border border-border rounded-xl flex items-center justify-between hover:border-border transition-colors">
                           <div className="space-y-0.5">
                             <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-bold font-mono text-white">v{ver.version}</span>
+                              <span className="text-xs font-bold font-mono text-foreground">v{ver.version}</span>
                               {idx === 0 && (
                                 <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1 py-0.5 rounded font-mono uppercase font-bold">
                                   Current
@@ -514,7 +514,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
                               {new Date(ver.createdAt).toLocaleDateString()}
                             </span>
                           </div>
-                          <span className="text-xs font-bold font-mono text-slate-300">
+                          <span className="text-xs font-bold font-mono text-muted-foreground">
                             SEO: {ver.seoScore}
                           </span>
                         </div>
@@ -526,8 +526,8 @@ export const BlogEditor = ({ blogId, onBack }) => {
               </div>
 
               {/* Structural Outline */}
-              <div className="glass-card rounded-2xl p-6 border border-white/5 flex flex-col max-h-[320px]">
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-white/5 pb-2">
+              <div className="bg-card rounded-2xl p-6 border border-border flex flex-col max-h-[320px]">
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-border pb-2">
                   <FileText size={16} className="text-accent" />
                   <span>AI Structural Outline</span>
                 </h3>
@@ -535,15 +535,15 @@ export const BlogEditor = ({ blogId, onBack }) => {
                 <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-glass">
                   {blogRecord.outline && blogRecord.outline.length > 0 ? (
                     blogRecord.outline.map((sec, idx) => (
-                      <div key={idx} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1.5">
-                        <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <div key={idx} className="p-3 bg-white/5 border border-border rounded-xl space-y-1.5">
+                        <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                           <span className="w-4 h-4 rounded bg-primary/20 text-primary flex items-center justify-center font-mono text-[9px]">
                             {idx + 1}
                           </span>
                           <span className="truncate">{sec.sectionTitle}</span>
                         </p>
                         {sec.talkingPoints && sec.talkingPoints.length > 0 && (
-                          <ul className="list-disc ml-6 text-[10px] text-slate-400 space-y-1">
+                          <ul className="list-disc ml-6 text-[10px] text-muted-foreground space-y-1">
                             {sec.talkingPoints.map((tp, i) => (
                               <li key={i}>{tp}</li>
                             ))}
@@ -560,9 +560,9 @@ export const BlogEditor = ({ blogId, onBack }) => {
 
             {/* Markdown editor panel */}
             <div className="lg:col-span-2 flex flex-col">
-              <div className="glass-card rounded-3xl border border-white/5 overflow-hidden flex flex-col flex-grow h-full min-h-[600px]">
-                <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
-                  <div className="flex items-center gap-2 text-white">
+              <div className="bg-card rounded-3xl border border-border overflow-hidden flex flex-col flex-grow h-full min-h-[600px]">
+                <div className="px-6 py-4 border-b border-border bg-white/5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
+                  <div className="flex items-center gap-2 text-foreground">
                     <FileEdit size={18} className="text-accent" />
                     <h3 className="text-sm font-bold tracking-tight">Canonical Markdown Editor</h3>
                   </div>
@@ -571,7 +571,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
                     <button
                       type="button"
                       onClick={() => setHistoryOpen(true)}
-                      className="px-3 py-1.5 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-xl transition-all"
+                      className="px-3 py-1.5 border border-border hover:border-border bg-white/5 hover:bg-white/10 text-muted-foreground text-xs font-semibold rounded-xl transition-all"
                     >
                       <History size={13} className="inline mr-1" />
                       <span>History</span>
@@ -606,16 +606,16 @@ export const BlogEditor = ({ blogId, onBack }) => {
                 </div>
 
                 {/* Markdown text area */}
-                <div className="flex-1 p-6 relative flex flex-col min-h-0 bg-background/25">
+                <div className="flex-1 p-6 relative flex flex-col min-h-0 bg-cardackground/25">
                   <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="Write your comprehensive canonical content in structured Markdown format..."
-                    className="w-full flex-1 bg-transparent border-0 resize-none font-mono text-xs text-slate-200 leading-relaxed focus:outline-none focus:ring-0 overflow-y-auto pr-2 scrollbar-glass"
+                    className="w-full flex-1 bg-transparent border-0 resize-none font-mono text-xs text-foreground leading-relaxed focus:outline-none focus:ring-0 overflow-y-auto pr-2 scrollbar-glass"
                   />
-                  <div className="mt-4 border-t border-white/5 pt-3 flex justify-between items-center text-[10px] text-slate-500 font-mono">
+                  <div className="mt-4 border-t border-border pt-3 flex justify-between items-center text-[10px] text-slate-500 font-mono">
                     <span>Markdown Enabled</span>
-                    <span className="font-semibold text-slate-400">
+                    <span className="font-semibold text-muted-foreground">
                       Words: ~{liveWordCount} | Characters: {content?.length || 0}
                     </span>
                   </div>

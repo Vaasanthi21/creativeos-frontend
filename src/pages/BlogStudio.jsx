@@ -22,6 +22,13 @@ import {
 export const BlogStudio = () => {
   const [showWorkflowHelper, setShowWorkflowHelper] = React.useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
+  
+  const [showTour, setShowTour] = React.useState(false);
+  React.useEffect(() => {
+    if (!localStorage.getItem("hasSeenBlogTour")) {
+      setShowTour(true);
+    }
+  }, []);
   const view = searchParams.get('view') || 'list';
   const id = searchParams.get('id');
 
@@ -102,10 +109,10 @@ export const BlogStudio = () => {
         <div className="space-y-1 text-left mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-extrabold tracking-tight text-white">
+              <h2 className="font-display text-2xl font-extrabold tracking-tight text-foreground">
                 Blogs Studio
               </h2>
-              <p className="text-xs text-slate-400 leading-relaxed font-normal max-w-3xl">
+              <p className="text-xs text-muted-foreground leading-relaxed font-normal max-w-3xl">
                 Generate SEO-optimized blogs grounded using your company profile and AI context.
               </p>
             </div>
@@ -115,19 +122,19 @@ export const BlogStudio = () => {
                 className={`group px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 border flex items-center gap-2 cursor-pointer ${
                   showWorkflowHelper
                     ? 'bg-primary/20 border-primary/45 text-primary shadow-[0_0_12px_rgba(242,91,24,0.12)]'
-                    : 'bg-white/5 border-white/10 text-slate-300 hover:border-primary/40 hover:text-white shadow-[0_0_15px_rgba(255,255,255,0.02)] animate-pulse-glow'
+                    : 'bg-white/5 border-border text-muted-foreground hover:border-primary/40 hover:text-white shadow-[0_0_15px_rgba(255,255,255,0.02)] animate-pulse-glow'
                 }`}
               >
                 <Sparkles size={14} className="text-primary group-hover:rotate-12 duration-300" />
                 <span>{showWorkflowHelper ? 'Hide Generation Guide' : 'View Generation Guide'}</span>
-                <ChevronDown size={14} className={`text-slate-400 transition-transform duration-300 ${showWorkflowHelper ? 'rotate-180 text-primary' : ''}`} />
+                <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-300 ${showWorkflowHelper ? 'rotate-180 text-primary' : ''}`} />
               </button>
             )}
           </div>
 
           {/* Collapsible Helper Guide for returning users */}
           {blogs.length > 0 && showWorkflowHelper && (
-            <div className="glass-card rounded-3xl p-6 border border-white/5 bg-[#0B0F19]/80 text-left space-y-6 !mt-6 animate-fade-in">
+            <div className="bg-card rounded-3xl p-6 border border-border bg-card text-left space-y-6 !mt-6 animate-fade-in">
               <style>{`
                 @keyframes pulseGlow {
                   0%, 100% {
@@ -152,8 +159,8 @@ export const BlogStudio = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <div className="flex items-center justify-between border-b border-border pb-2">
+                <h3 className="font-display text-sm font-bold text-foreground flex items-center gap-2">
                   <Compass size={16} className="text-primary" />
                   <span>Grounded Blog Generation Workflow</span>
                 </h3>
@@ -196,7 +203,7 @@ export const BlogStudio = () => {
                   return (
                     <div 
                       key={index}
-                      className="bg-white/[0.01] border border-white/5 p-4 rounded-2xl relative flex flex-col justify-between hover:border-primary/30 hover:bg-white/[0.02] transition-all duration-300"
+                      className="bg-white/[0.01] border border-border p-4 rounded-2xl relative flex flex-col justify-between hover:border-primary/30 hover:bg-white/[0.02] transition-all duration-300"
                     >
                       <span className="absolute top-2.5 right-3 text-[10px] font-bold font-mono text-slate-600">
                         {item.step}
@@ -205,8 +212,8 @@ export const BlogStudio = () => {
                         <div className="w-8 h-8 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center text-primary mb-3">
                           <ItemIcon size={14} />
                         </div>
-                        <h4 className="text-xs font-bold text-white mb-1.5">{item.title}</h4>
-                        <p className="text-[10px] text-slate-400 leading-relaxed">{item.desc}</p>
+                        <h4 className="font-display text-xs font-bold text-foreground mb-1.5">{item.title}</h4>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">{item.desc}</p>
                       </div>
                     </div>
                   );
@@ -218,9 +225,9 @@ export const BlogStudio = () => {
 
           {/* How Blog Studio Works Pipeline - only shown when blogs.length === 0 */}
           {blogs.length === 0 && (
-            <div className="glass-card rounded-3xl p-6 border border-white/5 bg-[#0B0F19]/60 text-left space-y-6 !mt-6">
+            <div className="bg-card rounded-3xl p-6 border border-border bg-card text-left space-y-6 !mt-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="font-display text-sm font-bold text-foreground flex items-center gap-2">
                   <Compass size={16} className="text-primary" />
                   <span>How Blog Studio Works</span>
                 </h3>
@@ -240,7 +247,7 @@ export const BlogStudio = () => {
                             ? 'bg-primary/[0.02] border-primary/30 hover:border-primary/55 hover:bg-primary/[0.04]' 
                             : isActiveStep
                             ? 'bg-primary/[0.03] border-primary/45 shadow-[0_0_12px_rgba(242,91,24,0.08)] hover:border-primary/60'
-                            : 'bg-white/[0.01] border-white/5 hover:border-primary/20 hover:bg-white/[0.02]'
+                            : 'bg-white/[0.01] border-border hover:border-primary/20 hover:bg-white/[0.02]'
                         }`}
                       >
                         {/* Step Number Badge */}
@@ -265,11 +272,11 @@ export const BlogStudio = () => {
                           {/* Text details */}
                           <div className="mt-3 space-y-1">
                             <div className={`text-[11px] font-bold leading-tight transition-colors duration-300 ${
-                              step.done ? 'text-white' : isActiveStep ? 'text-primary' : 'text-slate-300 group-hover:text-white'
+                              step.done ? 'text-white' : isActiveStep ? 'text-primary' : 'text-muted-foreground group-hover:text-white'
                             }`}>
                               {step.name}
                             </div>
-                            <div className="text-[9px] text-slate-500 font-normal leading-normal select-none group-hover:text-slate-400 transition-colors duration-300">
+                            <div className="text-[9px] text-slate-500 font-normal leading-normal select-none group-hover:text-muted-foreground transition-colors duration-300">
                               {step.desc}
                             </div>
                           </div>
@@ -335,6 +342,67 @@ export const BlogStudio = () => {
           />
         )}
       </div>
+
+      {showTour && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card border border-border p-8 rounded-3xl max-w-md w-full shadow-2xl relative space-y-6 animate-in fade-in zoom-in-95 duration-200 text-left">
+            <div className="text-center space-y-4">
+              <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
+                <BookOpen size={28} />
+              </div>
+              <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
+                Welcome to Blog Studio!
+              </h2>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Take a quick 3-step tour of the SEO blog creation workflow:
+              </p>
+            </div>
+
+            <div className="space-y-4 border-t border-b border-border/60 py-5">
+              <div className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                  1
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-foreground">Train AI (Brand Setup)</h4>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Crawl your website or upload company documents to index your brand voice and target personas.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                  2
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-foreground">Generate SEO Blogs</h4>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Select from suggested topics or define custom angles to draft structured articles grounded in your references.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                  3
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-foreground">Social Adaptations & Preview</h4>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Generate platform-adapted variants (LinkedIn, Medium, Substack) and preview formatting before exporting.</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.setItem("hasSeenBlogTour", "true");
+                setShowTour(false);
+              }}
+              className="w-full py-3 bg-primary text-primary-foreground font-bold rounded-xl text-xs shadow-md transition-all duration-200 hover:bg-primary/95 active:scale-[0.99]"
+            >
+              Get Started
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

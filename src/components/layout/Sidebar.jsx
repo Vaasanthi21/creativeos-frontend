@@ -19,7 +19,7 @@ import {
   LifeBuoy,
   Video,
   Wallet,
-  X, // 🚀 Added close icon token
+  X,
   BookOpen,
 } from "lucide-react";
 import { getPersonaById } from "@/lib/personas";
@@ -50,6 +50,7 @@ export default function Sidebar({
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const persona = getPersonaById(activePersona);
+
 
   const platformIcons = {
     linkedin: Linkedin,
