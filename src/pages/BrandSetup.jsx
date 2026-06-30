@@ -136,6 +136,12 @@ export const BrandSetup = () => {
   // Sync server data to local form states on load or update
   useEffect(() => {
     if (companyData) {
+      if (viewMode === 'manual_setup') {
+        setLogo(companyData.logo || '');
+        setBrandColors(companyData.brandColors || []);
+        setBrandColorsDescription(companyData.brandColorsDescription || '');
+        return;
+      }
       setCompanyName(companyData.companyName || '');
       setWebsite(companyData.website || '');
       setIndustry(companyData.industry || '');
@@ -147,7 +153,7 @@ export const BrandSetup = () => {
       setBrandColors(companyData.brandColors || []);
       setBrandColorsDescription(companyData.brandColorsDescription || '');
     }
-  }, [companyData]);
+  }, [companyData, viewMode]);
 
   // Determine initial view mode: redirect to choose screen only when no company details are extracted or generated
   useEffect(() => {
@@ -1707,13 +1713,13 @@ export const BrandSetup = () => {
                       {documentsData.map((doc) => {
                         const docId = doc.id || doc._id;
                         const docFileName = doc.fileName || doc.file_name || doc.name || 'Source';
-                        const docFileType = doc.fileType || doc.file_type || 'url';
+                        const docFileType = (doc.fileType || doc.file_type || doc.source_type || doc.type || 'file').toLowerCase();
                         const docExtractedText = doc.extractedText || doc.extracted_text || doc.content || '';
                         return (
                           <div key={docId} className="p-3 bg-card border border-border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:border-slate-350 transition-all shadow-sm">
                             <div className="flex items-center gap-2.5 min-w-0">
                               <div className="p-2 rounded bg-slate-100 text-slate-600 shrink-0">
-                                {docFileType === 'url' ? <Globe size={14} /> : <FileText size={14} />}
+                                {docFileType === 'url' || docFileType === 'link' ? <Globe size={14} /> : <FileText size={14} />}
                               </div>
                               <div className="min-w-0">
                                 <p className="font-bold text-foreground truncate" title={docFileName}>{docFileName}</p>
@@ -2848,7 +2854,7 @@ export const BrandSetup = () => {
                       {documentsData.map((doc) => {
                         const docId = doc.id || doc._id;
                         const docFileName = doc.fileName || doc.file_name || doc.name || 'Source';
-                        const docFileType = doc.fileType || doc.file_type || 'url';
+                        const docFileType = (doc.fileType || doc.file_type || doc.source_type || doc.type || 'file').toLowerCase();
                         const docExtractedText = doc.extractedText || doc.extracted_text || doc.content || '';
                         const docCreatedAt = doc.createdAt || doc.created_at || doc.updatedAt || doc.updated_at;
                         return (
@@ -2858,7 +2864,7 @@ export const BrandSetup = () => {
                               {/* File Name & Type */}
                               <div className="flex items-start gap-2.5">
                                 <div className="p-2 rounded bg-slate-100 text-slate-600 shrink-0">
-                                  {docFileType === 'url' ? <Globe size={14} /> : <FileText size={14} />}
+                                  {docFileType === 'url' || docFileType === 'link' ? <Globe size={14} /> : <FileText size={14} />}
                                 </div>
                                 <div className="min-w-0">
                                   <p className="font-bold text-foreground truncate text-xs" title={docFileName}>{docFileName}</p>
