@@ -2057,9 +2057,9 @@ export const BrandSetup = () => {
                 <div className="flex justify-between items-center pb-1">
                   <span className="text-muted-foreground font-medium">AI Summary</span>
                   <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide ${
-                    primaryDoc && primaryDoc.summaryText ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                    primaryDoc && (primaryDoc.summaryText || primaryDoc.summary_text || primaryDoc.summary || primaryDoc.extractedText || primaryDoc.extracted_text || primaryDoc.content) ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
                   }`}>
-                    {primaryDoc && primaryDoc.summaryText ? "Available" : "Pending"}
+                    {primaryDoc && (primaryDoc.summaryText || primaryDoc.summary_text || primaryDoc.summary || primaryDoc.extractedText || primaryDoc.extracted_text || primaryDoc.content) ? "Available" : "Pending"}
                   </span>
                 </div>
               </div>
@@ -2068,7 +2068,7 @@ export const BrandSetup = () => {
             <div className="text-[10px] text-muted-foreground border-t border-slate-100 pt-3 flex justify-between items-center">
               <span>Last Updated:</span>
               <span className="font-bold text-foreground">
-                {primaryDoc ? new Date(primaryDoc.updatedAt).toLocaleDateString() : (companyData ? new Date(companyData.updatedAt).toLocaleDateString() : 'Today')}
+                {primaryDoc ? new Date(primaryDoc.updatedAt || primaryDoc.updated_at || companyData?.updatedAt || companyData?.updated_at || Date.now()).toLocaleDateString() : (companyData ? new Date(companyData.updatedAt || companyData.updated_at || Date.now()).toLocaleDateString() : 'Today')}
               </span>
             </div>
           </div>
@@ -2101,65 +2101,68 @@ export const BrandSetup = () => {
             {/* Content Body */}
             {isUnderstandingExpanded && (
               <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                {primaryDoc && primaryDoc.summaryText ? (
-                  <div className="space-y-4 flex-1 flex flex-col justify-between">
-                    
-                    {/* Render Edit view or Markdown view */}
-                    <div className="flex-1 bg-slate-50/50 border border-border rounded-xl p-4 min-h-[140px] text-xs leading-relaxed max-h-[220px] overflow-y-auto">
-                      {isEditingSummary ? (
-                        <textarea
-                          value={summaryTextVal}
-                          onChange={(e) => setSummaryTextVal(e.target.value)}
-                          className="w-full h-[150px] p-2 text-foreground border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-xs bg-white resize-none"
-                        />
-                      ) : (
-                        <div 
-                          className="space-y-3 text-slate-700"
-                          dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(primaryDoc.summaryText) }}
-                        />
-                      )}
-                    </div>
+                {(() => {
+                  const activeSummary = primaryDoc?.summaryText || primaryDoc?.summary_text || primaryDoc?.summary || primaryDoc?.extractedText || primaryDoc?.extracted_text || primaryDoc?.content || '';
+                  if (primaryDoc && activeSummary) {
+                    return (
+                      <div className="space-y-4 flex-1 flex flex-col justify-between">
+                        
+                        {/* Render Edit view or Markdown view */}
+                        <div className="flex-1 bg-slate-50/50 border border-border rounded-xl p-4 min-h-[140px] text-xs leading-relaxed max-h-[220px] overflow-y-auto">
+                          {isEditingSummary ? (
+                            <textarea
+                              value={summaryTextVal}
+                              onChange={(e) => setSummaryTextVal(e.target.value)}
+                              className="w-full h-[150px] p-2 text-foreground border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-xs bg-white resize-none"
+                            />
+                          ) : (
+                            <div 
+                              className="space-y-3 text-slate-700"
+                              dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(activeSummary) }}
+                            />
+                          )}
+                        </div>
 
-                    {/* Actions Panel */}
-                    <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 border-t border-slate-100">
-                      
-                      {/* Summary Save/Cancel */}
-                      <div className="flex gap-2">
-                        {isEditingSummary ? (
-                          <>
-                            <button
-                              onClick={() => {
-                                setIsEditingSummary(false);
-                                setSummaryTextVal(primaryDoc.summaryText || '');
-                              }}
-                              className="px-3 py-1.5 border border-border text-foreground hover:bg-slate-50 font-bold rounded-lg text-[10px]"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={() => {
-                                updateSummaryMutation.mutate({ id: primaryDoc.id || primaryDoc._id, summaryText: summaryTextVal });
-                              }}
-                              disabled={updateSummaryMutation.isPending}
-                              className="px-3.5 py-1.5 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer"
-                            >
-                              {updateSummaryMutation.isPending && <Loader2 size={10} className="animate-spin" />}
-                              <span>Save Summary</span>
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setIsEditingSummary(true);
-                              setSummaryTextVal(primaryDoc.summaryText || '');
-                            }}
-                            className="px-4 py-2 border border-border bg-card hover:bg-slate-50 text-foreground font-bold rounded-lg text-[10px] flex items-center gap-1 shadow-sm cursor-pointer"
-                          >
-                            <Edit2 size={10} />
-                            <span>Edit Summary</span>
-                          </button>
-                        )}
-                      </div>
+                        {/* Actions Panel */}
+                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 border-t border-slate-100">
+                          
+                          {/* Summary Save/Cancel */}
+                          <div className="flex gap-2">
+                            {isEditingSummary ? (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setIsEditingSummary(false);
+                                    setSummaryTextVal(activeSummary);
+                                  }}
+                                  className="px-3 py-1.5 border border-border text-foreground hover:bg-slate-50 font-bold rounded-lg text-[10px]"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    updateSummaryMutation.mutate({ id: primaryDoc.id || primaryDoc._id, summaryText: summaryTextVal });
+                                  }}
+                                  disabled={updateSummaryMutation.isPending}
+                                  className="px-3.5 py-1.5 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer"
+                                >
+                                  {updateSummaryMutation.isPending && <Loader2 size={10} className="animate-spin" />}
+                                  <span>Save Summary</span>
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setIsEditingSummary(true);
+                                  setSummaryTextVal(activeSummary);
+                                }}
+                                className="px-4 py-2 border border-border bg-card hover:bg-slate-50 text-foreground font-bold rounded-lg text-[10px] flex items-center gap-1 shadow-sm cursor-pointer"
+                              >
+                                <Edit2 size={10} />
+                                <span>Edit Summary</span>
+                              </button>
+                            )}
+                          </div>
 
                       {/* Re-extract Company / Personas */}
                       <div className="flex gap-2">
@@ -2182,22 +2185,24 @@ export const BrandSetup = () => {
                       </div>
 
                     </div>
-
                   </div>
-                ) : (
-                  <div className="text-center p-8 border border-dashed border-border rounded-xl space-y-3 bg-slate-50/50">
-                    <p className="text-xs font-semibold text-slate-500">No AI Summary Drafted Yet</p>
-                    <p className="text-[11px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                      AI builds summaries automatically after Analyzing URLs or extracting documents.
-                    </p>
-                    <button
-                      onClick={() => quickAction('knowledge')}
-                      className="px-4 py-2 border border-border bg-card hover:bg-slate-50 font-bold rounded-xl text-[10px] text-foreground cursor-pointer shadow-sm"
-                    >
-                      Connect Knowledge Source
-                    </button>
-                  </div>
-                )}
+                    );
+                  }
+                  return (
+                    <div className="text-center p-8 border border-dashed border-border rounded-xl space-y-3 bg-slate-50/50">
+                      <p className="text-xs font-semibold text-slate-500">No AI Summary Drafted Yet</p>
+                      <p className="text-[11px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                        AI builds summaries automatically after Analyzing URLs or extracting documents.
+                      </p>
+                      <button
+                        onClick={() => quickAction('knowledge')}
+                        className="px-4 py-2 border border-border bg-card hover:bg-slate-50 font-bold rounded-xl text-[10px] text-foreground cursor-pointer shadow-sm"
+                      >
+                        Connect Knowledge Source
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
