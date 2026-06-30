@@ -695,9 +695,12 @@ export const BrandSetup = () => {
   // Quick Action Navigators
   const quickAction = (actionType) => {
     if (actionType === 'generate') {
-      navigate('/blogs');
+      navigate('/blog-studio');
+    } else if (actionType === 'content') {
+      navigate('/');
     } else if (actionType === 'knowledge') {
       setIsKnowledgeExpanded(true);
+      setOpenAccordion('knowledge');
       setTimeout(() => {
         document.getElementById('section-knowledge')?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
@@ -2940,6 +2943,14 @@ export const BrandSetup = () => {
             >
               <Sparkles size={12} />
               <span>Generate Blog Post</span>
+            </button>
+
+            <button
+              onClick={() => quickAction('content')}
+              className="px-4 py-2.5 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
+            >
+              <Sparkles size={12} />
+              <span>Generate Content</span>
             </button>
             
             <button
