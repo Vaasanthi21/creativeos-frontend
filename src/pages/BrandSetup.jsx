@@ -136,7 +136,7 @@ export const BrandSetup = () => {
   // Sync server data to local form states on load or update
   useEffect(() => {
     if (companyData) {
-      if (viewMode === 'manual_setup') {
+      if (viewMode === 'manual_setup' || isEditingCompany) {
         setLogo(companyData.logo || '');
         setBrandColors(companyData.brandColors || []);
         setBrandColorsDescription(companyData.brandColorsDescription || '');
@@ -153,7 +153,7 @@ export const BrandSetup = () => {
       setBrandColors(companyData.brandColors || []);
       setBrandColorsDescription(companyData.brandColorsDescription || '');
     }
-  }, [companyData, viewMode]);
+  }, [companyData, viewMode, isEditingCompany]);
 
   // Determine initial view mode: redirect to choose screen only when no company details are extracted or generated
   useEffect(() => {
