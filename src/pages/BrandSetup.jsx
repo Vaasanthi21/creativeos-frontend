@@ -679,7 +679,7 @@ export const BrandSetup = () => {
     if (actionType === 'generate') {
       navigate('/blog-studio');
     } else if (actionType === 'content') {
-      navigate('/');
+      navigate('/generate');
     } else if (actionType === 'knowledge') {
       setIsKnowledgeExpanded(true);
       setOpenAccordion('knowledge');

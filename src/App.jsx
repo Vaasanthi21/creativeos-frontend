@@ -1,5 +1,5 @@
 import { Toaster } from "./components/ui/toaster"
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import { GenerationJobsProvider } from './contexts/GenerationJobsContext';
@@ -7,6 +7,7 @@ import { TaskProvider } from './context/TaskContext';
 import MainLayout from './components/layout/MainLayout';
 import { BrandSetup } from './pages/BrandSetup';
 import { BlogStudio } from './pages/BlogStudio';
+import { LandingPage } from './pages/LandingPage';
 import Generate from './pages/Generate';
 import History from './pages/History';
 import Settings from './pages/Settings';
@@ -55,10 +56,11 @@ const AuthenticatedApp = () => {
     }
   }
 
-  // ❗ NOT AUTHENTICATED → ONLY SHARED LOGIN
+  // ❗ NOT AUTHENTICATED → LANDING PAGE & SHARED LOGIN
   if (!isAuthenticated) {
     return (
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route element={<SuperAdminLayout />}>
@@ -72,7 +74,7 @@ const AuthenticatedApp = () => {
           <Route path="/superadmin/requests" element={<SuperAdminRequests />} />
           <Route path="/superadmin/settings" element={<SuperAdminSettings />} />
         </Route>
-        <Route path="*" element={<Login />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
@@ -84,8 +86,9 @@ const AuthenticatedApp = () => {
       <Route element={<AdminRoute />}>
         <Route path="/admin" element={<AdminDashboard />} />
       </Route>
+      <Route path="/" element={<LandingPage />} />
       <Route element={<MainLayout />}>
-        <Route path="/" element={<Generate />} />
+        <Route path="/generate" element={<Generate />} />
         <Route path="/history" element={<History />} />
         <Route path="/refine" element={<RefineContent />} />
         <Route path="/settings" element={<Settings />} />
