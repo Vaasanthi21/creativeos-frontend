@@ -508,7 +508,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm">
             <button
-              onClick={() => navigate('/brand?tab=knowledge')}
+              onClick={() => navigate('/personas')}
               className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-background font-extrabold rounded-xl shadow-glow transition-all hover:opacity-90 flex items-center justify-center gap-2 text-xs cursor-pointer active:scale-[0.98]"
             >
               <span>Upload Documents</span>
