@@ -793,7 +793,7 @@ export const BrandSetup = () => {
   // ────────────────────────────────────────────────────────────────────────
   if (viewMode === 'choose') {
     return (
-      <div className="max-w-3xl mx-auto space-y-8 py-10 px-4">
+      <div className="max-w-3xl mx-auto space-y-8 py-10 px-4 brand-setup-root">
         {/* Header Title */}
         <div className="text-center space-y-3">
           <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
@@ -904,7 +904,7 @@ export const BrandSetup = () => {
   if (viewMode === 'ai_setup') {
     const hasUploadedFiles = documentsData && documentsData.length > 0;
     return (
-      <div className="max-w-4xl mx-auto space-y-6 py-6 px-4">
+      <div className="max-w-4xl mx-auto space-y-6 py-6 px-4 brand-setup-root">
         {/* Back Link */}
         <button
           onClick={() => setViewMode('choose')}
@@ -1182,7 +1182,7 @@ export const BrandSetup = () => {
   // ────────────────────────────────────────────────────────────────────────
   if (viewMode === 'manual_setup') {
     return (
-      <div id="manual-setup-root" className="max-w-4xl mx-auto space-y-6 py-6 px-4">
+      <div id="manual-setup-root" className="max-w-4xl mx-auto space-y-6 py-6 px-4 brand-setup-root">
         {/* Back Link */}
         <button
           onClick={() => setViewMode('choose')}
@@ -1675,7 +1675,7 @@ export const BrandSetup = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                   
                   {/* Website link crawl */}
-                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <Globe size={14} className="text-primary" />
@@ -1693,7 +1693,7 @@ export const BrandSetup = () => {
                           value={websiteUrl}
                           onChange={(e) => setWebsiteUrl(e.target.value)}
                           placeholder="https://example.com/blog-reference"
-                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-white dark:bg-card text-foreground focus:outline-none"
+                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none"
                           disabled={crawlMutation.isPending}
                         />
                         <button
@@ -1714,7 +1714,7 @@ export const BrandSetup = () => {
                   </div>
 
                   {/* Attachment uploader */}
-                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <FileText size={14} className="text-primary" />
@@ -1732,7 +1732,7 @@ export const BrandSetup = () => {
                       onDragLeave={handleDrag}
                       onDrop={handleDrop}
                       className={`border border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all flex-1 min-h-[80px] ${
-                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30 dark:bg-slate-950/10'
+                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30'
                       }`}
                     >
                       <input
@@ -1809,7 +1809,7 @@ export const BrandSetup = () => {
                               </button>
                               <button
                                 onClick={() => handleDeleteDoc(docId)}
-                                className="p-1 hover:bg-red-500/10 hover:text-red-500 rounded text-muted-foreground border border-transparent hover:border-red-500/20 transition-all cursor-pointer"
+                                className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-muted-foreground border border-transparent hover:border-red-100 transition-all cursor-pointer"
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -1841,7 +1841,7 @@ export const BrandSetup = () => {
         {personaModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-white dark:bg-card rounded-t-2xl">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <h3 className="font-display text-lg font-bold text-foreground">
                   {editPersonaId ? 'Modify Content Persona' : 'Design Content Persona'}
                 </h3>
@@ -1948,7 +1948,7 @@ export const BrandSetup = () => {
         {selectedText !== null && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-2xl bg-white border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-white dark:bg-card rounded-t-2xl">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <div>
                   <h3 className="font-display text-lg font-bold text-foreground">AI Grounding Summary Context</h3>
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5 max-w-md">{selectedFileName}</p>
@@ -1961,7 +1961,7 @@ export const BrandSetup = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-900/20 border-y border-border max-h-[50vh] flex flex-col">
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-50 border-y border-border max-h-[50vh] flex flex-col">
                 {isEditingSummary ? (
                   <textarea
                     value={summaryTextVal}
@@ -2031,7 +2031,7 @@ export const BrandSetup = () => {
     const isBrandReady = companyName && website && personasData.length > 0;
     
     return (
-      <div className="space-y-6 relative max-w-6xl mx-auto py-6 px-4">
+      <div className="space-y-6 relative max-w-6xl mx-auto py-6 px-4 brand-setup-root">
         
         {/* Toast Notification */}
         {showToast && (
@@ -2568,27 +2568,27 @@ export const BrandSetup = () => {
                       <div className="md:col-span-3 space-y-4 text-xs">
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="p-3 bg-slate-50/30 dark:bg-slate-950/20 border border-border rounded-xl space-y-0.5">
+                          <div className="p-3 bg-slate-50/30 border border-border rounded-xl space-y-0.5">
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Website Domain</span>
                             <a href={website} target="_blank" rel="noreferrer" className="text-primary hover:underline font-semibold block truncate">
                               {website || 'No URL'}
                             </a>
                           </div>
                           
-                          <div className="p-3 bg-slate-50/30 dark:bg-slate-950/20 border border-border rounded-xl space-y-0.5">
+                          <div className="p-3 bg-slate-50/30 border border-border rounded-xl space-y-0.5">
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Brand Voice Tone</span>
                             <p className="font-semibold text-foreground truncate">{brandVoice || 'Professional'}</p>
                           </div>
                         </div>
 
-                        <div className="p-4 bg-slate-50/30 dark:bg-slate-950/20 border border-border rounded-xl space-y-1.5">
+                        <div className="p-4 bg-slate-50/30 border border-border rounded-xl space-y-1.5">
                           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Product / Service Pitch</span>
-                          <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{productDescription || 'Configure details to feed the blog writer.'}</p>
+                          <p className="text-slate-700 leading-relaxed">{productDescription || 'Configure details to feed the blog writer.'}</p>
                         </div>
 
-                        <div className="p-4 bg-slate-50/30 dark:bg-slate-950/20 border border-border rounded-xl space-y-1.5">
+                        <div className="p-4 bg-slate-50/30 border border-border rounded-xl space-y-1.5">
                           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Target Audience Focus</span>
-                          <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{targetAudience || 'Describe your core client segments.'}</p>
+                          <p className="text-slate-700 leading-relaxed">{targetAudience || 'Describe your core client segments.'}</p>
                         </div>
 
                         {/* Competitors */}
@@ -2833,7 +2833,7 @@ export const BrandSetup = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                   
                   {/* Website link crawl */}
-                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <Globe size={14} className="text-primary" />
@@ -2851,7 +2851,7 @@ export const BrandSetup = () => {
                           value={websiteUrl}
                           onChange={(e) => setWebsiteUrl(e.target.value)}
                           placeholder="https://example.com/blog-reference"
-                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-white dark:bg-card text-foreground focus:outline-none"
+                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none"
                           disabled={crawlMutation.isPending}
                         />
                         <button
@@ -2872,7 +2872,7 @@ export const BrandSetup = () => {
                   </div>
 
                   {/* Attachment uploader */}
-                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <FileText size={14} className="text-primary" />
@@ -2890,7 +2890,7 @@ export const BrandSetup = () => {
                       onDragLeave={handleDrag}
                       onDrop={handleDrop}
                       className={`border border-dashed rounded-xl p-3 flex flex-col items-center justify-center text-center transition-all flex-1 ${
-                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30 dark:bg-slate-950/10'
+                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30'
                       }`}
                     >
                       <input
@@ -2943,7 +2943,7 @@ export const BrandSetup = () => {
                               
                               {/* File Name & Type */}
                               <div className="flex items-start gap-2.5">
-                                <div className="p-2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
+                                <div className="p-2 rounded bg-slate-100 text-slate-600 shrink-0">
                                   {docFileType === 'url' || docFileType === 'link' ? <Globe size={14} /> : <FileText size={14} />}
                                 </div>
                                 <div className="min-w-0">
@@ -2970,7 +2970,7 @@ export const BrandSetup = () => {
                             <div className="flex justify-end items-center gap-1.5 pt-2.5 border-t border-slate-100">
                               <button
                                 onClick={() => handleViewText(doc)}
-                                className="px-2 py-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-border rounded text-[10px] text-foreground font-bold flex items-center gap-0.5 cursor-pointer"
+                                className="px-2 py-1 bg-slate-50 hover:bg-slate-100 border border-border rounded text-[10px] text-foreground font-bold flex items-center gap-0.5 cursor-pointer"
                               >
                                 <Eye size={10} />
                                 <span>View Summary</span>
@@ -3267,7 +3267,7 @@ export const BrandSetup = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-white dark:bg-card">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-white">
                 <div className="flex items-center gap-4 border-b border-border pb-4">
                   {logo ? (
                     <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1.5 overflow-hidden shadow-sm shrink-0">
@@ -3321,10 +3321,10 @@ export const BrandSetup = () => {
                 )}
               </div>
 
-              <div className="p-4 border-t border-border flex justify-end bg-white dark:bg-card rounded-b-2xl">
+              <div className="p-4 border-t border-border flex justify-end bg-white rounded-b-2xl">
                 <button
                   onClick={() => setIsViewDetailsOpen(false)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl text-xs cursor-pointer"
+                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-bold rounded-xl text-xs cursor-pointer"
                 >
                   Close
                 </button>
@@ -3347,7 +3347,7 @@ export const BrandSetup = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-white dark:bg-card">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-white">
                 <div className="flex items-center gap-4 border-b border-border pb-4">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-primary/10 to-accent/20 border border-primary/20 flex items-center justify-center font-extrabold text-primary text-sm shadow-sm select-none">
                     {(viewPersonaDetails.personaName || viewPersonaDetails.name) ? (viewPersonaDetails.personaName || viewPersonaDetails.name).split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'P'}
@@ -3375,10 +3375,10 @@ export const BrandSetup = () => {
                 </div>
               </div>
 
-              <div className="p-4 border-t border-border flex justify-end bg-white dark:bg-card rounded-b-2xl">
+              <div className="p-4 border-t border-border flex justify-end bg-white rounded-b-2xl">
                 <button
                   onClick={() => setViewPersonaDetails(null)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl text-xs cursor-pointer shadow-md hover:opacity-90"
+                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-bold rounded-xl text-xs cursor-pointer shadow-md hover:opacity-90"
                 >
                   Close
                 </button>

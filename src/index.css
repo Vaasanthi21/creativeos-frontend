@@ -102,3 +102,104 @@
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+
+/* ────────────────────────────────────────────────────────────────────────
+   Dark Mode Overrides for Brand Setup
+   ──────────────────────────────────────────────────────────────────────── */
+.dark .brand-setup-root {
+  color: #f1f5f9;
+}
+
+.dark .brand-setup-root .bg-white {
+  background-color: #0f172a !important; /* bg-slate-900 */
+}
+
+.dark .brand-setup-root .bg-white\/40 {
+  background-color: rgba(30, 41, 59, 0.2) !important;
+}
+
+.dark .brand-setup-root .bg-white\/95 {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+}
+
+.dark .brand-setup-root .bg-slate-50 {
+  background-color: #1e293b !important; /* bg-slate-800 */
+}
+
+.dark .brand-setup-root .bg-slate-50\/50 {
+  background-color: rgba(30, 41, 59, 0.4) !important;
+}
+
+.dark .brand-setup-root .bg-slate-50\/40 {
+  background-color: rgba(30, 41, 59, 0.3) !important;
+}
+
+.dark .brand-setup-root .bg-slate-50\/30 {
+  background-color: rgba(30, 41, 59, 0.2) !important;
+}
+
+.dark .brand-setup-root .bg-slate-50\/20 {
+  background-color: rgba(30, 41, 59, 0.1) !important;
+}
+
+.dark .brand-setup-root .bg-slate-100 {
+  background-color: #1e293b !important;
+}
+
+.dark .brand-setup-root .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+.dark .brand-setup-root .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+.dark .brand-setup-root .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+.dark .brand-setup-root .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+.dark .brand-setup-root .text-slate-900 {
+  color: #f8fafc !important;
+}
+
+.dark .brand-setup-root .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+.dark .brand-setup-root .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.dark .brand-setup-root .border-slate-100 {
+  border-color: rgba(51, 65, 85, 0.4) !important;
+}
+
+.dark .brand-setup-root .border-slate-200 {
+  border-color: #334155 !important; /* border-slate-700 */
+}
+
+.dark .brand-setup-root .border-slate-300 {
+  border-color: #475569 !important;
+}
+
+.dark .brand-setup-root .bg-cardlack\/75 {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+.dark .brand-setup-root input[type="text"],
+.dark .brand-setup-root input[type="url"],
+.dark .brand-setup-root textarea {
+  background-color: #0b0f19 !important; /* very dark background for inputs */
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+.dark .brand-setup-root input[type="text"]:focus,
+.dark .brand-setup-root input[type="url"]:focus,
+.dark .brand-setup-root textarea:focus {
+  border-color: #f25b18 !important;
+}
