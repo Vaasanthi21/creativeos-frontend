@@ -1675,7 +1675,7 @@ export const BrandSetup = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                   
                   {/* Website link crawl */}
-                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <Globe size={14} className="text-primary" />
@@ -1714,7 +1714,7 @@ export const BrandSetup = () => {
                   </div>
 
                   {/* Attachment uploader */}
-                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <FileText size={14} className="text-primary" />
@@ -1732,7 +1732,7 @@ export const BrandSetup = () => {
                       onDragLeave={handleDrag}
                       onDrop={handleDrop}
                       className={`border border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all flex-1 min-h-[80px] ${
-                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30 dark:bg-slate-950/10'
+                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-white dark:bg-slate-950/10'
                       }`}
                     >
                       <input
@@ -2179,7 +2179,7 @@ export const BrandSetup = () => {
                       <div className="space-y-4 flex-1 flex flex-col justify-between">
                         
                         {/* Render Edit view or Markdown view */}
-                        <div className="flex-1 bg-slate-50 dark:bg-slate-900/40 border border-border rounded-xl p-4 min-h-[140px] text-xs leading-relaxed max-h-[220px] overflow-y-auto">
+                        <div className="flex-1 bg-white dark:bg-slate-900/40 border border-border rounded-xl p-4 min-h-[140px] text-xs leading-relaxed max-h-[220px] overflow-y-auto">
                           {isEditingSummary ? (
                             <textarea
                               value={summaryTextVal}
@@ -2740,11 +2740,11 @@ export const BrandSetup = () => {
  
                             {/* Attributes snippet */}
                             <div className="grid grid-cols-2 gap-2 text-[10px] pt-1">
-                              <div className="p-2 bg-slate-50 dark:bg-slate-900/40 rounded-lg border border-border">
+                              <div className="p-2 bg-white dark:bg-slate-900/40 rounded-lg border border-border">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Tone</span>
                                 <span className="font-semibold text-primary truncate block">{p.tone || p.voice}</span>
                               </div>
-                              <div className="p-2 bg-slate-50 dark:bg-slate-900/40 rounded-lg border border-border">
+                              <div className="p-2 bg-white dark:bg-slate-900/40 rounded-lg border border-border">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Writing Style</span>
                                 <span className="font-semibold text-slate-700 dark:text-slate-200 truncate block">{p.writingStyle || '—'}</span>
                               </div>
@@ -2835,7 +2835,7 @@ export const BrandSetup = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                   
                   {/* Website link crawl */}
-                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <Globe size={14} className="text-primary" />
@@ -2874,7 +2874,7 @@ export const BrandSetup = () => {
                   </div>
 
                   {/* Attachment uploader */}
-                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <FileText size={14} className="text-primary" />
@@ -2892,7 +2892,7 @@ export const BrandSetup = () => {
                       onDragLeave={handleDrag}
                       onDrop={handleDrop}
                       className={`border border-dashed rounded-xl p-3 flex flex-col items-center justify-center text-center transition-all flex-1 ${
-                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30 dark:bg-slate-950/10'
+                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-white dark:bg-slate-950/10'
                       }`}
                     >
                       <input
