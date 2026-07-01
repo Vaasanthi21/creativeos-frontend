@@ -471,7 +471,7 @@ export const BrandSetup = () => {
     const payload = {
       name: personaName.trim(),
       personaName: personaName.trim(),
-      company: companyData?._id || companyData?.companyName || '',
+      company: companyData?.companyName || companyData?.name || '',
       tone: tone.trim(),
       voice: tone.trim(),
       writingStyle: writingStyle.trim(),
