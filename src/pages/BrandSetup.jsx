@@ -44,6 +44,7 @@ export const BrandSetup = () => {
   // ────────────────────────────────────────────────────────────────────────
   // State Management
   // ────────────────────────────────────────────────────────────────────────
+  // View modes: 'choose' | 'ai_setup' | 'manual_setup' | 'processing' | 'workspace'
   const [viewMode, setViewMode] = useState(null);
   const [initializedCompanyId, setInitializedCompanyId] = useState(null);
 
@@ -53,7 +54,7 @@ export const BrandSetup = () => {
   const [isKnowledgeExpanded, setIsKnowledgeExpanded] = useState(true);
   const [isUnderstandingExpanded, setIsUnderstandingExpanded] = useState(true);
 
-  // Manual Setup Accordion state
+  // Manual Setup Accordion state: 'profile' | 'personas' | 'knowledge'
   const [openAccordion, setOpenAccordion] = useState('profile');
 
   // Company Profile form fields
@@ -108,7 +109,7 @@ export const BrandSetup = () => {
   // ────────────────────────────────────────────────────────────────────────
   // React Query API Operations
   // ────────────────────────────────────────────────────────────────────────
-  const { data: companyData, isLoading: companyLoading, isError: companyError } = useQuery({
+  const { data: companyData, isLoading: companyLoading, isError: companyError, error: compErr } = useQuery({
     queryKey: ['company'],
     queryFn: async () => {
       const response = await api.get('/company');
@@ -116,7 +117,7 @@ export const BrandSetup = () => {
     }
   });
 
-  const { data: personasData, isLoading: personasLoading } = useQuery({
+  const { data: personasData, isLoading: personasLoading, isError: personasError } = useQuery({
     queryKey: ['personas'],
     queryFn: async () => {
       const response = await api.get('/personas');
@@ -124,7 +125,7 @@ export const BrandSetup = () => {
     }
   });
 
-  const { data: documentsData, isLoading: documentsLoading } = useQuery({
+  const { data: documentsData, isLoading: documentsLoading, isError: documentsError } = useQuery({
     queryKey: ['knowledge'],
     queryFn: async () => {
       const response = await api.get('/knowledge');
@@ -154,9 +155,10 @@ export const BrandSetup = () => {
     }
   }, [companyData, viewMode, isEditingCompany]);
 
-  // Determine initial view mode
+  // Determine initial view mode: redirect to choose screen only when no company details are extracted or generated
   useEffect(() => {
     if (companyData && personasData) {
+      // 🚀 Do not override setup states when the user is in progress of manual or AI setup
       if (['manual_setup', 'ai_setup', 'processing'].includes(viewMode)) {
         return;
       }
@@ -182,18 +184,21 @@ export const BrandSetup = () => {
     }
   }, [companyData, personasData, companyError, initializedCompanyId, viewMode]);
 
+  // Clean up timers on unmount
   useEffect(() => {
     return () => {
       if (progressTimer) clearInterval(progressTimer);
     };
   }, [progressTimer]);
 
+  // Initialize with at least one color if list is empty during edit/manual setups
   useEffect(() => {
     if ((viewMode === 'manual_setup' || isEditingCompany) && brandColors.length === 0) {
       setBrandColors(['#f25b18']);
     }
   }, [viewMode, isEditingCompany, brandColors.length]);
 
+  // Scroll to validation errors smoothly when they trigger
   useEffect(() => {
     if (errorAlert) {
       const timer = setTimeout(() => {
@@ -206,7 +211,7 @@ export const BrandSetup = () => {
     }
   }, [errorAlert]);
 
-  // Mutations
+  // Mutation: Save Company Details
   const updateCompanyMutation = useMutation({
     mutationFn: async (updatedPayload) => {
       const response = await api.put(`/company/${companyData._id}`, updatedPayload);
@@ -222,6 +227,7 @@ export const BrandSetup = () => {
     }
   });
 
+  // Mutation: Create Persona
   const createPersonaMutation = useMutation({
     mutationFn: async (newPersona) => {
       const response = await api.post('/personas', newPersona);
@@ -237,6 +243,7 @@ export const BrandSetup = () => {
     }
   });
 
+  // Mutation: Edit Persona
   const updatePersonaMutation = useMutation({
     mutationFn: async ({ id, payload }) => {
       const response = await api.put(`/personas/${id}`, payload);
@@ -252,6 +259,7 @@ export const BrandSetup = () => {
     }
   });
 
+  // Mutation: Delete Persona
   const deletePersonaMutation = useMutation({
     mutationFn: async (id) => {
       await api.delete(`/personas/${id}`);
@@ -265,6 +273,7 @@ export const BrandSetup = () => {
     }
   });
 
+  // Mutation: Upload Knowledge File
   const uploadDocMutation = useMutation({
     mutationFn: async (file) => {
       const formData = new FormData();
@@ -290,6 +299,7 @@ export const BrandSetup = () => {
     }
   });
 
+  // Mutation: Delete Document
   const deleteDocMutation = useMutation({
     mutationFn: async (id) => {
       await api.delete(`/knowledge/${id}`);
@@ -306,6 +316,7 @@ export const BrandSetup = () => {
     }
   });
 
+  // Mutation: Edit summary text
   const updateSummaryMutation = useMutation({
     mutationFn: async ({ id, summaryText }) => {
       const response = await api.put(`/knowledge/${id}/summary`, { summaryText });
@@ -322,6 +333,7 @@ export const BrandSetup = () => {
     }
   });
 
+  // AI Extraction Progress simulation
   const startProgressSimulation = (title) => {
     setProcessingTitle(title);
     setViewMode('processing');
@@ -353,6 +365,7 @@ export const BrandSetup = () => {
     setProcessingError(errorMsg);
   };
 
+  // Mutation: Crawl Website URL
   const crawlMutation = useMutation({
     mutationFn: async (url) => {
       startProgressSimulation('Analyzing Website & Extracting Brand');
@@ -372,6 +385,7 @@ export const BrandSetup = () => {
     }
   });
 
+  // Mutation: Extract Brand & Personas from source document
   const extractMutation = useMutation({
     mutationFn: async (id) => {
       startProgressSimulation('Re-extracting Brand Context');
@@ -390,7 +404,9 @@ export const BrandSetup = () => {
     }
   });
 
+  // ────────────────────────────────────────────────────────────────────────
   // Helper handlers
+  // ────────────────────────────────────────────────────────────────────────
   const triggerToast = (msg) => {
     setToastMessage(msg);
     setShowToast(true);
@@ -573,6 +589,7 @@ export const BrandSetup = () => {
   };
 
   const handleFinishManualSetup = () => {
+    // 1. Check if required company information is provided locally and matches/saved on the server
     if (!companyName.trim()) {
       setOpenAccordion('profile');
       triggerValidationError('companyName', 'Company Name is required. Please fill out and save your Company Information.');
@@ -599,6 +616,7 @@ export const BrandSetup = () => {
       return;
     }
 
+    // Check if there are unsaved company profile changes
     const isUnsaved = !companyData || 
       companyData.companyName !== companyName.trim() ||
       companyData.website !== website.trim() ||
@@ -612,6 +630,7 @@ export const BrandSetup = () => {
       return;
     }
 
+    // 2. Check if at least a single persona is created
     if (!personasData || personasData.length === 0) {
       setErrorAlert('Please design and save at least one Audience Persona before finishing.');
       setOpenAccordion('personas');
@@ -667,6 +686,7 @@ export const BrandSetup = () => {
     }
   };
 
+  // Get primary document for the main AI summary context
   const getPrimaryDoc = () => {
     if (!documentsData || documentsData.length === 0) return null;
     const urlDoc = documentsData.find(d => (d.fileType || d.file_type) === 'url');
@@ -675,6 +695,7 @@ export const BrandSetup = () => {
 
   const primaryDoc = getPrimaryDoc();
 
+  // Quick Action Navigators
   const quickAction = (actionType) => {
     if (actionType === 'generate') {
       navigate('/blog-studio');
@@ -707,6 +728,7 @@ export const BrandSetup = () => {
     }
   };
 
+  // Logo upload helpers in form
   const handleLogoUploadTrigger = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -754,6 +776,9 @@ export const BrandSetup = () => {
     }
   };
 
+  // ────────────────────────────────────────────────────────────────────────
+  // Loading & Error States
+  // ────────────────────────────────────────────────────────────────────────
   if (companyLoading || personasLoading || documentsLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
@@ -769,6 +794,7 @@ export const BrandSetup = () => {
   if (viewMode === 'choose') {
     return (
       <div className="max-w-3xl mx-auto space-y-8 py-10 px-4">
+        {/* Header Title */}
         <div className="text-center space-y-3">
           <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
             <Building2 size={32} />
@@ -781,9 +807,11 @@ export const BrandSetup = () => {
           </p>
         </div>
 
+        {/* Choice Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-          {/* Card 1: AI Setup */}
-          <div className="bg-card rounded-3xl p-8 border border-border shadow-sm hover:shadow-lg hover:border-primary/40 transition-all duration-300 flex flex-col justify-between space-y-6 relative overflow-hidden">
+          
+          {/* Card 1: AI Setup (Recommended) */}
+          <div className="bg-card dark:bg-slate-900/30 backdrop-blur-md rounded-3xl p-8 border border-primary/20 dark:border-primary/30 flex flex-col justify-between space-y-6 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(242,91,24,0.12)] hover:border-primary/50 transition-all duration-500">
             <div className="absolute top-0 right-0 px-4 py-1.5 bg-primary/10 border-b border-l border-primary/20 rounded-bl-2xl text-[10px] font-extrabold uppercase tracking-wider text-primary">
               Recommended
             </div>
@@ -795,7 +823,8 @@ export const BrandSetup = () => {
                 Connect your website URL and upload key company docs. The AI will parse your site, generate profiles, extract audience personas, and build a tailored knowledge base automatically.
               </p>
               
-              <ul className="space-y-2 pt-2 text-xs text-foreground dark:text-slate-200 font-medium">
+              {/* Features List */}
+              <ul className="space-y-2 pt-2 text-xs text-foreground font-medium">
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-primary" />
                   <span>Analyze Website URL</span>
@@ -821,14 +850,14 @@ export const BrandSetup = () => {
 
             <button
               onClick={() => setViewMode('ai_setup')}
-              className="w-full py-3 bg-gradient-to-r from-primary to-accent text-foreground dark:text-white font-extrabold rounded-xl transition-all duration-300 shadow-sm hover:opacity-90 active:scale-[0.98] cursor-pointer"
+              className="w-full py-3 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl transition-all duration-300 shadow-sm hover:opacity-90 active:scale-[0.98] cursor-pointer"
             >
               Start AI Setup
             </button>
           </div>
 
           {/* Card 2: Manual Setup */}
-          <div className="bg-card rounded-3xl p-8 border border-border shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 flex flex-col justify-between space-y-6">
+          <div className="bg-card dark:bg-slate-900/30 backdrop-blur-md rounded-3xl p-8 border border-border dark:border-slate-800 flex flex-col justify-between space-y-6 group hover:border-primary/45 hover:shadow-lg transition-all duration-500">
             <div className="space-y-4">
               <div className="text-3xl">✍</div>
               <h3 className="font-display text-xl font-bold text-foreground">Manual Setup</h3>
@@ -836,7 +865,7 @@ export const BrandSetup = () => {
                 Input your company details, write descriptions, define keywords, upload logos, create target personas, and add knowledge grounding files manually.
               </p>
               
-              <ul className="space-y-2 pt-2 text-xs text-foreground dark:text-slate-200 font-medium">
+              <ul className="space-y-2 pt-2 text-xs text-foreground font-medium">
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-muted-foreground" />
                   <span>Create Brand Profile Manually</span>
@@ -863,6 +892,7 @@ export const BrandSetup = () => {
               Start Manual Setup
             </button>
           </div>
+
         </div>
       </div>
     );
@@ -875,6 +905,7 @@ export const BrandSetup = () => {
     const hasUploadedFiles = documentsData && documentsData.length > 0;
     return (
       <div className="max-w-4xl mx-auto space-y-6 py-6 px-4">
+        {/* Back Link */}
         <button
           onClick={() => setViewMode('choose')}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
@@ -883,6 +914,7 @@ export const BrandSetup = () => {
           <span>Back to setup choices</span>
         </button>
 
+        {/* Title */}
         <div>
           <h2 className="font-display text-2xl font-extrabold tracking-tight text-foreground">🤖 AI Assisted Brand Setup</h2>
           <p className="text-xs text-muted-foreground mt-1">
@@ -890,19 +922,22 @@ export const BrandSetup = () => {
           </p>
         </div>
 
+        {/* Global Error Banner */}
         {errorAlert && (
-          <div id="error-alert-banner" className="flex items-center justify-between gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
+          <div id="error-alert-banner" className="flex items-center justify-between gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-700 text-sm">
             <div className="flex items-center gap-3">
               <AlertCircle size={20} className="shrink-0 text-red-500" />
               <span>{errorAlert}</span>
             </div>
-            <button onClick={() => setErrorAlert('')} className="text-muted-foreground hover:text-slate-400">
+            <button onClick={() => setErrorAlert('')} className="text-muted-foreground hover:text-slate-600">
               <X size={16} />
             </button>
           </div>
         )}
 
+        {/* side-by-side URL and Upload */}
         <div className="flex flex-col md:flex-row md:items-stretch gap-6 relative">
+          
           {/* Section A: Crawl URL */}
           <div className="flex-1 bg-card rounded-2xl p-6 border border-border flex flex-col justify-between space-y-4">
             <div>
@@ -922,7 +957,7 @@ export const BrandSetup = () => {
                 value={websiteUrl}
                 onChange={(e) => setWebsiteUrl(e.target.value)}
                 placeholder="e.g. https://mycompany.com"
-                className="w-full px-3 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary bg-background text-foreground"
+                className="w-full px-3 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary focus:border-transparent bg-white text-foreground"
               />
               <span className="text-[10px] text-muted-foreground block">AI crawls, saves metadata, and extracts profile and target audience.</span>
             </div>
@@ -930,9 +965,9 @@ export const BrandSetup = () => {
 
           {/* OR Divider */}
           <div className="flex md:flex-col items-center justify-center my-2 md:my-0 relative shrink-0 min-w-[40px]">
-            <div className="hidden md:block w-px h-full bg-border"></div>
-            <div className="block md:hidden w-full h-px bg-border"></div>
-            <span className="absolute px-3 py-1 bg-card border border-border rounded-full text-[10px] font-bold text-muted-foreground shadow-sm uppercase tracking-wider select-none">
+            <div className="hidden md:block w-px h-full bg-slate-200"></div>
+            <div className="block md:hidden w-full h-px bg-slate-200"></div>
+            <span className="absolute px-3 py-1 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-muted-foreground shadow-sm uppercase tracking-wider select-none">
               or
             </span>
           </div>
@@ -949,6 +984,7 @@ export const BrandSetup = () => {
               </p>
             </div>
 
+            {/* Drag & Drop Zone */}
             <div
               onDragEnter={handleDrag}
               onDragOver={handleDrag}
@@ -957,7 +993,7 @@ export const BrandSetup = () => {
               className={`border border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all ${
                 dragActive 
                   ? 'border-primary bg-primary/5' 
-                  : 'border-border bg-muted/30 hover:border-primary/50'
+                  : 'border-border bg-slate-50/50 hover:border-slate-350'
               }`}
             >
               <input
@@ -972,7 +1008,7 @@ export const BrandSetup = () => {
                 <div className="space-y-2 w-full max-w-xs py-2 text-center">
                   <Loader2 className="animate-spin text-primary mx-auto" size={24} />
                   <p className="text-[11px] font-semibold text-muted-foreground">Uploading & extracting text...</p>
-                  <div className="w-full h-1 bg-border rounded-full overflow-hidden">
+                  <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden border border-slate-200">
                     <div 
                       className="h-full bg-primary transition-all duration-300"
                       style={{ width: `${uploadProgress}%` }}
@@ -993,24 +1029,29 @@ export const BrandSetup = () => {
               )}
             </div>
 
+            {/* Uploaded Files Count */}
             {hasUploadedFiles && (
-              <div className="text-xs font-semibold text-emerald-500 flex items-center gap-1.5">
+              <div className="text-xs font-semibold text-emerald-600 flex items-center gap-1.5">
                 <Check size={14} />
                 <span>{documentsData.length} document(s) uploaded & ready</span>
               </div>
             )}
+
           </div>
+
         </div>
 
+        {/* Guidance Recommendation */}
         <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-xs text-muted-foreground space-y-1">
           <p className="font-bold text-foreground">💡 Setup Source Recommendation</p>
-          <p>You can proceed using: Website only, Documents only, or Website + Documents. We recommend uploading both sources to feed the AI rich context.</p>
+          <p>You can proceed using: Website only, Documents only, or Website + Documents. We recommend uploading both sources to feed the AI rich context, resulting in highly detailed brand profiles.</p>
         </div>
 
+        {/* Start Setup Submit */}
         <div className="flex justify-end gap-3 pt-4 border-t border-border">
           <button
             onClick={() => setViewMode('choose')}
-            className="px-5 py-2.5 bg-secondary dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-foreground dark:text-white font-semibold rounded-xl text-xs transition-all cursor-pointer"
+            className="px-5 py-2.5 bg-secondary hover:bg-slate-200 text-foreground font-semibold rounded-xl text-xs transition-all cursor-pointer"
           >
             Cancel
           </button>
@@ -1019,6 +1060,7 @@ export const BrandSetup = () => {
               if (websiteUrl.trim()) {
                 crawlMutation.mutate(websiteUrl);
               } else if (hasUploadedFiles) {
+                // If files exist, run extract on the primary file
                 const primary = getPrimaryDoc();
                 if (primary) {
                   extractMutation.mutate(primary._id);
@@ -1030,7 +1072,7 @@ export const BrandSetup = () => {
               }
             }}
             disabled={crawlMutation.isPending || extractMutation.isPending}
-            className="px-6 py-3 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+            className="px-6 py-3 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
           >
             {(crawlMutation.isPending || extractMutation.isPending) ? (
               <>
@@ -1045,6 +1087,7 @@ export const BrandSetup = () => {
             )}
           </button>
         </div>
+
       </div>
     );
   }
@@ -1063,7 +1106,8 @@ export const BrandSetup = () => {
     ];
 
     return (
-      <div className="max-w-md mx-auto py-16 px-4 space-y-8 text-center">
+      <div className="max-w-md mx-auto py-16 px-4 space-y-8 text-center brand-setup-root">
+        {/* Progress Loader Icon */}
         <div className="relative w-20 h-20 mx-auto">
           {activeProgressStep < 5 ? (
             <>
@@ -1073,12 +1117,13 @@ export const BrandSetup = () => {
               </div>
             </>
           ) : (
-            <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center text-emerald-500 shadow-sm animate-bounce">
+            <div className="w-20 h-20 bg-emerald-50 border border-emerald-100 rounded-full flex items-center justify-center text-emerald-500 shadow-sm animate-bounce">
               <CheckCircle2 size={36} />
             </div>
           )}
         </div>
 
+        {/* Title */}
         <div className="space-y-2">
           <h3 className="font-display text-xl font-bold text-foreground">{processingTitle}</h3>
           <p className="text-xs text-muted-foreground">
@@ -1086,6 +1131,7 @@ export const BrandSetup = () => {
           </p>
         </div>
 
+        {/* Progress Checklist */}
         <div className="bg-card rounded-2xl p-6 border border-border text-left space-y-3.5 max-w-sm mx-auto">
           {steps.map((step) => {
             const isCompleted = activeProgressStep > step.id || activeProgressStep === 5;
@@ -1093,7 +1139,7 @@ export const BrandSetup = () => {
             return (
               <div key={step.id} className="flex items-center justify-between text-xs">
                 <span className={`font-semibold ${
-                  isCompleted ? 'text-emerald-500' : isActive ? 'text-primary' : 'text-muted-foreground'
+                  isCompleted ? 'text-emerald-600' : isActive ? 'text-primary' : 'text-muted-foreground'
                 }`}>
                   {step.label}
                 </span>
@@ -1103,16 +1149,17 @@ export const BrandSetup = () => {
                 ) : isActive ? (
                   <Loader2 size={12} className="animate-spin text-primary" />
                 ) : (
-                  <div className="w-2.5 h-2.5 rounded-full bg-muted border border-border" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-200 border border-slate-300" />
                 )}
               </div>
             );
           })}
         </div>
 
+        {/* Error State */}
         {processingError && (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-500 max-w-sm mx-auto">
+            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-700 max-w-sm mx-auto">
               {processingError}
             </div>
             <button
@@ -1120,7 +1167,7 @@ export const BrandSetup = () => {
                 setProcessingError('');
                 setViewMode('ai_setup');
               }}
-              className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-lg text-xs"
+              className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-lg text-xs"
             >
               Try Again
             </button>
@@ -1136,6 +1183,7 @@ export const BrandSetup = () => {
   if (viewMode === 'manual_setup') {
     return (
       <div id="manual-setup-root" className="max-w-4xl mx-auto space-y-6 py-6 px-4">
+        {/* Back Link */}
         <button
           onClick={() => setViewMode('choose')}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
@@ -1144,6 +1192,7 @@ export const BrandSetup = () => {
           <span>Back to setup choices</span>
         </button>
 
+        {/* Header */}
         <div className="flex justify-between items-center border-b border-border pb-4">
           <div>
             <h2 className="font-display text-2xl font-extrabold tracking-tight text-foreground">✍ Manual Brand Setup</h2>
@@ -1151,31 +1200,34 @@ export const BrandSetup = () => {
           </div>
           <button
             onClick={handleFinishManualSetup}
-            className="px-4 py-2 border border-border bg-card hover:bg-muted/50 text-foreground font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer shadow-sm"
+            className="px-4 py-2 border border-border bg-card hover:bg-slate-50 text-foreground font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer shadow-sm"
           >
             <span>Finish & Go to Workspace</span>
             <span>&rarr;</span>
           </button>
         </div>
 
+        {/* Global Error Banner */}
         {errorAlert && (
-          <div id="error-alert-banner" className="flex items-center justify-between gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs animate-fade-in">
+          <div id="error-alert-banner" className="flex items-center justify-between gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-700 text-xs animate-fade-in">
             <div className="flex items-center gap-3">
               <AlertCircle size={18} className="shrink-0 text-red-500" />
               <span>{errorAlert}</span>
             </div>
-            <button onClick={() => setErrorAlert('')} className="text-muted-foreground hover:text-foreground font-bold text-sm select-none cursor-pointer">
+            <button onClick={() => setErrorAlert('')} className="text-muted-foreground hover:text-slate-600 font-bold text-sm select-none cursor-pointer">
               &times;
             </button>
           </div>
         )}
 
+        {/* Accordions Stack */}
         <div className="space-y-4">
+          
           {/* ACCORDION 1: Company Profile */}
-          <div id="accordion-profile" className="bg-card rounded-2xl border border-border overflow-hidden">
+          <div id="accordion-profile" className="bg-card dark:bg-slate-900/30 backdrop-blur-md rounded-2xl border border-border dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
             <button
               onClick={() => handleSetOpenAccordion('profile', true)}
-              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-muted/20 transition-colors text-left"
+              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/50 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary">
@@ -1190,8 +1242,10 @@ export const BrandSetup = () => {
             </button>
 
             {openAccordion === 'profile' && (
-              <div className="p-6 border-t border-border bg-muted/10 space-y-6">
+              <div className="p-6 border-t border-border bg-white/40 space-y-6">
                 <form onSubmit={handleSaveCompanyProfile} className="space-y-6">
+                  
+                  {/* Basic Details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-muted-foreground">Company Name *</label>
@@ -1202,7 +1256,7 @@ export const BrandSetup = () => {
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         placeholder="Enter company name"
-                        className="w-full px-3 py-2 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background"
+                        className="w-full px-3 py-2 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white"
                       />
                     </div>
 
@@ -1215,7 +1269,7 @@ export const BrandSetup = () => {
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
                         placeholder="e.g. https://mycompany.com"
-                        className="w-full px-3 py-2 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background"
+                        className="w-full px-3 py-2 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white"
                       />
                     </div>
 
@@ -1227,15 +1281,17 @@ export const BrandSetup = () => {
                         value={industry}
                         onChange={(e) => setIndustry(e.target.value)}
                         placeholder="e.g. B2B SaaS, Finance"
-                        className="w-full px-3 py-2 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background"
+                        className="w-full px-3 py-2 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white"
                       />
                     </div>
                   </div>
 
+                  {/* Logo upload */}
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-muted-foreground">Company Logo *</label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-4 flex flex-col items-center justify-center bg-muted/20 min-h-[100px] text-center">
+                      
+                      <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-50/40 min-h-[100px] text-center">
                         {uploadingLogo ? (
                           <div className="flex flex-col items-center gap-1">
                             <Loader2 className="animate-spin text-primary" size={18} />
@@ -1257,11 +1313,11 @@ export const BrandSetup = () => {
                         )}
                       </div>
 
-                      <div className="border border-border bg-muted/10 rounded-xl p-4 flex flex-col justify-center min-h-[100px]">
+                      <div className="border border-border bg-slate-50/20 rounded-xl p-4 flex flex-col justify-center min-h-[100px]">
                         {logo ? (
                           <div className="flex items-start gap-3">
                             <div className="relative shrink-0">
-                              <div className="w-12 h-12 rounded-lg bg-white flex items-center justify-center p-1 border border-border overflow-hidden shadow-sm">
+                              <div className="w-12 h-12 rounded-lg bg-white flex items-center justify-center p-1 border border-slate-200 overflow-hidden shadow-sm">
                                 <img
                                   src={logo.startsWith('http') || logo.startsWith('data:') ? logo : `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/..${logo}`}
                                   alt="Logo Preview"
@@ -1271,7 +1327,7 @@ export const BrandSetup = () => {
                               <button
                                 type="button"
                                 onClick={handleLogoDeleteTrigger}
-                                className="absolute -top-1.5 -right-1.5 p-0.5 bg-red-500 hover:bg-red-600 text-white rounded-full border border-border flex items-center justify-center cursor-pointer"
+                                className="absolute -top-1.5 -right-1.5 p-0.5 bg-red-500 hover:bg-red-600 text-foreground rounded-full border border-white flex items-center justify-center cursor-pointer"
                               >
                                 <X size={8} />
                               </button>
@@ -1300,10 +1356,12 @@ export const BrandSetup = () => {
                           <div className="text-center text-muted-foreground py-3 text-xs italic">No logo uploaded yet</div>
                         )}
                       </div>
+
                     </div>
                   </div>
 
-                  <div className="space-y-2 border border-border bg-muted/20 rounded-xl p-4">
+                  {/* Brand Colors Configurator */}
+                  <div className="space-y-2 border border-border bg-slate-50/20 rounded-xl p-4">
                     <div>
                       <label className="text-xs font-bold text-foreground">Brand Palette Colors</label>
                       <span className="text-[10px] text-muted-foreground block mt-0.5">Customize your brand's color theme palette. Pick from the picker or input hex codes manually.</span>
@@ -1311,7 +1369,7 @@ export const BrandSetup = () => {
 
                     <div className="flex flex-wrap gap-3 items-end pt-1">
                       {brandColors.map((color, idx) => (
-                        <div key={idx} className="flex items-center gap-2 bg-background border border-border p-1.5 rounded-xl shadow-sm">
+                        <div key={idx} className="flex items-center gap-2 bg-white border border-border p-1.5 rounded-xl shadow-sm">
                           <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-border shrink-0">
                             <input
                               type="color"
@@ -1334,7 +1392,7 @@ export const BrandSetup = () => {
                               setBrandColors(newColors);
                             }}
                             placeholder="#HEX"
-                            className="w-20 px-2 py-1 text-xs font-mono border border-border rounded-lg focus:outline-none text-foreground bg-muted/40"
+                            className="w-20 px-2 py-1 text-xs font-mono border border-border rounded-lg focus:outline-none text-foreground bg-slate-50"
                           />
 
                           <button
@@ -1342,7 +1400,7 @@ export const BrandSetup = () => {
                             onClick={() => {
                               setBrandColors(brandColors.filter((_, i) => i !== idx));
                             }}
-                            className="p-1 hover:bg-red-500/10 text-muted-foreground hover:text-red-500 rounded-lg cursor-pointer"
+                            className="p-1 hover:bg-red-50 text-muted-foreground hover:text-red-500 rounded-lg cursor-pointer"
                             title="Remove color"
                           >
                             <X size={12} />
@@ -1355,7 +1413,7 @@ export const BrandSetup = () => {
                         onClick={() => {
                           setBrandColors([...brandColors, '#f25b18']);
                         }}
-                        className="px-3.5 py-2 border border-border bg-card hover:bg-muted text-foreground font-semibold rounded-xl text-[10px] flex items-center gap-1 cursor-pointer h-10 shadow-sm"
+                        className="px-3.5 py-2 border border-border hover:bg-slate-50 text-foreground font-semibold rounded-xl text-[10px] flex items-center gap-1 cursor-pointer h-10 shadow-sm"
                       >
                         <Plus size={12} />
                         <span>Add Another Color</span>
@@ -1363,6 +1421,7 @@ export const BrandSetup = () => {
                     </div>
                   </div>
 
+                  {/* Narrative details */}
                   <div className="space-y-4">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-muted-foreground">Product / Service Description *</label>
@@ -1373,7 +1432,7 @@ export const BrandSetup = () => {
                         value={productDescription}
                         onChange={(e) => setProductDescription(e.target.value)}
                         placeholder="Describe what your product does, value proposition, and key features..."
-                        className="w-full p-3 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background resize-none"
+                        className="w-full p-3 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white resize-none"
                       />
                     </div>
 
@@ -1386,7 +1445,7 @@ export const BrandSetup = () => {
                         value={targetAudience}
                         onChange={(e) => setTargetAudience(e.target.value)}
                         placeholder="e.g. CMOs, Founders seeking pre-seed capital, small business owners..."
-                        className="w-full p-3 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background resize-none"
+                        className="w-full p-3 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white resize-none"
                       />
                     </div>
 
@@ -1398,11 +1457,12 @@ export const BrandSetup = () => {
                         value={brandVoice}
                         onChange={(e) => setBrandVoice(e.target.value)}
                         placeholder="e.g. Professional, authoritative, visionary, snappy, conversational..."
-                        className="w-full p-3 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background resize-none"
+                        className="w-full p-3 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white resize-none"
                       />
                     </div>
                   </div>
 
+                  {/* Competitor Tags */}
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-muted-foreground">Key Competitors</label>
                     <div className="flex gap-2">
@@ -1411,13 +1471,13 @@ export const BrandSetup = () => {
                         value={newCompetitor}
                         onChange={(e) => setNewCompetitor(e.target.value)}
                         placeholder="Add competitor"
-                        className="flex-1 px-3 py-2 border border-border rounded-xl text-xs focus:outline-none focus:border-primary text-foreground bg-background"
+                        className="flex-1 px-3 py-2 border border-border rounded-xl text-xs focus:outline-none focus:border-primary text-foreground bg-white"
                         onKeyDown={(e) => { if (e.key === 'Enter') handleAddCompetitor(e); }}
                       />
                       <button
                         type="button"
                         onClick={handleAddCompetitor}
-                        className="px-3 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 transition-all rounded-xl flex items-center justify-center cursor-pointer"
+                        className="px-3 bg-primary/10 hover:bg-primary text-primary hover:text-foreground border border-primary/20 transition-all rounded-xl flex items-center justify-center cursor-pointer"
                       >
                         <Plus size={16} />
                       </button>
@@ -1430,13 +1490,13 @@ export const BrandSetup = () => {
                         competitors.map((comp) => (
                           <div
                             key={comp}
-                            className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 bg-secondary dark:bg-slate-800 border border-border rounded-lg text-xs font-medium text-foreground"
+                            className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 bg-secondary border border-border rounded-lg text-xs font-medium text-slate-700"
                           >
                             <span>{comp}</span>
                             <button
                               type="button"
                               onClick={() => handleRemoveCompetitor(comp)}
-                              className="p-0.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground cursor-pointer"
+                              className="p-0.5 hover:bg-slate-200 rounded text-muted-foreground hover:text-slate-600 cursor-pointer"
                             >
                               <X size={10} />
                             </button>
@@ -1446,11 +1506,12 @@ export const BrandSetup = () => {
                     </div>
                   </div>
 
+                  {/* Submit Button */}
                   <div className="pt-4 border-t border-border flex justify-between items-center">
                     <button
                       type="submit"
                       disabled={updateCompanyMutation.isPending}
-                      className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-white font-bold rounded-xl shadow-sm text-xs cursor-pointer flex items-center gap-1.5"
+                      className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-foreground font-bold rounded-xl shadow-sm text-xs cursor-pointer flex items-center gap-1.5"
                     >
                       {updateCompanyMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
                       <span>Save Company Profile</span>
@@ -1463,16 +1524,17 @@ export const BrandSetup = () => {
                       Next Step: Personas &rarr;
                     </button>
                   </div>
+
                 </form>
               </div>
             )}
           </div>
 
           {/* ACCORDION 2: Audience Personas */}
-          <div id="accordion-personas" className="bg-card rounded-2xl border border-border overflow-hidden">
+          <div id="accordion-personas" className="bg-card dark:bg-slate-900/30 backdrop-blur-md rounded-2xl border border-border dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
             <button
               onClick={() => handleSetOpenAccordion('personas', true)}
-              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-muted/20 transition-colors text-left"
+              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/50 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary">
@@ -1487,27 +1549,30 @@ export const BrandSetup = () => {
             </button>
 
             {openAccordion === 'personas' && (
-              <div className="p-6 border-t border-border bg-muted/10 space-y-6">
+              <div className="p-6 border-t border-border bg-white/40 space-y-6">
+                
+                {/* Header Actions */}
                 <div className="flex justify-between items-center">
                   <h4 className="font-display text-xs font-bold text-foreground">Active Personas List</h4>
                   <button
                     onClick={openCreatePersonaModal}
-                    className="px-3.5 py-2 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm cursor-pointer"
+                    className="px-3.5 py-2 bg-gradient-to-r from-primary to-accent text-foreground font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm cursor-pointer"
                   >
                     <UserPlus size={14} />
                     <span>Create Persona</span>
                   </button>
                 </div>
 
+                {/* Grid List */}
                 {personasData.length === 0 ? (
-                  <div className="text-center p-8 bg-muted/20 border border-dashed border-border rounded-xl space-y-3">
-                    <p className="text-xs font-semibold text-muted-foreground">No Personas Yet</p>
+                  <div className="text-center p-8 bg-slate-50/50 border border-dashed border-border rounded-xl space-y-3">
+                    <p className="text-xs font-semibold text-slate-500">No Personas Yet</p>
                     <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
                       Personas help Blog Studio adapt blog tone and messaging. Create one manually to begin.
                     </p>
                     <button
                       onClick={openCreatePersonaModal}
-                      className="px-4 py-2 border border-border bg-card hover:bg-muted font-bold rounded-xl text-[10px] text-foreground shadow-sm cursor-pointer"
+                      className="px-4 py-2 border border-border bg-card hover:bg-slate-50 font-bold rounded-xl text-[10px] text-foreground shadow-sm cursor-pointer"
                     >
                       Create Manual Persona
                     </button>
@@ -1515,7 +1580,7 @@ export const BrandSetup = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {personasData.map((p) => (
-                      <div key={p.id || p._id} className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-sm hover:border-primary/40 transition-all">
+                      <div key={p.id || p._id} className="bg-card dark:bg-slate-900/50 border border-border dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-sm hover:border-primary/40 transition-all duration-300">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <h5 className="font-display font-bold text-foreground text-sm truncate">{p.personaName || p.name}</h5>
@@ -1526,22 +1591,24 @@ export const BrandSetup = () => {
                           <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
                             {p.description || p.notes || 'No bio specified.'}
                           </p>
-                          <div className="grid grid-cols-2 gap-2 text-[10px] bg-muted/30 p-2 rounded-lg border border-border">
+                          <div className="grid grid-cols-2 gap-2 text-[10px] bg-slate-50/50 p-2 rounded-lg border border-border">
                             <div>
                               <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Tone</span>
                               <span className="font-semibold text-primary truncate block">{p.tone || p.voice}</span>
                             </div>
                             <div>
                               <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Style</span>
-                              <span className="font-semibold text-foreground truncate block">{p.writingStyle || '—'}</span>
+                              <span className="font-semibold text-slate-650 truncate block">{p.writingStyle || '—'}</span>
                             </div>
                           </div>
                         </div>
 
+                        {/* Action buttons */}
                         <div className="flex justify-between items-center pt-2 border-t border-border mt-auto gap-2">
                           <button
                             onClick={() => setViewPersonaDetails(p)}
-                            className="px-2.5 py-1.5 bg-muted/40 hover:bg-muted border border-border rounded-lg text-muted-foreground hover:text-foreground font-bold text-[9px] flex items-center gap-1 cursor-pointer transition-all"
+                            className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-border rounded-lg text-slate-650 hover:text-foreground font-bold text-[9px] flex items-center gap-1 cursor-pointer transition-all"
+                            title="Details"
                           >
                             <Eye size={10} />
                             <span>Details</span>
@@ -1549,14 +1616,14 @@ export const BrandSetup = () => {
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => openEditPersonaModal(p)}
-                              className="p-1 bg-muted/40 hover:bg-muted border border-border rounded-lg text-muted-foreground hover:text-foreground transition-all cursor-pointer flex items-center"
+                              className="p-1 bg-slate-50 hover:bg-slate-100 border border-border rounded-lg text-slate-600 hover:text-foreground transition-all cursor-pointer flex items-center"
                               title="Edit"
                             >
                               <Edit2 size={12} />
                             </button>
                             <button
                               onClick={() => handleDeletePersona(p.id || p._id)}
-                              className="p-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 transition-all cursor-pointer flex items-center"
+                              className="p-1 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg text-red-500 transition-all cursor-pointer flex items-center"
                               title="Delete"
                             >
                               <Trash2 size={12} />
@@ -1568,6 +1635,7 @@ export const BrandSetup = () => {
                   </div>
                 )}
 
+                {/* Footer accordion toggle */}
                 <div className="pt-4 border-t border-border flex justify-end">
                   <button
                     type="button"
@@ -1577,15 +1645,16 @@ export const BrandSetup = () => {
                     Next Step: Knowledge Base &rarr;
                   </button>
                 </div>
+
               </div>
             )}
           </div>
 
           {/* ACCORDION 3: Knowledge Base */}
-          <div id="accordion-knowledge" className="bg-card rounded-2xl border border-border overflow-hidden">
+          <div id="accordion-knowledge" className="bg-card dark:bg-slate-900/30 backdrop-blur-md rounded-2xl border border-border dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
             <button
               onClick={() => handleSetOpenAccordion('knowledge', true)}
-              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-muted/20 transition-colors text-left"
+              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/50 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary">
@@ -1600,9 +1669,13 @@ export const BrandSetup = () => {
             </button>
 
             {openAccordion === 'knowledge' && (
-              <div className="p-6 border-t border-border bg-muted/10 space-y-6">
+              <div className="p-6 border-t border-border bg-white/40 space-y-6">
+                
+                {/* Inline URL crawler & Document uploader side-by-side */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                  <div className="p-4 bg-muted/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  
+                  {/* Website link crawl */}
+                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <Globe size={14} className="text-primary" />
@@ -1620,7 +1693,7 @@ export const BrandSetup = () => {
                           value={websiteUrl}
                           onChange={(e) => setWebsiteUrl(e.target.value)}
                           placeholder="https://example.com/blog-reference"
-                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-background text-foreground focus:outline-none"
+                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none"
                           disabled={crawlMutation.isPending}
                         />
                         <button
@@ -1632,7 +1705,7 @@ export const BrandSetup = () => {
                             crawlMutation.mutate(websiteUrl);
                           }}
                           disabled={crawlMutation.isPending}
-                          className="px-3 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-extrabold rounded-xl text-[10px] flex items-center justify-center cursor-pointer shrink-0"
+                          className="px-3 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-extrabold rounded-xl text-[10px] flex items-center justify-center cursor-pointer shrink-0"
                         >
                           {crawlMutation.isPending ? <Loader2 size={10} className="animate-spin" /> : 'Analyze URL'}
                         </button>
@@ -1640,7 +1713,8 @@ export const BrandSetup = () => {
                     </div>
                   </div>
 
-                  <div className="p-4 bg-muted/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  {/* Attachment uploader */}
+                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <FileText size={14} className="text-primary" />
@@ -1651,13 +1725,14 @@ export const BrandSetup = () => {
                       </p>
                     </div>
 
+                    {/* Drag Drop Area */}
                     <div
                       onDragEnter={handleDrag}
                       onDragOver={handleDrag}
                       onDragLeave={handleDrag}
                       onDrop={handleDrop}
                       className={`border border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all flex-1 min-h-[80px] ${
-                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-muted/10'
+                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30'
                       }`}
                     >
                       <input
@@ -1671,7 +1746,7 @@ export const BrandSetup = () => {
                       {uploadProgress !== null ? (
                         <div className="w-full max-w-xs space-y-2 py-2">
                           <Loader2 size={16} className="animate-spin text-primary mx-auto" />
-                          <div className="w-full h-1 bg-border rounded-full overflow-hidden">
+                          <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden border border-border">
                             <div className="h-full bg-primary" style={{ width: `${uploadProgress}%` }} />
                           </div>
                         </div>
@@ -1685,13 +1760,15 @@ export const BrandSetup = () => {
                       )}
                     </div>
                   </div>
+
                 </div>
 
+                {/* Sourced files list */}
                 <div className="space-y-3">
                   <h4 className="font-display text-xs font-bold text-foreground">AI Knowledge Sources</h4>
 
                   {documentsData.length === 0 ? (
-                    <div className="p-6 bg-muted/20 border border-dashed border-border rounded-xl text-center text-xs text-muted-foreground italic">
+                    <div className="p-6 bg-slate-50/50 border border-dashed border-border rounded-xl text-center text-xs text-muted-foreground italic">
                       No reference documents uploaded. This step is optional – you can proceed without uploading documents.
                     </div>
                   ) : (
@@ -1702,9 +1779,9 @@ export const BrandSetup = () => {
                         const docFileType = (doc.fileType || doc.file_type || doc.source_type || doc.type || 'file').toLowerCase();
                         const docExtractedText = doc.extractedText || doc.extracted_text || doc.content || '';
                         return (
-                          <div key={docId} className="p-3 bg-card border border-border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:border-primary/40 transition-all shadow-sm">
+                          <div key={docId} className="p-3 bg-card border border-border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:border-slate-350 transition-all shadow-sm">
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="p-2 rounded bg-muted text-muted-foreground shrink-0">
+                              <div className="p-2 rounded bg-slate-100 text-slate-600 shrink-0">
                                 {docFileType === 'url' || docFileType === 'link' ? <Globe size={14} /> : <FileText size={14} />}
                               </div>
                               <div className="min-w-0">
@@ -1718,21 +1795,21 @@ export const BrandSetup = () => {
                             <div className="flex gap-1">
                               <button
                                 onClick={() => handleViewText(doc)}
-                                className="px-2.5 py-1 bg-muted/40 hover:bg-muted border border-border text-foreground font-bold rounded text-[10px] flex items-center gap-1 cursor-pointer"
+                                className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 border border-border text-foreground font-bold rounded text-[10px] flex items-center gap-1 cursor-pointer"
                               >
                                 <Eye size={10} />
                                 <span>View Summary</span>
                               </button>
                               <button
                                 onClick={() => extractMutation.mutate(docId)}
-                                className="px-2.5 py-1 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 font-bold rounded text-[10px] flex items-center gap-1 cursor-pointer"
+                                className="px-2.5 py-1 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded text-[10px] flex items-center gap-1 cursor-pointer"
                               >
                                 <Sparkles size={10} />
                                 <span>Extract Context</span>
                               </button>
                               <button
                                 onClick={() => handleDeleteDoc(docId)}
-                                className="p-1 hover:bg-red-500/10 hover:text-red-500 rounded text-muted-foreground border border-transparent transition-all cursor-pointer"
+                                className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-muted-foreground border border-transparent hover:border-red-100 transition-all cursor-pointer"
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -1744,36 +1821,39 @@ export const BrandSetup = () => {
                   )}
                 </div>
 
+                {/* Accordion final finish */}
                 <div className="pt-4 border-t border-border flex justify-end">
                   <button
                     onClick={handleFinishManualSetup}
-                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer"
+                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer"
                   >
                     Finish Setup & Open Brand Workspace
                   </button>
                 </div>
+
               </div>
             )}
           </div>
+
         </div>
 
         {/* Persona CRUD Form Modal */}
         {personaModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <h3 className="font-display text-lg font-bold text-foreground">
                   {editPersonaId ? 'Modify Content Persona' : 'Design Content Persona'}
                 </h3>
                 <button
                   onClick={closePersonaModal}
-                  className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              <form onSubmit={handlePersonaSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 bg-card">
+              <form onSubmit={handlePersonaSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground">Persona Name *</label>
                   <input
@@ -1782,7 +1862,7 @@ export const BrandSetup = () => {
                     value={personaName}
                     onChange={(e) => setPersonaName(e.target.value)}
                     placeholder="e.g. Thought Leader, Technical Founder"
-                    className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background"
+                    className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white"
                   />
                 </div>
 
@@ -1794,7 +1874,7 @@ export const BrandSetup = () => {
                     value={tone}
                     onChange={(e) => setTone(e.target.value)}
                     placeholder="e.g. Professional, Visionary, Snappy, Empathetic"
-                    className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background"
+                    className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white"
                   />
                 </div>
 
@@ -1806,7 +1886,7 @@ export const BrandSetup = () => {
                       value={writingStyle}
                       onChange={(e) => setWritingStyle(e.target.value)}
                       placeholder="e.g. Storyteller, Technical"
-                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background"
+                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white"
                     />
                   </div>
 
@@ -1817,7 +1897,7 @@ export const BrandSetup = () => {
                       value={audienceType}
                       onChange={(e) => setAudienceType(e.target.value)}
                       placeholder="e.g. Pre-Seed Founders"
-                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background"
+                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white"
                     />
                   </div>
                 </div>
@@ -1829,7 +1909,7 @@ export const BrandSetup = () => {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe this persona's focus, background, constraints, and target topics..."
-                    className="w-full p-3 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background resize-none"
+                    className="w-full p-3 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white resize-none"
                   />
                 </div>
 
@@ -1837,14 +1917,14 @@ export const BrandSetup = () => {
                   <button
                     type="button"
                     onClick={closePersonaModal}
-                    className="px-4 py-2 border border-border text-foreground hover:bg-muted rounded-xl text-xs font-semibold cursor-pointer"
+                    className="px-4 py-2 border border-border text-foreground hover:bg-slate-50 rounded-xl text-xs font-semibold cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={createPersonaMutation.isPending || updatePersonaMutation.isPending}
-                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-white font-bold rounded-xl shadow-sm flex items-center gap-1.5 text-xs cursor-pointer"
+                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-foreground font-bold rounded-xl shadow-sm flex items-center gap-1.5 text-xs cursor-pointer"
                   >
                     {(createPersonaMutation.isPending || updatePersonaMutation.isPending) ? (
                       <>
@@ -1867,32 +1947,32 @@ export const BrandSetup = () => {
         {/* View Document Summary / Edit Modal */}
         {selectedText !== null && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="w-full max-w-2xl bg-card border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+            <div className="w-full max-w-2xl bg-white border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <div>
                   <h3 className="font-display text-lg font-bold text-foreground">AI Grounding Summary Context</h3>
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5 max-w-md">{selectedFileName}</p>
                 </div>
                 <button
                   onClick={() => { setSelectedText(null); setIsEditingSummary(false); }}
-                  className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 bg-muted/20 border-y border-border max-h-[50vh] flex flex-col">
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-50 border-y border-border max-h-[50vh] flex flex-col">
                 {isEditingSummary ? (
                   <textarea
                     value={summaryTextVal}
                     onChange={(e) => setSummaryTextVal(e.target.value)}
-                    className="w-full flex-1 min-h-[25vh] p-3 text-foreground border border-border rounded-xl focus:outline-none text-sm bg-background resize-y"
+                    className="w-full flex-1 min-h-[25vh] p-3 text-foreground border border-border rounded-xl focus:outline-none text-sm bg-white resize-y"
                     placeholder="Type or modify summary text here..."
                   />
                 ) : (
                   selectedText ? (
                     <div 
-                      className="text-xs md:text-sm text-foreground/90 leading-relaxed space-y-4"
+                      className="text-xs md:text-sm text-slate-700 leading-relaxed space-y-4"
                       dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(selectedText) }}
                     />
                   ) : (
@@ -1901,19 +1981,19 @@ export const BrandSetup = () => {
                 )}
               </div>
 
-              <div className="p-4 border-t border-border flex justify-end gap-2 bg-card rounded-b-2xl">
+              <div className="p-4 border-t border-border flex justify-end gap-2 bg-white rounded-b-2xl">
                 {isEditingSummary ? (
                   <>
                     <button
                       onClick={() => setIsEditingSummary(false)}
-                      className="px-4 py-2 border border-border hover:bg-muted text-foreground rounded-xl text-xs font-semibold cursor-pointer"
+                      className="px-4 py-2 border border-slate-350 hover:bg-slate-50 text-foreground rounded-xl text-xs font-semibold cursor-pointer"
                       disabled={updateSummaryMutation.isPending}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={() => updateSummaryMutation.mutate({ id: selectedDocId, summaryText: summaryTextVal })}
-                      className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 cursor-pointer"
                       disabled={updateSummaryMutation.isPending}
                     >
                       {updateSummaryMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : 'Save Summary'}
@@ -1923,13 +2003,13 @@ export const BrandSetup = () => {
                   <>
                     <button
                       onClick={() => setIsEditingSummary(true)}
-                      className="px-4 py-2 border border-border hover:bg-muted text-foreground rounded-xl text-xs font-semibold cursor-pointer"
+                      className="px-4 py-2 border border-border hover:bg-slate-50 text-foreground rounded-xl text-xs font-semibold cursor-pointer"
                     >
                       Edit Summary
                     </button>
                     <button
                       onClick={() => setSelectedText(null)}
-                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-xl text-xs shadow-sm cursor-pointer"
                     >
                       Done
                     </button>
@@ -1939,6 +2019,7 @@ export const BrandSetup = () => {
             </div>
           </div>
         )}
+
       </div>
     );
   }
@@ -1951,27 +2032,31 @@ export const BrandSetup = () => {
     
     return (
       <div className="space-y-6 relative max-w-6xl mx-auto py-6 px-4">
+        
+        {/* Toast Notification */}
         {showToast && (
-          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-card border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-card bg-white/95 border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
             <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
               <Check size={14} />
             </div>
-            <span className="font-semibold text-foreground">{toastMessage}</span>
+            <span className="font-semibold text-slate-800">{toastMessage}</span>
           </div>
         )}
 
+        {/* Global Error Banner */}
         {errorAlert && (
-          <div id="error-alert-banner" className="flex items-center justify-between gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
+          <div id="error-alert-banner" className="flex items-center justify-between gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-700 text-sm">
             <div className="flex items-center gap-3">
               <AlertCircle size={20} className="shrink-0 text-red-500" />
               <span>{errorAlert}</span>
             </div>
-            <button onClick={() => setErrorAlert('')} className="text-muted-foreground hover:text-foreground">
+            <button onClick={() => setErrorAlert('')} className="text-muted-foreground hover:text-slate-600">
               <X size={16} />
             </button>
           </div>
         )}
 
+        {/* Page Top Header */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
             <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">Brand Workspace</h1>
@@ -1981,15 +2066,17 @@ export const BrandSetup = () => {
           </div>
           <button
             onClick={() => setViewMode('choose')}
-            className="px-4 py-2 border border-border bg-card hover:bg-muted text-foreground font-semibold rounded-xl text-xs shadow-sm self-start sm:self-center cursor-pointer transition-colors"
+            className="px-4 py-2 border border-border bg-card hover:bg-slate-50 text-foreground font-semibold rounded-xl text-xs shadow-sm self-start sm:self-center cursor-pointer transition-colors"
           >
             Switch Setup Mode
           </button>
         </div>
 
+        {/* Workspace Grid Split (Top Block: AI Understanding & Status Card) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
           {/* Completion Status Panel */}
-          <div className="bg-card rounded-3xl p-6 border border-border flex flex-col justify-between space-y-4">
+          <div className="bg-card dark:bg-slate-900/30 backdrop-blur-md rounded-3xl p-6 border border-border dark:border-slate-800 flex flex-col justify-between space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
             <div>
               <h3 className="font-display text-sm font-bold text-foreground flex items-center gap-2">
                 <CheckCircle2 className={isBrandReady ? "text-emerald-500" : "text-amber-500"} size={18} />
@@ -1999,10 +2086,10 @@ export const BrandSetup = () => {
             </div>
 
             <div className="space-y-3 flex-1 flex flex-col justify-center">
-              <div className={`p-4 rounded-xl text-center space-y-1 border ${
-                isBrandReady 
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
-                  : "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
+              
+              {/* Ready Badge banner */}
+              <div className={`p-4 rounded-xl text-center space-y-1 ${
+                isBrandReady ? "bg-emerald-50 border border-emerald-100 text-emerald-800" : "bg-amber-50 border border-amber-100 text-amber-800"
               }`}>
                 <p className="text-xs font-bold uppercase tracking-wider">
                   {isBrandReady ? "🎉 Brand Ready" : "⚠️ Needs Training"}
@@ -2014,31 +2101,32 @@ export const BrandSetup = () => {
                 </p>
               </div>
 
+              {/* Stats stack */}
               <div className="space-y-2 pt-2 text-xs">
-                <div className="flex justify-between items-center border-b border-border pb-1.5">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
                   <span className="text-muted-foreground font-medium">Company Profile</span>
                   <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide ${
-                    companyName && website ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+                    companyName && website ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                   }`}>
                     {companyName && website ? "Completed" : "Pending"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center border-b border-border pb-1.5">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
                   <span className="text-muted-foreground font-medium">Audience Personas</span>
-                  <span className="font-bold text-foreground bg-muted px-1.5 py-0.5 rounded text-[9px]">
+                  <span className="font-bold text-foreground bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">
                     {personasData.length} Sourced
                   </span>
                 </div>
-                <div className="flex justify-between items-center border-b border-border pb-1.5">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
                   <span className="text-muted-foreground font-medium">Knowledge Sources</span>
-                  <span className="font-bold text-foreground bg-muted px-1.5 py-0.5 rounded text-[9px]">
+                  <span className="font-bold text-foreground bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">
                     {documentsData.length} Indexed
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-1">
                   <span className="text-muted-foreground font-medium">AI Summary</span>
                   <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide ${
-                    primaryDoc && (primaryDoc.summaryText || primaryDoc.summary_text || primaryDoc.summary || primaryDoc.extractedText || primaryDoc.extracted_text || primaryDoc.content) ? "bg-emerald-500/10 text-emerald-500" : "bg-muted text-muted-foreground"
+                    primaryDoc && (primaryDoc.summaryText || primaryDoc.summary_text || primaryDoc.summary || primaryDoc.extractedText || primaryDoc.extracted_text || primaryDoc.content) ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
                   }`}>
                     {primaryDoc && (primaryDoc.summaryText || primaryDoc.summary_text || primaryDoc.summary || primaryDoc.extractedText || primaryDoc.extracted_text || primaryDoc.content) ? "Available" : "Pending"}
                   </span>
@@ -2046,7 +2134,7 @@ export const BrandSetup = () => {
               </div>
             </div>
 
-            <div className="text-[10px] text-muted-foreground border-t border-border pt-3 flex justify-between items-center">
+            <div className="text-[10px] text-muted-foreground border-t border-slate-100 pt-3 flex justify-between items-center">
               <span>Last Updated:</span>
               <span className="font-bold text-foreground">
                 {primaryDoc ? new Date(primaryDoc.updatedAt || primaryDoc.updated_at || companyData?.updatedAt || companyData?.updated_at || Date.now()).toLocaleDateString() : (companyData ? new Date(companyData.updatedAt || companyData.updated_at || Date.now()).toLocaleDateString() : 'Today')}
@@ -2054,9 +2142,11 @@ export const BrandSetup = () => {
             </div>
           </div>
 
-          {/* Collapsible Section 1: AI Understanding */}
-          <div className="lg:col-span-2 bg-card rounded-3xl border border-border flex flex-col justify-between relative overflow-hidden">
-            <div className="p-5 border-b border-border flex items-center justify-between bg-muted/10">
+          {/* Collapsible Section 1: AI Understanding (renders inline summary editing/saving) */}
+          <div className="lg:col-span-2 bg-card dark:bg-slate-900/30 backdrop-blur-md rounded-3xl border border-border dark:border-slate-800 flex flex-col justify-between relative overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+            
+            {/* Header */}
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
               <button
                 onClick={() => setIsUnderstandingExpanded(!isUnderstandingExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
@@ -2071,12 +2161,13 @@ export const BrandSetup = () => {
               </button>
               <button 
                 onClick={() => setIsUnderstandingExpanded(!isUnderstandingExpanded)} 
-                className="text-muted-foreground p-1 hover:bg-muted rounded-lg cursor-pointer"
+                className="text-muted-foreground p-1 hover:bg-slate-100 rounded-lg cursor-pointer"
               >
                 {isUnderstandingExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
             </div>
 
+            {/* Content Body */}
             {isUnderstandingExpanded && (
               <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                 {(() => {
@@ -2084,22 +2175,27 @@ export const BrandSetup = () => {
                   if (primaryDoc && activeSummary) {
                     return (
                       <div className="space-y-4 flex-1 flex flex-col justify-between">
-                        <div className="flex-1 bg-muted/30 border border-border rounded-xl p-4 min-h-[140px] text-xs leading-relaxed max-h-[220px] overflow-y-auto text-foreground">
+                        
+                        {/* Render Edit view or Markdown view */}
+                        <div className="flex-1 bg-slate-50/50 border border-border rounded-xl p-4 min-h-[140px] text-xs leading-relaxed max-h-[220px] overflow-y-auto">
                           {isEditingSummary ? (
                             <textarea
                               value={summaryTextVal}
                               onChange={(e) => setSummaryTextVal(e.target.value)}
-                              className="w-full h-[150px] p-2 text-foreground border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-xs bg-background resize-none"
+                              className="w-full h-[150px] p-2 text-foreground border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-xs bg-white resize-none"
                             />
                           ) : (
                             <div 
-                              className="space-y-3 prose dark:prose-invert max-w-none text-foreground/90"
+                              className="space-y-3 text-slate-700"
                               dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(activeSummary) }}
                             />
                           )}
                         </div>
 
-                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 border-t border-border">
+                        {/* Actions Panel */}
+                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 border-t border-slate-100">
+                          
+                          {/* Summary Save/Cancel */}
                           <div className="flex gap-2">
                             {isEditingSummary ? (
                               <>
@@ -2108,7 +2204,7 @@ export const BrandSetup = () => {
                                     setIsEditingSummary(false);
                                     setSummaryTextVal(activeSummary);
                                   }}
-                                  className="px-3 py-1.5 border border-border text-foreground hover:bg-muted font-bold rounded-lg text-[10px]"
+                                  className="px-3 py-1.5 border border-border text-foreground hover:bg-slate-50 font-bold rounded-lg text-[10px]"
                                 >
                                   Cancel
                                 </button>
@@ -2117,7 +2213,7 @@ export const BrandSetup = () => {
                                     updateSummaryMutation.mutate({ id: primaryDoc.id || primaryDoc._id, summaryText: summaryTextVal });
                                   }}
                                   disabled={updateSummaryMutation.isPending}
-                                  className="px-3.5 py-1.5 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer"
+                                  className="px-3.5 py-1.5 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer"
                                 >
                                   {updateSummaryMutation.isPending && <Loader2 size={10} className="animate-spin" />}
                                   <span>Save Summary</span>
@@ -2129,7 +2225,7 @@ export const BrandSetup = () => {
                                   setIsEditingSummary(true);
                                   setSummaryTextVal(activeSummary);
                                 }}
-                                className="px-4 py-2 border border-border bg-card hover:bg-muted text-foreground font-bold rounded-lg text-[10px] flex items-center gap-1 shadow-sm cursor-pointer"
+                                className="px-4 py-2 border border-border bg-card hover:bg-slate-50 text-foreground font-bold rounded-lg text-[10px] flex items-center gap-1 shadow-sm cursor-pointer"
                               >
                                 <Edit2 size={10} />
                                 <span>Edit Summary</span>
@@ -2137,37 +2233,39 @@ export const BrandSetup = () => {
                             )}
                           </div>
 
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => extractMutation.mutate(primaryDoc.id || primaryDoc._id)}
-                              disabled={extractMutation.isPending}
-                              className="px-3 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer transition-all"
-                            >
-                              <Building size={10} />
-                              <span>Re-extract Company</span>
-                            </button>
-                            <button
-                              onClick={() => extractMutation.mutate(primaryDoc.id || primaryDoc._id)}
-                              disabled={extractMutation.isPending}
-                              className="px-3 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer transition-all"
-                            >
-                              <Users size={10} />
-                              <span>Re-extract Personas</span>
-                            </button>
-                          </div>
-                        </div>
+                      {/* Re-extract Company / Personas */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => extractMutation.mutate(primaryDoc.id || primaryDoc._id)}
+                          disabled={extractMutation.isPending}
+                          className="px-3 py-2 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer shrink-0 transition-all"
+                        >
+                          <Building size={10} />
+                          <span>Re-extract Company</span>
+                        </button>
+                        <button
+                          onClick={() => extractMutation.mutate(primaryDoc.id || primaryDoc._id)}
+                          disabled={extractMutation.isPending}
+                          className="px-3 py-2 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer shrink-0 transition-all"
+                        >
+                          <Users size={10} />
+                          <span>Re-extract Personas</span>
+                        </button>
                       </div>
+
+                    </div>
+                  </div>
                     );
                   }
                   return (
-                    <div className="text-center p-8 border border-dashed border-border rounded-xl space-y-3 bg-muted/20">
-                      <p className="text-xs font-semibold text-muted-foreground">No AI Summary Drafted Yet</p>
+                    <div className="text-center p-8 border border-dashed border-border rounded-xl space-y-3 bg-slate-50/50">
+                      <p className="text-xs font-semibold text-slate-500">No AI Summary Drafted Yet</p>
                       <p className="text-[11px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
                         AI builds summaries automatically after Analyzing URLs or extracting documents.
                       </p>
                       <button
                         onClick={() => quickAction('knowledge')}
-                        className="px-4 py-2 border border-border bg-card hover:bg-muted font-bold rounded-xl text-[10px] text-foreground cursor-pointer shadow-sm"
+                        className="px-4 py-2 border border-border bg-card hover:bg-slate-50 font-bold rounded-xl text-[10px] text-foreground cursor-pointer shadow-sm"
                       >
                         Connect Knowledge Source
                       </button>
@@ -2176,14 +2274,19 @@ export const BrandSetup = () => {
                 })()}
               </div>
             )}
+
           </div>
+
         </div>
 
-        {/* Workspace Sections */}
+        {/* Collapsible Accordion Sections for main workspace details */}
         <div className="space-y-4 pt-2">
+          
           {/* Collapsible Section 2: Company Profile */}
-          <div id="section-company" className="bg-card rounded-3xl border border-border overflow-hidden">
-            <div className="p-5 border-b border-border flex items-center justify-between bg-muted/10">
+          <div id="section-company" className="bg-card dark:bg-slate-900/30 backdrop-blur-md rounded-3xl border border-border dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+            
+            {/* Header toggle */}
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
               <button
                 onClick={() => setIsCompanyExpanded(!isCompanyExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
@@ -2199,23 +2302,28 @@ export const BrandSetup = () => {
               
               <div className="flex items-center gap-2">
                 <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${
-                  companyName && website ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                  companyName && website ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-amber-50 text-amber-700 border-amber-100"
                 }`}>
                   {companyName && website ? "Configured" : "Missing Info"}
                 </span>
                 <button 
                   onClick={() => setIsCompanyExpanded(!isCompanyExpanded)} 
-                  className="text-muted-foreground p-1 hover:bg-muted rounded-lg"
+                  className="text-muted-foreground p-1 hover:bg-slate-100 rounded-lg"
                 >
                   {isCompanyExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
               </div>
             </div>
 
+            {/* Profile Content Body */}
             {isCompanyExpanded && (
               <div className="p-6">
+                
+                {/* Form or Card view toggle */}
                 {isEditingCompany ? (
                   <form onSubmit={handleSaveCompanyProfile} className="space-y-5">
+                    
+                    {/* Basic inputs */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1">
                         <label className="text-xs font-semibold text-muted-foreground">Company Name *</label>
@@ -2225,7 +2333,7 @@ export const BrandSetup = () => {
                           required
                           value={companyName}
                           onChange={(e) => setCompanyName(e.target.value)}
-                          className="w-full px-3 py-2 border border-border rounded-xl text-xs bg-background text-foreground focus:outline-none"
+                          className="w-full px-3 py-2 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none"
                         />
                       </div>
                       <div className="space-y-1">
@@ -2236,7 +2344,7 @@ export const BrandSetup = () => {
                           required
                           value={website}
                           onChange={(e) => setWebsite(e.target.value)}
-                          className="w-full px-3 py-2 border border-border rounded-xl text-xs bg-background text-foreground focus:outline-none"
+                          className="w-full px-3 py-2 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none"
                         />
                       </div>
                       <div className="space-y-1">
@@ -2245,13 +2353,15 @@ export const BrandSetup = () => {
                           type="text"
                           id="industry"
                           value={industry}
-                          className="w-full px-3 py-2 border border-border rounded-xl text-xs bg-background text-foreground focus:outline-none"
+                          onChange={(e) => setIndustry(e.target.value)}
+                          className="w-full px-3 py-2 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none"
                         />
                       </div>
                     </div>
 
+                    {/* Logo upload block */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-4 flex flex-col items-center justify-center bg-muted/20 min-h-[90px] text-center">
+                      <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-50/40 min-h-[90px] text-center">
                         {uploadingLogo ? (
                           <Loader2 className="animate-spin text-primary" size={16} />
                         ) : (
@@ -2270,9 +2380,9 @@ export const BrandSetup = () => {
                       </div>
 
                       {logo && (
-                        <div className="border border-border bg-muted/10 rounded-xl p-3 flex items-center justify-between gap-3 min-w-0">
+                        <div className="border border-border bg-slate-50/20 rounded-xl p-3 flex items-center justify-between gap-3 min-w-0">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center p-1 border border-border overflow-hidden shrink-0">
+                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center p-1 border border-slate-200 overflow-hidden shrink-0">
                               <img
                                 src={logo.startsWith('http') || logo.startsWith('data:') ? logo : `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/..${logo}`}
                                 alt="Logo"
@@ -2286,7 +2396,7 @@ export const BrandSetup = () => {
                           <button
                             type="button"
                             onClick={handleLogoDeleteTrigger}
-                            className="p-1.5 hover:bg-red-500/10 text-red-500 rounded-lg border border-transparent transition-all cursor-pointer shrink-0"
+                            className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded-lg text-slate-400 border border-transparent hover:border-red-100 transition-all cursor-pointer shrink-0"
                             title="Delete logo"
                           >
                             <Trash2 size={14} />
@@ -2295,15 +2405,16 @@ export const BrandSetup = () => {
                       )}
                     </div>
 
-                    <div className="space-y-2 border border-border bg-muted/20 rounded-xl p-4">
+                    {/* Brand Colors Configurator */}
+                    <div className="space-y-2 border border-border bg-slate-50/20 rounded-xl p-4">
                       <div>
                         <label className="text-xs font-bold text-foreground">Brand Palette Colors</label>
-                        <span className="text-[10px] text-muted-foreground block mt-0.5">Customize your brand's color theme palette.</span>
+                        <span className="text-[10px] text-muted-foreground block mt-0.5">Customize your brand's color theme palette. Pick from the picker or input hex codes manually.</span>
                       </div>
 
                       <div className="flex flex-wrap gap-3 items-end pt-1">
                         {brandColors.map((color, idx) => (
-                          <div key={idx} className="flex items-center gap-2 bg-background border border-border p-1.5 rounded-xl shadow-sm">
+                          <div key={idx} className="flex items-center gap-2 bg-white border border-border p-1.5 rounded-xl shadow-sm">
                             <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-border shrink-0">
                               <input
                                 type="color"
@@ -2326,7 +2437,7 @@ export const BrandSetup = () => {
                                 setBrandColors(newColors);
                               }}
                               placeholder="#HEX"
-                              className="w-20 px-2 py-1 text-xs font-mono border border-border rounded-lg focus:outline-none text-foreground bg-muted/40"
+                              className="w-20 px-2 py-1 text-xs font-mono border border-border rounded-lg focus:outline-none text-foreground bg-slate-50"
                             />
 
                             <button
@@ -2334,7 +2445,8 @@ export const BrandSetup = () => {
                               onClick={() => {
                                 setBrandColors(brandColors.filter((_, i) => i !== idx));
                               }}
-                              className="p-1 hover:bg-red-500/10 text-muted-foreground hover:text-red-500 rounded-lg cursor-pointer"
+                              className="p-1 hover:bg-red-50 text-muted-foreground hover:text-red-500 rounded-lg cursor-pointer"
+                              title="Remove color"
                             >
                               <X size={12} />
                             </button>
@@ -2346,14 +2458,15 @@ export const BrandSetup = () => {
                           onClick={() => {
                             setBrandColors([...brandColors, '#f25b18']);
                           }}
-                          className="px-3.5 py-2 border border-border bg-card hover:bg-muted text-foreground font-semibold rounded-xl text-[10px] flex items-center gap-1 cursor-pointer h-10 shadow-sm"
+                          className="px-3.5 py-2 border border-border hover:bg-slate-50 text-foreground font-semibold rounded-xl text-[10px] flex items-center gap-1 cursor-pointer h-10 shadow-sm"
                         >
                           <Plus size={12} />
-                          <span>Add Color</span>
+                          <span>Add Another Color</span>
                         </button>
                       </div>
                     </div>
 
+                    {/* Narrative Textareas */}
                     <div className="space-y-4">
                       <div className="space-y-1">
                         <label className="text-xs font-semibold text-muted-foreground">Product Description *</label>
@@ -2363,7 +2476,7 @@ export const BrandSetup = () => {
                           required
                           value={productDescription}
                           onChange={(e) => setProductDescription(e.target.value)}
-                          className="w-full p-3 border border-border rounded-xl text-xs bg-background text-foreground focus:outline-none resize-none"
+                          className="w-full p-3 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none resize-none"
                         />
                       </div>
                       <div className="space-y-1">
@@ -2374,7 +2487,7 @@ export const BrandSetup = () => {
                           required
                           value={targetAudience}
                           onChange={(e) => setTargetAudience(e.target.value)}
-                          className="w-full p-3 border border-border rounded-xl text-xs bg-background text-foreground focus:outline-none resize-none"
+                          className="w-full p-3 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none resize-none"
                         />
                       </div>
                       <div className="space-y-1">
@@ -2384,35 +2497,41 @@ export const BrandSetup = () => {
                           id="brandVoice"
                           value={brandVoice}
                           onChange={(e) => setBrandVoice(e.target.value)}
-                          className="w-full p-3 border border-border rounded-xl text-xs bg-background text-foreground focus:outline-none resize-none"
+                          className="w-full p-3 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none resize-none"
                         />
                       </div>
                     </div>
 
+                    {/* Form foot actions */}
                     <div className="flex gap-2 pt-3 border-t border-border">
                       <button
                         type="button"
                         onClick={() => setIsEditingCompany(false)}
-                        className="px-4 py-2 border border-border text-foreground hover:bg-muted font-bold rounded-lg text-xs"
+                        className="px-4 py-2 border border-border text-foreground hover:bg-slate-50 font-bold rounded-lg text-xs"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={updateCompanyMutation.isPending}
-                        className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer"
                       >
                         {updateCompanyMutation.isPending && <Loader2 size={12} className="animate-spin" />}
                         <span>Save Profile Changes</span>
                       </button>
                     </div>
+
                   </form>
                 ) : (
                   <div className="space-y-6">
+                    
+                    {/* Read-Only Company Details Card Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
-                      <div className="bg-muted/10 border border-border rounded-2xl p-5 text-center flex flex-col items-center space-y-4 md:col-span-1 justify-center min-h-[180px]">
+                      
+                      {/* Logo & Colors Card */}
+                      <div className="bg-slate-50/40 border border-border rounded-2xl p-5 text-center flex flex-col items-center space-y-4 md:col-span-1 justify-center min-h-[180px]">
                         {logo ? (
-                          <div className="w-20 h-20 rounded-2xl bg-white border border-border flex items-center justify-center p-2 shadow-sm overflow-hidden">
+                          <div className="w-20 h-20 rounded-2xl bg-white border border-slate-200 flex items-center justify-center p-2 shadow-sm overflow-hidden">
                             <img
                               src={logo.startsWith('http') || logo.startsWith('data:') ? logo : `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/..${logo}`}
                               alt="Company Logo"
@@ -2420,7 +2539,7 @@ export const BrandSetup = () => {
                             />
                           </div>
                         ) : (
-                          <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center text-muted-foreground">
+                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-muted-foreground">
                             <Building size={28} />
                           </div>
                         )}
@@ -2430,6 +2549,7 @@ export const BrandSetup = () => {
                           <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{industry || 'SaaS'}</span>
                         </div>
 
+                        {/* Colors */}
                         {brandColors.length > 0 && (
                           <div className="flex items-center gap-1">
                             {brandColors.map((color, idx) => (
@@ -2444,67 +2564,78 @@ export const BrandSetup = () => {
                         )}
                       </div>
 
+                      {/* Bio Details */}
                       <div className="md:col-span-3 space-y-4 text-xs">
+                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="p-3 bg-muted/20 border border-border rounded-xl space-y-0.5">
+                          <div className="p-3 bg-slate-50/30 border border-border rounded-xl space-y-0.5">
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Website Domain</span>
                             <a href={website} target="_blank" rel="noreferrer" className="text-primary hover:underline font-semibold block truncate">
                               {website || 'No URL'}
                             </a>
                           </div>
                           
-                          <div className="p-3 bg-muted/20 border border-border rounded-xl space-y-0.5">
+                          <div className="p-3 bg-slate-50/30 border border-border rounded-xl space-y-0.5">
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Brand Voice Tone</span>
                             <p className="font-semibold text-foreground truncate">{brandVoice || 'Professional'}</p>
                           </div>
                         </div>
 
-                        <div className="p-4 bg-muted/20 border border-border rounded-xl space-y-1.5">
+                        <div className="p-4 bg-slate-50/30 border border-border rounded-xl space-y-1.5">
                           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Product / Service Pitch</span>
-                          <p className="text-foreground/90 leading-relaxed">{productDescription || 'Configure details to feed the blog writer.'}</p>
+                          <p className="text-slate-700 leading-relaxed">{productDescription || 'Configure details to feed the blog writer.'}</p>
                         </div>
 
-                        <div className="p-4 bg-muted/20 border border-border rounded-xl space-y-1.5">
+                        <div className="p-4 bg-slate-50/30 border border-border rounded-xl space-y-1.5">
                           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Target Audience Focus</span>
-                          <p className="text-foreground/90 leading-relaxed">{targetAudience || 'Describe your core client segments.'}</p>
+                          <p className="text-slate-700 leading-relaxed">{targetAudience || 'Describe your core client segments.'}</p>
                         </div>
 
+                        {/* Competitors */}
                         {competitors.length > 0 && (
                           <div className="space-y-1.5">
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Key Competitors</span>
                             <div className="flex flex-wrap gap-1">
                               {competitors.map((c) => (
-                                <span key={c} className="px-2 py-0.5 bg-muted border border-border rounded text-[10px] font-medium text-foreground">{c}</span>
+                                <span key={c} className="px-2 py-0.5 bg-slate-100 border border-border rounded text-[10px] font-medium text-slate-700">{c}</span>
                               ))}
                             </div>
                           </div>
                         )}
+
                       </div>
+
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-4 border-t border-border">
+                    {/* Actions Panel */}
+                    <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
                       <button
                         onClick={() => setIsViewDetailsOpen(true)}
-                        className="px-4 py-2 border border-border bg-card hover:bg-muted text-foreground font-bold rounded-lg text-xs shadow-sm cursor-pointer"
+                        className="px-4 py-2 border border-border bg-card hover:bg-slate-50 text-foreground font-bold rounded-lg text-xs shadow-sm cursor-pointer"
                       >
                         View Details
                       </button>
                       <button
                         onClick={() => setIsEditingCompany(true)}
-                        className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-lg text-xs shadow-md cursor-pointer"
+                        className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-lg text-xs shadow-md cursor-pointer"
                       >
                         Edit Profile
                       </button>
                     </div>
+
                   </div>
                 )}
+
               </div>
             )}
+
           </div>
 
           {/* Collapsible Section 3: Audience Personas */}
-          <div id="section-personas" className="bg-card rounded-3xl border border-border overflow-hidden">
-            <div className="p-5 border-b border-border flex items-center justify-between bg-muted/10">
+          <div id="section-personas" className="bg-card dark:bg-slate-900/30 backdrop-blur-md rounded-3xl border border-border dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+            
+            {/* Header toggle */}
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
               <button
                 onClick={() => setIsPersonasExpanded(!isPersonasExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
@@ -2519,20 +2650,23 @@ export const BrandSetup = () => {
               </button>
               
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase tracking-wider border border-border">
+                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[9px] font-bold uppercase tracking-wider border border-border">
                   {personasData.length} Created
                 </span>
                 <button 
                   onClick={() => setIsPersonasExpanded(!isPersonasExpanded)} 
-                  className="text-muted-foreground p-1 hover:bg-muted rounded-lg"
+                  className="text-muted-foreground p-1 hover:bg-slate-100 rounded-lg"
                 >
                   {isPersonasExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
               </div>
             </div>
 
+            {/* Content Body */}
             {isPersonasExpanded && (
               <div className="p-6 space-y-6">
+                
+                {/* Actions header */}
                 <div className="flex justify-between items-center">
                   <h4 className="font-display text-xs font-bold text-foreground">Content Target Profiles</h4>
                   <div className="flex gap-2">
@@ -2540,7 +2674,7 @@ export const BrandSetup = () => {
                       <button
                         onClick={() => extractMutation.mutate(primaryDoc.id || primaryDoc._id)}
                         disabled={extractMutation.isPending}
-                        className="px-3.5 py-2 border border-border bg-card hover:bg-muted text-foreground font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm cursor-pointer"
+                        className="px-3.5 py-2 border border-border bg-card hover:bg-slate-50 text-foreground font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm cursor-pointer"
                       >
                         <Sparkles size={13} className="text-primary animate-pulse" />
                         <span>Regenerate Personas</span>
@@ -2548,7 +2682,7 @@ export const BrandSetup = () => {
                     )}
                     <button
                       onClick={openCreatePersonaModal}
-                      className="px-3.5 py-2 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl text-xs flex items-center gap-1 shadow-md cursor-pointer"
+                      className="px-3.5 py-2 bg-gradient-to-r from-primary to-accent text-foreground font-extrabold rounded-xl text-xs flex items-center gap-1 shadow-md cursor-pointer"
                     >
                       <UserPlus size={14} />
                       <span>Create Persona</span>
@@ -2556,22 +2690,23 @@ export const BrandSetup = () => {
                   </div>
                 </div>
 
+                {/* Personas Cards grid */}
                 {personasData.length === 0 ? (
-                  <div className="text-center p-8 border border-dashed border-border rounded-2xl bg-muted/20 space-y-4">
-                    <p className="text-xs font-bold text-muted-foreground">No Personas Sourced Yet</p>
+                  <div className="text-center p-8 border border-dashed border-border rounded-2xl bg-slate-50/50 space-y-4">
+                    <p className="text-xs font-bold text-slate-500">No Personas Sourced Yet</p>
                     <p className="text-[11px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
                       Personas help Blog Studio adapt blog tone and messaging. Create one manually or generate automatically from your website crawl.
                     </p>
                     <div className="flex justify-center gap-2">
                       <button
                         onClick={openCreatePersonaModal}
-                        className="px-4 py-2 border border-border bg-card hover:bg-muted font-bold rounded-xl text-[10px] text-foreground cursor-pointer shadow-sm"
+                        className="px-4 py-2 border border-border bg-card hover:bg-slate-50 font-bold rounded-xl text-[10px] text-foreground cursor-pointer shadow-sm"
                       >
                         Create Persona Manually
                       </button>
                       <button
                         onClick={() => quickAction('knowledge')}
-                        className="px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-white font-bold rounded-xl text-[10px] cursor-pointer"
+                        className="px-4 py-2 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 text-primary font-bold rounded-xl text-[10px] cursor-pointer"
                       >
                         Generate From Website
                       </button>
@@ -2583,8 +2718,10 @@ export const BrandSetup = () => {
                       const displayName = p.personaName || p.name || 'Persona';
                       const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'P';
                       return (
-                        <div key={p._id} className="bg-card border border-border rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-sm hover:border-primary/40 transition-all">
+                        <div key={p._id} className="bg-card dark:bg-slate-900/50 border border-border dark:border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-sm hover:border-primary/40 transition-all duration-300">
                           <div className="space-y-3.5">
+                            
+                            {/* Avatar Badge & Header */}
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary/10 to-accent/20 border border-primary/20 flex items-center justify-center font-extrabold text-primary text-xs shadow-sm select-none">
                                 {initials}
@@ -2599,26 +2736,31 @@ export const BrandSetup = () => {
                               </div>
                             </div>
  
+                            {/* Attributes snippet */}
                             <div className="grid grid-cols-2 gap-2 text-[10px] pt-1">
-                              <div className="p-2 bg-muted/40 rounded-lg border border-border">
+                              <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Tone</span>
                                 <span className="font-semibold text-primary truncate block">{p.tone || p.voice}</span>
                               </div>
-                              <div className="p-2 bg-muted/40 rounded-lg border border-border">
+                              <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Writing Style</span>
-                                <span className="font-semibold text-foreground truncate block">{p.writingStyle || '—'}</span>
+                                <span className="font-semibold text-slate-700 truncate block">{p.writingStyle || '—'}</span>
                               </div>
                             </div>
 
+                            {/* Bio */}
                             <p className="text-[11px] text-muted-foreground line-clamp-3 leading-relaxed">
                               {p.description || 'No detailed biography specified for this persona.'}
                             </p>
+
                           </div>
 
-                          <div className="flex justify-between items-center pt-3 border-t border-border mt-auto gap-2">
+                          {/* Footer Actions */}
+                          <div className="flex justify-between items-center pt-3 border-t border-slate-100 mt-auto gap-2">
                             <button
                               onClick={() => setViewPersonaDetails(p)}
-                              className="px-2.5 py-1.5 bg-muted/40 hover:bg-muted border border-border rounded-lg text-muted-foreground hover:text-foreground font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
+                              className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-border rounded-lg text-slate-650 hover:text-foreground font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
+                              title="Details"
                             >
                               <Eye size={10} />
                               <span>Details</span>
@@ -2626,32 +2768,37 @@ export const BrandSetup = () => {
                             <div className="flex items-center gap-1.5">
                               <button
                                 onClick={() => openEditPersonaModal(p)}
-                                className="px-2.5 py-1.5 bg-muted/40 hover:bg-muted border border-border rounded-lg text-foreground font-bold text-[10px] flex items-center gap-1 cursor-pointer"
+                                className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-border rounded-lg text-foreground font-bold text-[10px] flex items-center gap-1 cursor-pointer"
                               >
                                 <Edit2 size={10} />
                                 <span>Edit</span>
                               </button>
                               <button
                                 onClick={() => handleDeletePersona(p.id || p._id)}
-                                className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
+                                className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500 hover:text-foreground border border-red-500/20 text-red-500 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
                               >
                                 <Trash2 size={10} />
                                 <span>Delete</span>
                               </button>
                             </div>
                           </div>
+
                         </div>
                       );
                     })}
                   </div>
                 )}
+
               </div>
             )}
+
           </div>
 
           {/* Collapsible Section 4: Knowledge Sources */}
-          <div id="section-knowledge" className="bg-card rounded-3xl border border-border overflow-hidden">
-            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40 dark:bg-muted/10">
+          <div id="section-knowledge" className="bg-card dark:bg-slate-900/30 backdrop-blur-md rounded-3xl border border-border dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+            
+            {/* Header toggle */}
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
               <button
                 onClick={() => setIsKnowledgeExpanded(!isKnowledgeExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
@@ -2666,22 +2813,27 @@ export const BrandSetup = () => {
               </button>
 
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase tracking-wider border border-border">
+                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[9px] font-bold uppercase tracking-wider border border-border">
                   {documentsData.length} Indexed
                 </span>
                 <button 
                   onClick={() => setIsKnowledgeExpanded(!isKnowledgeExpanded)} 
-                  className="text-muted-foreground p-1 hover:bg-muted rounded-lg"
+                  className="text-muted-foreground p-1 hover:bg-slate-100 rounded-lg"
                 >
                   {isKnowledgeExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
               </div>
             </div>
 
+            {/* Content Body */}
             {isKnowledgeExpanded && (
               <div className="p-6 space-y-6">
+                
+                {/* Inline URL crawler & Document uploader side-by-side */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                  <div className="p-4 bg-muted/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  
+                  {/* Website link crawl */}
+                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <Globe size={14} className="text-primary" />
@@ -2699,7 +2851,7 @@ export const BrandSetup = () => {
                           value={websiteUrl}
                           onChange={(e) => setWebsiteUrl(e.target.value)}
                           placeholder="https://example.com/blog-reference"
-                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-background text-foreground focus:outline-none"
+                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none"
                           disabled={crawlMutation.isPending}
                         />
                         <button
@@ -2711,7 +2863,7 @@ export const BrandSetup = () => {
                             crawlMutation.mutate(websiteUrl);
                           }}
                           disabled={crawlMutation.isPending}
-                          className="px-3 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-extrabold rounded-xl text-[10px] flex items-center justify-center cursor-pointer shrink-0"
+                          className="px-3 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-extrabold rounded-xl text-[10px] flex items-center justify-center cursor-pointer shrink-0"
                         >
                           {crawlMutation.isPending ? <Loader2 size={10} className="animate-spin" /> : 'Analyze URL'}
                         </button>
@@ -2719,7 +2871,8 @@ export const BrandSetup = () => {
                     </div>
                   </div>
 
-                  <div className="p-4 bg-muted/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  {/* Attachment uploader */}
+                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <FileText size={14} className="text-primary" />
@@ -2730,13 +2883,14 @@ export const BrandSetup = () => {
                       </p>
                     </div>
 
+                    {/* Drag Drop Area */}
                     <div
                       onDragEnter={handleDrag}
                       onDragOver={handleDrag}
                       onDragLeave={handleDrag}
                       onDrop={handleDrop}
                       className={`border border-dashed rounded-xl p-3 flex flex-col items-center justify-center text-center transition-all flex-1 ${
-                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-muted/10'
+                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30'
                       }`}
                     >
                       <input
@@ -2750,7 +2904,7 @@ export const BrandSetup = () => {
                       {uploadProgress !== null ? (
                         <div className="w-full max-w-xs space-y-1 py-1">
                           <Loader2 size={12} className="animate-spin text-primary mx-auto" />
-                          <div className="w-full h-1 bg-border rounded-full overflow-hidden">
+                          <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden border border-border">
                             <div className="h-full bg-primary" style={{ width: `${uploadProgress}%` }} />
                           </div>
                         </div>
@@ -2764,13 +2918,15 @@ export const BrandSetup = () => {
                       )}
                     </div>
                   </div>
+
                 </div>
 
+                {/* Sources list */}
                 <div className="space-y-3">
                   <h4 className="font-display text-xs font-bold text-foreground">Active Knowledge Repositories</h4>
 
                   {documentsData.length === 0 ? (
-                    <div className="p-8 border border-dashed border-border rounded-2xl bg-muted/20 text-center text-xs text-muted-foreground italic">
+                    <div className="p-8 border border-dashed border-border rounded-2xl bg-slate-50/50 text-center text-xs text-muted-foreground italic">
                       No grounding files indexed. Upload key PDF, Word, or TXT assets (optional).
                     </div>
                   ) : (
@@ -2782,10 +2938,12 @@ export const BrandSetup = () => {
                         const docExtractedText = doc.extractedText || doc.extracted_text || doc.content || '';
                         const docCreatedAt = doc.createdAt || doc.created_at || doc.updatedAt || doc.updated_at;
                         return (
-                          <div key={docId} className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-sm hover:border-primary/40 transition-all">
+                          <div key={docId} className="bg-card dark:bg-slate-900/50 border border-border dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-sm hover:border-primary/40 transition-all duration-300">
                             <div className="space-y-2 min-w-0">
+                              
+                              {/* File Name & Type */}
                               <div className="flex items-start gap-2.5">
-                                <div className="p-2 rounded bg-muted text-muted-foreground shrink-0">
+                                <div className="p-2 rounded bg-slate-100 text-slate-600 shrink-0">
                                   {docFileType === 'url' || docFileType === 'link' ? <Globe size={14} /> : <FileText size={14} />}
                                 </div>
                                 <div className="min-w-0">
@@ -2794,6 +2952,7 @@ export const BrandSetup = () => {
                                 </div>
                               </div>
 
+                              {/* Details meta */}
                               <div className="text-[10px] text-muted-foreground space-y-1">
                                 <p className="flex items-center gap-1">
                                   <BookOpen size={10} />
@@ -2804,12 +2963,14 @@ export const BrandSetup = () => {
                                   <span>Indexed {docCreatedAt ? new Date(docCreatedAt).toLocaleDateString() : 'Today'}</span>
                                 </p>
                               </div>
+
                             </div>
 
-                            <div className="flex justify-end items-center gap-1.5 pt-2.5 border-t border-border">
+                            {/* Footer Actions */}
+                            <div className="flex justify-end items-center gap-1.5 pt-2.5 border-t border-slate-100">
                               <button
                                 onClick={() => handleViewText(doc)}
-                                className="px-2 py-1 bg-muted hover:bg-muted/80 border border-border rounded text-[10px] text-foreground font-bold flex items-center gap-0.5 cursor-pointer"
+                                className="px-2 py-1 bg-slate-50 hover:bg-slate-100 border border-border rounded text-[10px] text-foreground font-bold flex items-center gap-0.5 cursor-pointer"
                               >
                                 <Eye size={10} />
                                 <span>View Summary</span>
@@ -2817,7 +2978,7 @@ export const BrandSetup = () => {
                               {docFileType === 'url' && (
                                 <button
                                   onClick={() => extractMutation.mutate(docId)}
-                                  className="px-2 py-1 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 rounded text-[10px] font-bold flex items-center gap-0.5 cursor-pointer transition-all"
+                                  className="px-2 py-1 bg-primary/10 hover:bg-primary hover:text-foreground border border-primary/20 rounded text-[10px] text-primary font-bold flex items-center gap-0.5 cursor-pointer transition-all"
                                 >
                                   <Sparkles size={10} />
                                   <span>Re-extract</span>
@@ -2825,38 +2986,44 @@ export const BrandSetup = () => {
                               )}
                               <button
                                 onClick={() => handleDeleteDoc(docId)}
-                                className="p-1 hover:bg-red-500/10 hover:text-red-500 rounded text-muted-foreground border border-transparent transition-all cursor-pointer"
+                                className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-muted-foreground border border-transparent hover:border-red-100 transition-all cursor-pointer"
                               >
                                 <Trash2 size={12} />
                               </button>
                             </div>
+
                           </div>
                         );
                       })}
                     </div>
                   )}
                 </div>
+
               </div>
             )}
+
           </div>
+
         </div>
 
         {/* Quick Actions Panel */}
-        <div className="bg-card rounded-3xl p-6 border border-border space-y-4 mt-6">
+        <div className="bg-card dark:bg-slate-900/30 backdrop-blur-md rounded-3xl p-6 border border-border dark:border-slate-800 space-y-4 mt-6 shadow-sm hover:shadow-md transition-all duration-300">
           <div>
             <h3 className="font-display text-xs font-bold text-foreground uppercase tracking-wider">⚡ What would you like to do next?</h3>
             <p className="text-[10px] text-muted-foreground mt-0.5">Quick actions to navigate workspace settings</p>
           </div>
           
           <div className="flex flex-wrap gap-2.5">
+            {/* Generate Blog Studio (always orange gradient) */}
             <button
               onClick={() => quickAction('generate')}
-              className="px-4 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
+              className="px-4 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
             >
               <Sparkles size={12} />
               <span>Generate Blog Studio</span>
             </button>
 
+            {/* Add Knowledge Source (popover hover to orange) */}
             <button
               onClick={() => quickAction('knowledge')}
               className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
@@ -2865,6 +3032,7 @@ export const BrandSetup = () => {
               <span>Add Knowledge Source</span>
             </button>
             
+            {/* Create Target Persona (popover hover to orange) */}
             <button
               onClick={() => quickAction('persona')}
               className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
@@ -2873,6 +3041,7 @@ export const BrandSetup = () => {
               <span>Create Target Persona</span>
             </button>
             
+            {/* Edit Company Profile (popover hover to orange) */}
             <button
               onClick={() => quickAction('company')}
               className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
@@ -2881,6 +3050,7 @@ export const BrandSetup = () => {
               <span>Edit Company Profile</span>
             </button>
             
+            {/* Refresh AI (popover hover to orange) */}
             <button
               onClick={() => quickAction('refresh')}
               className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
@@ -2889,9 +3059,10 @@ export const BrandSetup = () => {
               <span>Refresh AI</span>
             </button>
 
+            {/* Generate Content Studio (always orange gradient) */}
             <button
               onClick={() => quickAction('content')}
-              className="px-4 py-2.5 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
+              className="px-4 py-2.5 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
             >
               <Sparkles size={12} />
               <span>Generate Content Studio</span>
@@ -2899,23 +3070,23 @@ export const BrandSetup = () => {
           </div>
         </div>
 
-        {/* Persona Form Modal */}
+        {/* Persona CRUD Form Modal */}
         {personaModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <h3 className="font-display text-lg font-bold text-foreground">
                   {editPersonaId ? 'Modify Content Persona' : 'Design Content Persona'}
                 </h3>
                 <button
                   onClick={closePersonaModal}
-                  className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              <form onSubmit={handlePersonaSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 bg-card">
+              <form onSubmit={handlePersonaSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground">Persona Name *</label>
                   <input
@@ -2924,7 +3095,7 @@ export const BrandSetup = () => {
                     value={personaName}
                     onChange={(e) => setPersonaName(e.target.value)}
                     placeholder="e.g. Thought Leader, Technical Founder"
-                    className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background"
+                    className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white"
                   />
                 </div>
 
@@ -2936,7 +3107,7 @@ export const BrandSetup = () => {
                     value={tone}
                     onChange={(e) => setTone(e.target.value)}
                     placeholder="e.g. Professional, Visionary, Snappy, Empathetic"
-                    className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background"
+                    className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white"
                   />
                 </div>
 
@@ -2948,7 +3119,7 @@ export const BrandSetup = () => {
                       value={writingStyle}
                       onChange={(e) => setWritingStyle(e.target.value)}
                       placeholder="e.g. Storyteller, Technical"
-                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background"
+                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white"
                     />
                   </div>
 
@@ -2959,7 +3130,7 @@ export const BrandSetup = () => {
                       value={audienceType}
                       onChange={(e) => setAudienceType(e.target.value)}
                       placeholder="e.g. Pre-Seed Founders"
-                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background"
+                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white"
                     />
                   </div>
                 </div>
@@ -2971,7 +3142,7 @@ export const BrandSetup = () => {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe this persona's focus, background, constraints, and target topics..."
-                    className="w-full p-3 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-background resize-none"
+                    className="w-full p-3 border border-border rounded-xl text-sm focus:outline-none focus:border-primary text-foreground bg-white resize-none"
                   />
                 </div>
 
@@ -2979,14 +3150,14 @@ export const BrandSetup = () => {
                   <button
                     type="button"
                     onClick={closePersonaModal}
-                    className="px-4 py-2 border border-border text-foreground hover:bg-muted rounded-xl text-xs font-semibold cursor-pointer"
+                    className="px-4 py-2 border border-border text-foreground hover:bg-slate-50 rounded-xl text-xs font-semibold cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={createPersonaMutation.isPending || updatePersonaMutation.isPending}
-                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-white font-bold rounded-xl shadow-sm flex items-center gap-1.5 text-xs cursor-pointer"
+                    className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 text-foreground font-bold rounded-xl shadow-sm flex items-center gap-1.5 text-xs cursor-pointer"
                   >
                     {(createPersonaMutation.isPending || updatePersonaMutation.isPending) ? (
                       <>
@@ -3009,32 +3180,32 @@ export const BrandSetup = () => {
         {/* View Document Summary / Edit Modal */}
         {selectedText !== null && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="w-full max-w-2xl bg-card border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+            <div className="w-full max-w-2xl bg-white border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <div>
                   <h3 className="font-display text-lg font-bold text-foreground">AI Grounding Summary Context</h3>
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5 max-w-md">{selectedFileName}</p>
                 </div>
                 <button
                   onClick={() => { setSelectedText(null); setIsEditingSummary(false); }}
-                  className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-655 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 bg-muted/20 border-y border-border max-h-[50vh] flex flex-col">
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-50 border-y border-border max-h-[50vh] flex flex-col">
                 {isEditingSummary ? (
                   <textarea
                     value={summaryTextVal}
                     onChange={(e) => setSummaryTextVal(e.target.value)}
-                    className="w-full flex-1 min-h-[25vh] p-3 text-foreground border border-border rounded-xl focus:outline-none text-sm bg-background resize-y"
+                    className="w-full flex-1 min-h-[25vh] p-3 text-foreground border border-border rounded-xl focus:outline-none text-sm bg-white resize-y"
                     placeholder="Type or modify summary text here..."
                   />
                 ) : (
                   selectedText ? (
                     <div 
-                      className="text-xs md:text-sm text-foreground/90 leading-relaxed space-y-4"
+                      className="text-xs md:text-sm text-slate-700 leading-relaxed space-y-4"
                       dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(selectedText) }}
                     />
                   ) : (
@@ -3043,19 +3214,19 @@ export const BrandSetup = () => {
                 )}
               </div>
 
-              <div className="p-4 border-t border-border flex justify-end gap-2 bg-card rounded-b-2xl">
+              <div className="p-4 border-t border-border flex justify-end gap-2 bg-white rounded-b-2xl">
                 {isEditingSummary ? (
                   <>
                     <button
                       onClick={() => setIsEditingSummary(false)}
-                      className="px-4 py-2 border border-border hover:bg-muted text-foreground rounded-xl text-xs font-semibold cursor-pointer"
+                      className="px-4 py-2 border border-slate-355 hover:bg-slate-50 text-foreground rounded-xl text-xs font-semibold cursor-pointer"
                       disabled={updateSummaryMutation.isPending}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={() => updateSummaryMutation.mutate({ id: selectedDocId, summaryText: summaryTextVal })}
-                      className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 cursor-pointer"
                       disabled={updateSummaryMutation.isPending}
                     >
                       {updateSummaryMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : 'Save Summary'}
@@ -3065,13 +3236,13 @@ export const BrandSetup = () => {
                   <>
                     <button
                       onClick={() => setIsEditingSummary(true)}
-                      className="px-4 py-2 border border-border hover:bg-muted text-foreground rounded-xl text-xs font-semibold cursor-pointer"
+                      className="px-4 py-2 border border-border hover:bg-slate-50 text-foreground rounded-xl text-xs font-semibold cursor-pointer"
                     >
                       Edit Summary
                     </button>
                     <button
                       onClick={() => setSelectedText(null)}
-                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-xl text-xs shadow-sm cursor-pointer"
                     >
                       Done
                     </button>
@@ -3086,20 +3257,20 @@ export const BrandSetup = () => {
         {isViewDetailsOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-3xl bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <h3 className="font-display text-lg font-bold text-foreground">Company Profile Details</h3>
                 <button
                   onClick={() => setIsViewDetailsOpen(false)}
-                  className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-655 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-card">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-white">
                 <div className="flex items-center gap-4 border-b border-border pb-4">
                   {logo ? (
-                    <div className="w-16 h-16 rounded-xl bg-white border border-border flex items-center justify-center p-1.5 overflow-hidden shadow-sm shrink-0">
+                    <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1.5 overflow-hidden shadow-sm shrink-0">
                       <img
                         src={logo.startsWith('http') || logo.startsWith('data:') ? logo : `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/..${logo}`}
                         alt="Logo"
@@ -3107,7 +3278,7 @@ export const BrandSetup = () => {
                       />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-muted border border-border flex items-center justify-center text-muted-foreground">
+                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-muted-foreground">
                       <Building size={24} />
                     </div>
                   )}
@@ -3130,12 +3301,12 @@ export const BrandSetup = () => {
 
                 <div className="space-y-2">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product / Service Description</span>
-                  <p className="text-foreground/90 bg-muted/20 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{productDescription || '—'}</p>
+                  <p className="text-slate-700 bg-slate-50/50 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{productDescription || '—'}</p>
                 </div>
 
                 <div className="space-y-2">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Target Audience Focus</span>
-                  <p className="text-foreground/90 bg-muted/20 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{targetAudience || '—'}</p>
+                  <p className="text-slate-700 bg-slate-50/50 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{targetAudience || '—'}</p>
                 </div>
 
                 {competitors.length > 0 && (
@@ -3143,17 +3314,17 @@ export const BrandSetup = () => {
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Competitors</span>
                     <div className="flex flex-wrap gap-1.5">
                       {competitors.map((c) => (
-                        <span key={c} className="px-2.5 py-1 bg-muted border border-border rounded-lg text-xs font-semibold text-foreground">{c}</span>
+                        <span key={c} className="px-2.5 py-1 bg-slate-100 border border-border rounded-lg text-xs font-semibold text-slate-700">{c}</span>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="p-4 border-t border-border flex justify-end bg-card rounded-b-2xl">
+              <div className="p-4 border-t border-border flex justify-end bg-white rounded-b-2xl">
                 <button
                   onClick={() => setIsViewDetailsOpen(false)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-xl text-xs cursor-pointer"
+                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-bold rounded-xl text-xs cursor-pointer"
                 >
                   Close
                 </button>
@@ -3166,17 +3337,17 @@ export const BrandSetup = () => {
         {viewPersonaDetails && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <h3 className="font-display text-lg font-bold text-foreground">Content Persona Details</h3>
                 <button
                   onClick={() => setViewPersonaDetails(null)}
-                  className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-card">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-white">
                 <div className="flex items-center gap-4 border-b border-border pb-4">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-primary/10 to-accent/20 border border-primary/20 flex items-center justify-center font-extrabold text-primary text-sm shadow-sm select-none">
                     {(viewPersonaDetails.personaName || viewPersonaDetails.name) ? (viewPersonaDetails.personaName || viewPersonaDetails.name).split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'P'}
@@ -3194,20 +3365,20 @@ export const BrandSetup = () => {
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Writing Style</span>
-                    <p className="font-semibold text-foreground">{viewPersonaDetails.writingStyle || '—'}</p>
+                    <p className="font-semibold text-slate-700">{viewPersonaDetails.writingStyle || '—'}</p>
                   </div>
                 </div>
 
                 <div className="space-y-2 text-left">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Description & Biography</span>
-                  <p className="text-foreground/90 bg-muted/20 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{viewPersonaDetails.description || viewPersonaDetails.notes || '—'}</p>
+                  <p className="text-slate-750 bg-slate-50/50 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{viewPersonaDetails.description || viewPersonaDetails.notes || '—'}</p>
                 </div>
               </div>
 
-              <div className="p-4 border-t border-border flex justify-end bg-card rounded-b-2xl">
+              <div className="p-4 border-t border-border flex justify-end bg-white rounded-b-2xl">
                 <button
                   onClick={() => setViewPersonaDetails(null)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-xl text-xs cursor-pointer shadow-md hover:opacity-90"
+                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-bold rounded-xl text-xs cursor-pointer shadow-md hover:opacity-90"
                 >
                   Close
                 </button>
@@ -3215,11 +3386,16 @@ export const BrandSetup = () => {
             </div>
           </div>
         )}
+
       </div>
     );
   }
 
+  // Fallback / Initial State
   return null;
 };
 
+// ────────────────────────────────────────────────────────────────────────
+// SUBSIDIARY MODALS: Persona Form Modal & Sourced Text/Summary Modal
+// ────────────────────────────────────────────────────────────────────────
 export default BrandSetup;
