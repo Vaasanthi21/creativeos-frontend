@@ -2529,7 +2529,7 @@ export const BrandSetup = () => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
                       
                       {/* Logo & Colors Card */}
-                      <div className="bg-slate-50/40 border border-border rounded-2xl p-5 text-center flex flex-col items-center space-y-4 md:col-span-1 justify-center min-h-[180px]">
+                      <div className="bg-slate-50/30 dark:bg-slate-950/20 border border-border rounded-2xl p-5 text-center flex flex-col items-center space-y-4 md:col-span-1 justify-center min-h-[180px]">
                         {logo ? (
                           <div className="w-20 h-20 rounded-2xl bg-white border border-slate-200 flex items-center justify-center p-2 shadow-sm overflow-hidden">
                             <img
@@ -2539,7 +2539,7 @@ export const BrandSetup = () => {
                             />
                           </div>
                         ) : (
-                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-muted-foreground">
+                          <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-muted-foreground">
                             <Building size={28} />
                           </div>
                         )}
@@ -2568,27 +2568,27 @@ export const BrandSetup = () => {
                       <div className="md:col-span-3 space-y-4 text-xs">
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="p-3 bg-slate-50/30 border border-border rounded-xl space-y-0.5">
+                          <div className="p-3 bg-slate-50/30 dark:bg-slate-950/20 border border-border rounded-xl space-y-0.5">
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Website Domain</span>
                             <a href={website} target="_blank" rel="noreferrer" className="text-primary hover:underline font-semibold block truncate">
                               {website || 'No URL'}
                             </a>
                           </div>
                           
-                          <div className="p-3 bg-slate-50/30 border border-border rounded-xl space-y-0.5">
+                          <div className="p-3 bg-slate-50/30 dark:bg-slate-950/20 border border-border rounded-xl space-y-0.5">
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Brand Voice Tone</span>
                             <p className="font-semibold text-foreground truncate">{brandVoice || 'Professional'}</p>
                           </div>
                         </div>
 
-                        <div className="p-4 bg-slate-50/30 border border-border rounded-xl space-y-1.5">
+                        <div className="p-4 bg-slate-50/30 dark:bg-slate-950/20 border border-border rounded-xl space-y-1.5">
                           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Product / Service Pitch</span>
-                          <p className="text-slate-700 leading-relaxed">{productDescription || 'Configure details to feed the blog writer.'}</p>
+                          <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{productDescription || 'Configure details to feed the blog writer.'}</p>
                         </div>
 
-                        <div className="p-4 bg-slate-50/30 border border-border rounded-xl space-y-1.5">
+                        <div className="p-4 bg-slate-50/30 dark:bg-slate-950/20 border border-border rounded-xl space-y-1.5">
                           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Target Audience Focus</span>
-                          <p className="text-slate-700 leading-relaxed">{targetAudience || 'Describe your core client segments.'}</p>
+                          <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{targetAudience || 'Describe your core client segments.'}</p>
                         </div>
 
                         {/* Competitors */}
@@ -2597,7 +2597,7 @@ export const BrandSetup = () => {
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Key Competitors</span>
                             <div className="flex flex-wrap gap-1">
                               {competitors.map((c) => (
-                                <span key={c} className="px-2 py-0.5 bg-slate-100 border border-border rounded text-[10px] font-medium text-slate-700">{c}</span>
+                                <span key={c} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-border rounded text-[10px] font-medium text-slate-700 dark:text-slate-300">{c}</span>
                               ))}
                             </div>
                           </div>
@@ -2738,13 +2738,13 @@ export const BrandSetup = () => {
  
                             {/* Attributes snippet */}
                             <div className="grid grid-cols-2 gap-2 text-[10px] pt-1">
-                              <div className="p-2 bg-slate-50 rounded-lg border border-border">
+                              <div className="p-2 bg-slate-50/50 dark:bg-slate-900/40 rounded-lg border border-border">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Tone</span>
                                 <span className="font-semibold text-primary truncate block">{p.tone || p.voice}</span>
                               </div>
-                              <div className="p-2 bg-slate-50 rounded-lg border border-border">
+                              <div className="p-2 bg-slate-50/50 dark:bg-slate-900/40 rounded-lg border border-border">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Writing Style</span>
-                                <span className="font-semibold text-slate-700 truncate block">{p.writingStyle || '—'}</span>
+                                <span className="font-semibold text-slate-700 dark:text-slate-200 truncate block">{p.writingStyle || '—'}</span>
                               </div>
                             </div>
 
