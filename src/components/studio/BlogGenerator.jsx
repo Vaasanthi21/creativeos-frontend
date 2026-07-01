@@ -566,7 +566,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                       value={newTopicName}
                       onChange={(e) => setNewTopicName(e.target.value)}
                       placeholder="e.g. Q3 Enterprise Expansion"
-                      className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-foreground text-sm focus:outline-none focus:border-primary transition-colors"
+                      className="w-full px-4 py-2.5 bg-background/60 border border-border rounded-xl text-foreground text-sm focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
 
@@ -581,7 +581,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                       value={newTopicDetail}
                       onChange={(e) => setNewTopicDetail(e.target.value)}
                       placeholder="e.g. AI-driven marketing automation value propositions"
-                      className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-foreground text-sm focus:outline-none focus:border-primary transition-colors"
+                      className="w-full px-4 py-2.5 bg-background/60 border border-border rounded-xl text-foreground text-sm focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
 
@@ -594,12 +594,12 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                       required
                       value={newTopicPersonaId}
                       onChange={(e) => setNewTopicPersonaId(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-foreground text-sm focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                      className="w-full px-4 py-2.5 bg-background/60 border border-border rounded-xl text-foreground text-sm focus:outline-none focus:border-primary transition-colors cursor-pointer"
                     >
-                      <option value="" className="bg-cardackground text-slate-500">-- Select Brand Persona --</option>
+                      <option value="" className="bg-background text-slate-500">-- Select Brand Persona --</option>
                       {personas?.map(p => (
-                        <option key={p._id} value={p._id} className="bg-cardackground text-white">
-                          {p.personaName} ({p.tone})
+                        <option key={p._id} value={p._id} className="bg-card text-foreground">
+                          {p.personaName || p.name} ({p.tone || p.voice || ''})
                         </option>
                       ))}
                     </select>
@@ -621,7 +621,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                             className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all capitalize text-center ${
                               active
                                 ? 'bg-primary/10 border-primary/40 text-primary shadow-glow'
-                                : 'bg-cardackground/40 border-border text-muted-foreground hover:border-border'
+                                : 'bg-background/40 border-border text-muted-foreground hover:border-border'
                             }`}
                           >
                             {plat.replace('-', ' ')}
@@ -660,7 +660,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                         value={newTopicKeywordInput}
                         onChange={(e) => setNewTopicKeywordInput(e.target.value)}
                         placeholder="Add keywords (press enter)"
-                        className="flex-1 px-3 py-2 bg-cardackground/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary"
+                        className="flex-1 px-3 py-2 bg-background/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             handleAddKeyword(e);
@@ -703,7 +703,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                       value={newTopicGoal}
                       onChange={(e) => setNewTopicGoal(e.target.value)}
                       placeholder="Describe your goals, messaging strategies..."
-                      className="w-full px-4 py-3 bg-cardackground/60 border border-border rounded-xl text-white text-sm focus:outline-none focus:border-primary resize-none placeholder:text-slate-600"
+                      className="w-full px-4 py-3 bg-background/60 border border-border rounded-xl text-foreground text-sm focus:outline-none focus:border-primary resize-none placeholder:text-slate-600"
                     />
                   </div>
 
@@ -805,11 +805,11 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                                 <select
                                   value={selectedAngle}
                                   onChange={(e) => setSelectedAngle(e.target.value)}
-                                  className="w-full px-4 py-3 bg-cardackground/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                                  className="w-full px-4 py-3 bg-background/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer"
                                 >
-                                  <option value="" className="bg-cardackground text-muted-foreground">-- Select a suggested angle --</option>
+                                  <option value="" className="bg-background text-muted-foreground">-- Select a suggested angle --</option>
                                   {researchData.suggestedAngles.map((angle, index) => (
-                                    <option key={index} value={angle} className="bg-cardackground text-white truncate">
+                                    <option key={index} value={angle} className="bg-card text-foreground truncate">
                                       {angle}
                                     </option>
                                   ))}
@@ -829,7 +829,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
                                 value={selectedAngle}
                                 onChange={(e) => setSelectedAngle(e.target.value)}
                                 placeholder="Specify a custom strategic focus, angle, or hooks..."
-                                className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors resize-none leading-relaxed"
+                                className="w-full px-4 py-2.5 bg-background/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors resize-none leading-relaxed"
                               />
                               <p className="text-[9px] text-slate-500">
                                 The AI content generation pipeline will prioritize this strategic angle. You can select one from the dropdown or type a custom one.
