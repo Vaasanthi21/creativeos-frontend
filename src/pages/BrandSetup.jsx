@@ -413,6 +413,27 @@ export const BrandSetup = () => {
     setTimeout(() => setShowToast(false), 4000);
   };
 
+  const triggerValidationError = (fieldId, errorMessage) => {
+    setErrorAlert(errorMessage);
+    setTimeout(() => {
+      const elements = document.querySelectorAll(`#${fieldId}`);
+      const element = Array.from(elements).find(el => el.getBoundingClientRect().height > 0 || el.getBoundingClientRect().width > 0);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (element.type === 'file') {
+          element.parentElement?.focus();
+        } else {
+          element.focus();
+        }
+      } else {
+        const errorElement = document.getElementById('error-alert-banner');
+        if (errorElement) {
+          errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 100);
+  };
+
   const handleAddCompetitor = (e) => {
     e.preventDefault();
     if (!newCompetitor.trim()) return;
@@ -531,23 +552,23 @@ export const BrandSetup = () => {
   const handleSaveCompanyProfile = (e) => {
     e.preventDefault();
     if (!companyName.trim()) {
-      setErrorAlert('Company Name is required.');
+      triggerValidationError('companyName', 'Company Name is required.');
       return;
     }
     if (!website.trim()) {
-      setErrorAlert('Website URL is required.');
+      triggerValidationError('website', 'Website URL is required.');
       return;
     }
     if (!logo.trim()) {
-      setErrorAlert('Company Logo is required. Please upload a logo.');
+      triggerValidationError('logoUpload', 'Company Logo is required. Please upload a logo.');
       return;
     }
     if (!productDescription.trim()) {
-      setErrorAlert('Product / Service Description is required.');
+      triggerValidationError('productDescription', 'Product / Service Description is required.');
       return;
     }
     if (!targetAudience.trim()) {
-      setErrorAlert('Target Audience is required.');
+      triggerValidationError('targetAudience', 'Target Audience is required.');
       return;
     }
 
@@ -570,43 +591,28 @@ export const BrandSetup = () => {
   const handleFinishManualSetup = () => {
     // 1. Check if required company information is provided locally and matches/saved on the server
     if (!companyName.trim()) {
-      setErrorAlert('Company Name is required. Please fill out and save your Company Information.');
       setOpenAccordion('profile');
-      setTimeout(() => {
-        document.getElementById('manual-setup-root')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      triggerValidationError('companyName', 'Company Name is required. Please fill out and save your Company Information.');
       return;
     }
     if (!website.trim()) {
-      setErrorAlert('Website URL is required. Please fill out and save your Company Information.');
       setOpenAccordion('profile');
-      setTimeout(() => {
-        document.getElementById('manual-setup-root')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      triggerValidationError('website', 'Website URL is required. Please fill out and save your Company Information.');
       return;
     }
     if (!logo.trim()) {
-      setErrorAlert('Company Logo is required. Please upload a logo and save your Company Information.');
       setOpenAccordion('profile');
-      setTimeout(() => {
-        document.getElementById('manual-setup-root')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      triggerValidationError('logoUpload', 'Company Logo is required. Please upload a logo and save your Company Information.');
       return;
     }
     if (!productDescription.trim()) {
-      setErrorAlert('Product / Service Description is required. Please fill out and save your Company Information.');
       setOpenAccordion('profile');
-      setTimeout(() => {
-        document.getElementById('manual-setup-root')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      triggerValidationError('productDescription', 'Product / Service Description is required. Please fill out and save your Company Information.');
       return;
     }
     if (!targetAudience.trim()) {
-      setErrorAlert('Target Audience is required. Please fill out and save your Company Information.');
       setOpenAccordion('profile');
-      setTimeout(() => {
-        document.getElementById('manual-setup-root')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      triggerValidationError('targetAudience', 'Target Audience is required. Please fill out and save your Company Information.');
       return;
     }
 
@@ -619,11 +625,8 @@ export const BrandSetup = () => {
       companyData.targetAudience !== targetAudience.trim();
 
     if (isUnsaved) {
-      setErrorAlert('You have unsaved changes in your Company Information. Please click "Save Company Profile" first.');
       setOpenAccordion('profile');
-      setTimeout(() => {
-        document.getElementById('manual-setup-root')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      triggerValidationError('companyName', 'You have unsaved changes in your Company Information. Please click "Save Company Profile" first.');
       return;
     }
 
@@ -1248,6 +1251,7 @@ export const BrandSetup = () => {
                       <label className="text-xs font-semibold text-muted-foreground">Company Name *</label>
                       <input
                         type="text"
+                        id="companyName"
                         required
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
@@ -1260,6 +1264,7 @@ export const BrandSetup = () => {
                       <label className="text-xs font-semibold text-muted-foreground">Website URL *</label>
                       <input
                         type="text"
+                        id="website"
                         required
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
@@ -1272,6 +1277,7 @@ export const BrandSetup = () => {
                       <label className="text-xs font-semibold text-muted-foreground">Industry</label>
                       <input
                         type="text"
+                        id="industry"
                         value={industry}
                         onChange={(e) => setIndustry(e.target.value)}
                         placeholder="e.g. B2B SaaS, Finance"
@@ -1295,6 +1301,7 @@ export const BrandSetup = () => {
                           <>
                             <input
                               type="file"
+                              id="logoUpload"
                               accept=".png,.jpg,.jpeg,.webp"
                               onChange={handleLogoUploadTrigger}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -1420,6 +1427,7 @@ export const BrandSetup = () => {
                       <label className="text-xs font-semibold text-muted-foreground">Product / Service Description *</label>
                       <textarea
                         rows={3}
+                        id="productDescription"
                         required
                         value={productDescription}
                         onChange={(e) => setProductDescription(e.target.value)}
@@ -1432,6 +1440,7 @@ export const BrandSetup = () => {
                       <label className="text-xs font-semibold text-muted-foreground">Target Audience Description *</label>
                       <textarea
                         rows={2}
+                        id="targetAudience"
                         required
                         value={targetAudience}
                         onChange={(e) => setTargetAudience(e.target.value)}
@@ -1444,6 +1453,7 @@ export const BrandSetup = () => {
                       <label className="text-xs font-semibold text-muted-foreground">Brand Voice / Tone</label>
                       <textarea
                         rows={2}
+                        id="brandVoice"
                         value={brandVoice}
                         onChange={(e) => setBrandVoice(e.target.value)}
                         placeholder="e.g. Professional, authoritative, visionary, snappy, conversational..."
@@ -2269,6 +2279,7 @@ export const BrandSetup = () => {
                         <label className="text-xs font-semibold text-muted-foreground">Company Name *</label>
                         <input
                           type="text"
+                          id="companyName"
                           required
                           value={companyName}
                           onChange={(e) => setCompanyName(e.target.value)}
@@ -2279,6 +2290,7 @@ export const BrandSetup = () => {
                         <label className="text-xs font-semibold text-muted-foreground">Website URL *</label>
                         <input
                           type="text"
+                          id="website"
                           required
                           value={website}
                           onChange={(e) => setWebsite(e.target.value)}
@@ -2289,6 +2301,7 @@ export const BrandSetup = () => {
                         <label className="text-xs font-semibold text-muted-foreground">Industry</label>
                         <input
                           type="text"
+                          id="industry"
                           value={industry}
                           onChange={(e) => setIndustry(e.target.value)}
                           className="w-full px-3 py-2 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none"
@@ -2305,6 +2318,7 @@ export const BrandSetup = () => {
                           <>
                             <input
                               type="file"
+                              id="logoUpload"
                               accept=".png,.jpg,.jpeg,.webp"
                               onChange={handleLogoUploadTrigger}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -2316,17 +2330,27 @@ export const BrandSetup = () => {
                       </div>
 
                       {logo && (
-                        <div className="border border-border bg-slate-50/20 rounded-xl p-3 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center p-1 border border-slate-200 overflow-hidden">
-                            <img
-                              src={logo.startsWith('http') || logo.startsWith('data:') ? logo : `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/..${logo}`}
-                              alt="Logo"
-                              className="max-w-full max-h-full object-contain"
-                            />
+                        <div className="border border-border bg-slate-50/20 rounded-xl p-3 flex items-center justify-between gap-3 min-w-0">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center p-1 border border-slate-200 overflow-hidden shrink-0">
+                              <img
+                                src={logo.startsWith('http') || logo.startsWith('data:') ? logo : `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/..${logo}`}
+                                alt="Logo"
+                                className="max-w-full max-h-full object-contain"
+                              />
+                            </div>
+                            <div className="text-[10px] text-muted-foreground truncate">
+                              {brandColorsDescription || 'Logo uploaded.'}
+                            </div>
                           </div>
-                          <div className="text-[10px] text-muted-foreground flex-1 truncate">
-                            {brandColorsDescription || 'Logo uploaded.'}
-                          </div>
+                          <button
+                            type="button"
+                            onClick={handleLogoDeleteTrigger}
+                            className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded-lg text-slate-400 border border-transparent hover:border-red-100 transition-all cursor-pointer shrink-0"
+                            title="Delete logo"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       )}
                     </div>
@@ -2398,6 +2422,7 @@ export const BrandSetup = () => {
                         <label className="text-xs font-semibold text-muted-foreground">Product Description *</label>
                         <textarea
                           rows={3}
+                          id="productDescription"
                           required
                           value={productDescription}
                           onChange={(e) => setProductDescription(e.target.value)}
@@ -2408,6 +2433,7 @@ export const BrandSetup = () => {
                         <label className="text-xs font-semibold text-muted-foreground">Target Audience Focus *</label>
                         <textarea
                           rows={2}
+                          id="targetAudience"
                           required
                           value={targetAudience}
                           onChange={(e) => setTargetAudience(e.target.value)}
@@ -2418,6 +2444,7 @@ export const BrandSetup = () => {
                         <label className="text-xs font-semibold text-muted-foreground">Brand Voice & Tone</label>
                         <textarea
                           rows={2}
+                          id="brandVoice"
                           value={brandVoice}
                           onChange={(e) => setBrandVoice(e.target.value)}
                           className="w-full p-3 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none resize-none"
@@ -2937,22 +2964,16 @@ export const BrandSetup = () => {
           </div>
           
           <div className="flex flex-wrap gap-2.5">
+            {/* Generate Blog Studio (always orange gradient) */}
             <button
               onClick={() => quickAction('generate')}
-              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-primary hover:to-accent hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
+              className="px-4 py-2.5 bg-gradient-to-r from-primary to-accent text-foreground font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
             >
-              <Sparkles size={12} className="text-primary group-hover:text-white transition-colors" />
-              <span>Generate Blog Post</span>
+              <Sparkles size={12} />
+              <span>Generate Blog Studio</span>
             </button>
 
-            <button
-              onClick={() => quickAction('content')}
-              className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
-            >
-              <Sparkles size={12} className="text-[#f25b18] group-hover:text-white transition-colors" />
-              <span>Generate Content</span>
-            </button>
-            
+            {/* Add Knowledge Source (popover hover to orange) */}
             <button
               onClick={() => quickAction('knowledge')}
               className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
@@ -2961,6 +2982,7 @@ export const BrandSetup = () => {
               <span>Add Knowledge Source</span>
             </button>
             
+            {/* Create Target Persona (popover hover to orange) */}
             <button
               onClick={() => quickAction('persona')}
               className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
@@ -2969,6 +2991,7 @@ export const BrandSetup = () => {
               <span>Create Target Persona</span>
             </button>
             
+            {/* Edit Company Profile (popover hover to orange) */}
             <button
               onClick={() => quickAction('company')}
               className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
@@ -2977,12 +3000,22 @@ export const BrandSetup = () => {
               <span>Edit Company Profile</span>
             </button>
             
+            {/* Refresh AI (popover hover to orange) */}
             <button
               onClick={() => quickAction('refresh')}
               className="px-4 py-2.5 bg-card hover:bg-gradient-to-r hover:from-[#f25b18] hover:to-[#d84a0c] hover:text-white border border-border text-foreground font-semibold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-1 group"
             >
               <Loader2 size={12} className={`text-[#f25b18] group-hover:text-white transition-colors ${extractMutation.isPending ? "animate-spin" : ""}`} />
-              <span>Refresh AI Understanding</span>
+              <span>Refresh AI</span>
+            </button>
+
+            {/* Generate Content Studio (always orange gradient) */}
+            <button
+              onClick={() => quickAction('content')}
+              className="px-4 py-2.5 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
+            >
+              <Sparkles size={12} />
+              <span>Generate Content Studio</span>
             </button>
           </div>
         </div>
