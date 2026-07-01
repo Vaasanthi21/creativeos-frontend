@@ -1242,7 +1242,7 @@ export const BrandSetup = () => {
             </button>
 
             {openAccordion === 'profile' && (
-              <div className="p-6 border-t border-border bg-white/40 space-y-6">
+              <div className="p-6 border-t border-border bg-white/40 dark:bg-white/[0.02] space-y-6">
                 <form onSubmit={handleSaveCompanyProfile} className="space-y-6">
                   
                   {/* Basic Details */}
@@ -1549,7 +1549,7 @@ export const BrandSetup = () => {
             </button>
 
             {openAccordion === 'personas' && (
-              <div className="p-6 border-t border-border bg-white/40 space-y-6">
+              <div className="p-6 border-t border-border bg-white/40 dark:bg-white/[0.02] space-y-6">
                 
                 {/* Header Actions */}
                 <div className="flex justify-between items-center">
@@ -1669,7 +1669,7 @@ export const BrandSetup = () => {
             </button>
 
             {openAccordion === 'knowledge' && (
-              <div className="p-6 border-t border-border bg-white/40 space-y-6">
+              <div className="p-6 border-t border-border bg-white/40 dark:bg-white/[0.02] space-y-6">
                 
                 {/* Inline URL crawler & Document uploader side-by-side */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
@@ -2103,30 +2103,30 @@ export const BrandSetup = () => {
 
               {/* Stats stack */}
               <div className="space-y-2 pt-2 text-xs">
-                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
+                <div className="flex justify-between items-center border-b border-border pb-1.5">
                   <span className="text-muted-foreground font-medium">Company Profile</span>
                   <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide ${
-                    companyName && website ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                    companyName && website ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400" : "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400"
                   }`}>
                     {companyName && website ? "Completed" : "Pending"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
+                <div className="flex justify-between items-center border-b border-border pb-1.5">
                   <span className="text-muted-foreground font-medium">Audience Personas</span>
-                  <span className="font-bold text-foreground bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">
+                  <span className="font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[9px]">
                     {personasData.length} Sourced
                   </span>
                 </div>
-                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
+                <div className="flex justify-between items-center border-b border-border pb-1.5">
                   <span className="text-muted-foreground font-medium">Knowledge Sources</span>
-                  <span className="font-bold text-foreground bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">
+                  <span className="font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[9px]">
                     {documentsData.length} Indexed
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-1">
                   <span className="text-muted-foreground font-medium">AI Summary</span>
                   <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide ${
-                    primaryDoc && (primaryDoc.summaryText || primaryDoc.summary_text || primaryDoc.summary || primaryDoc.extractedText || primaryDoc.extracted_text || primaryDoc.content) ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                    primaryDoc && (primaryDoc.summaryText || primaryDoc.summary_text || primaryDoc.summary || primaryDoc.extractedText || primaryDoc.extracted_text || primaryDoc.content) ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                   }`}>
                     {primaryDoc && (primaryDoc.summaryText || primaryDoc.summary_text || primaryDoc.summary || primaryDoc.extractedText || primaryDoc.extracted_text || primaryDoc.content) ? "Available" : "Pending"}
                   </span>
@@ -2134,7 +2134,7 @@ export const BrandSetup = () => {
               </div>
             </div>
 
-            <div className="text-[10px] text-muted-foreground border-t border-slate-100 pt-3 flex justify-between items-center">
+            <div className="text-[10px] text-muted-foreground border-t border-border pt-3 flex justify-between items-center">
               <span>Last Updated:</span>
               <span className="font-bold text-foreground">
                 {primaryDoc ? new Date(primaryDoc.updatedAt || primaryDoc.updated_at || companyData?.updatedAt || companyData?.updated_at || Date.now()).toLocaleDateString() : (companyData ? new Date(companyData.updatedAt || companyData.updated_at || Date.now()).toLocaleDateString() : 'Today')}
@@ -2146,7 +2146,7 @@ export const BrandSetup = () => {
           <div className="lg:col-span-2 bg-card rounded-3xl border border-border flex flex-col justify-between relative overflow-hidden">
             
             {/* Header */}
-            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40 dark:bg-white/[0.02]">
               <button
                 onClick={() => setIsUnderstandingExpanded(!isUnderstandingExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
@@ -2177,23 +2177,23 @@ export const BrandSetup = () => {
                       <div className="space-y-4 flex-1 flex flex-col justify-between">
                         
                         {/* Render Edit view or Markdown view */}
-                        <div className="flex-1 bg-slate-50/50 border border-border rounded-xl p-4 min-h-[140px] text-xs leading-relaxed max-h-[220px] overflow-y-auto">
+                        <div className="flex-1 bg-slate-50 dark:bg-slate-900/40 border border-border rounded-xl p-4 min-h-[140px] text-xs leading-relaxed max-h-[220px] overflow-y-auto">
                           {isEditingSummary ? (
                             <textarea
                               value={summaryTextVal}
                               onChange={(e) => setSummaryTextVal(e.target.value)}
-                              className="w-full h-[150px] p-2 text-foreground border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-xs bg-white resize-none"
+                              className="w-full h-[150px] p-2 text-foreground border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-xs bg-background resize-none"
                             />
                           ) : (
                             <div 
-                              className="space-y-3 text-slate-700"
+                              className="space-y-3 text-slate-700 dark:text-slate-300"
                               dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(activeSummary) }}
                             />
                           )}
                         </div>
 
                         {/* Actions Panel */}
-                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 border-t border-slate-100">
+                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 border-t border-border">
                           
                           {/* Summary Save/Cancel */}
                           <div className="flex gap-2">
@@ -2286,7 +2286,7 @@ export const BrandSetup = () => {
           <div id="section-company" className="bg-card rounded-3xl border border-border overflow-hidden">
             
             {/* Header toggle */}
-            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40 dark:bg-white/[0.02]">
               <button
                 onClick={() => setIsCompanyExpanded(!isCompanyExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
@@ -2635,7 +2635,7 @@ export const BrandSetup = () => {
           <div id="section-personas" className="bg-card rounded-3xl border border-border overflow-hidden">
             
             {/* Header toggle */}
-            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40 dark:bg-white/[0.02]">
               <button
                 onClick={() => setIsPersonasExpanded(!isPersonasExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
@@ -2798,7 +2798,7 @@ export const BrandSetup = () => {
           <div id="section-knowledge" className="bg-card rounded-3xl border border-border overflow-hidden">
             
             {/* Header toggle */}
-            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40 dark:bg-white/[0.02]">
               <button
                 onClick={() => setIsKnowledgeExpanded(!isKnowledgeExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
