@@ -783,7 +783,7 @@ export const BrandSetup = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
           {/* Card 1: AI Setup */}
-          <div className="bg-card rounded-3xl p-8 border border-primary/20 flex flex-col justify-between space-y-6 relative overflow-hidden group hover:shadow-glow-sm transition-all duration-300">
+          <div className="bg-card rounded-3xl p-8 border border-border shadow-sm hover:shadow-lg hover:border-primary/40 transition-all duration-300 flex flex-col justify-between space-y-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 px-4 py-1.5 bg-primary/10 border-b border-l border-primary/20 rounded-bl-2xl text-[10px] font-extrabold uppercase tracking-wider text-primary">
               Recommended
             </div>
@@ -828,7 +828,7 @@ export const BrandSetup = () => {
           </div>
 
           {/* Card 2: Manual Setup */}
-          <div className="bg-card rounded-3xl p-8 border border-border flex flex-col justify-between space-y-6 group hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300">
+          <div className="bg-card rounded-3xl p-8 border border-border shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 flex flex-col justify-between space-y-6">
             <div className="space-y-4">
               <div className="text-3xl">✍</div>
               <h3 className="font-display text-xl font-bold text-foreground">Manual Setup</h3>
