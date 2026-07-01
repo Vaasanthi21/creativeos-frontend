@@ -993,7 +993,7 @@ export const BrandSetup = () => {
               className={`border border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all ${
                 dragActive 
                   ? 'border-primary bg-primary/5' 
-                  : 'border-border bg-slate-50/30 dark:bg-slate-950/20 hover:border-slate-350'
+                  : 'border-border bg-slate-50/50 hover:border-slate-350'
               }`}
             >
               <input
@@ -1227,7 +1227,7 @@ export const BrandSetup = () => {
           <div id="accordion-profile" className="bg-card rounded-2xl border border-border overflow-hidden">
             <button
               onClick={() => handleSetOpenAccordion('profile', true)}
-              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/30 dark:bg-slate-950/20 transition-colors text-left"
+              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/50 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary">
@@ -1242,7 +1242,7 @@ export const BrandSetup = () => {
             </button>
 
             {openAccordion === 'profile' && (
-              <div className="p-6 border-t border-border bg-white/40 dark:bg-white/[0.02] space-y-6">
+              <div className="p-6 border-t border-border bg-white/40 space-y-6">
                 <form onSubmit={handleSaveCompanyProfile} className="space-y-6">
                   
                   {/* Basic Details */}
@@ -1413,7 +1413,7 @@ export const BrandSetup = () => {
                         onClick={() => {
                           setBrandColors([...brandColors, '#f25b18']);
                         }}
-                        className="px-3.5 py-2 border border-border hover:bg-slate-50 dark:hover:bg-slate-800 text-foreground font-semibold rounded-xl text-[10px] flex items-center gap-1 cursor-pointer h-10 shadow-sm"
+                        className="px-3.5 py-2 border border-border hover:bg-slate-50 text-foreground font-semibold rounded-xl text-[10px] flex items-center gap-1 cursor-pointer h-10 shadow-sm"
                       >
                         <Plus size={12} />
                         <span>Add Another Color</span>
@@ -1534,7 +1534,7 @@ export const BrandSetup = () => {
           <div id="accordion-personas" className="bg-card rounded-2xl border border-border overflow-hidden">
             <button
               onClick={() => handleSetOpenAccordion('personas', true)}
-              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/30 dark:bg-slate-950/20 transition-colors text-left"
+              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/50 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary">
@@ -1549,7 +1549,7 @@ export const BrandSetup = () => {
             </button>
 
             {openAccordion === 'personas' && (
-              <div className="p-6 border-t border-border bg-white/40 dark:bg-white/[0.02] space-y-6">
+              <div className="p-6 border-t border-border bg-white/40 space-y-6">
                 
                 {/* Header Actions */}
                 <div className="flex justify-between items-center">
@@ -1565,8 +1565,8 @@ export const BrandSetup = () => {
 
                 {/* Grid List */}
                 {personasData.length === 0 ? (
-                  <div className="text-center p-8 bg-slate-50/30 dark:bg-slate-950/20 border border-dashed border-border rounded-xl space-y-3">
-                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">No Personas Yet</p>
+                  <div className="text-center p-8 bg-slate-50/50 border border-dashed border-border rounded-xl space-y-3">
+                    <p className="text-xs font-semibold text-slate-500">No Personas Yet</p>
                     <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
                       Personas help Blog Studio adapt blog tone and messaging. Create one manually to begin.
                     </p>
@@ -1591,7 +1591,7 @@ export const BrandSetup = () => {
                           <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
                             {p.description || p.notes || 'No bio specified.'}
                           </p>
-                          <div className="grid grid-cols-2 gap-2 text-[10px] bg-slate-50/30 dark:bg-slate-950/20 p-2 rounded-lg border border-border">
+                          <div className="grid grid-cols-2 gap-2 text-[10px] bg-slate-50/50 p-2 rounded-lg border border-border">
                             <div>
                               <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Tone</span>
                               <span className="font-semibold text-primary truncate block">{p.tone || p.voice}</span>
@@ -1654,7 +1654,7 @@ export const BrandSetup = () => {
           <div id="accordion-knowledge" className="bg-card rounded-2xl border border-border overflow-hidden">
             <button
               onClick={() => handleSetOpenAccordion('knowledge', true)}
-              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/30 dark:bg-slate-950/20 transition-colors text-left"
+              className="w-full p-5 flex items-center justify-between font-bold text-foreground text-sm hover:bg-slate-50/50 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary">
@@ -1669,7 +1669,7 @@ export const BrandSetup = () => {
             </button>
 
             {openAccordion === 'knowledge' && (
-              <div className="p-6 border-t border-border bg-white/40 dark:bg-white/[0.02] space-y-6">
+              <div className="p-6 border-t border-border bg-white/40 space-y-6">
                 
                 {/* Inline URL crawler & Document uploader side-by-side */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
@@ -1768,7 +1768,7 @@ export const BrandSetup = () => {
                   <h4 className="font-display text-xs font-bold text-foreground">AI Knowledge Sources</h4>
 
                   {documentsData.length === 0 ? (
-                    <div className="p-6 bg-slate-50/30 dark:bg-slate-950/20 border border-dashed border-border rounded-xl text-center text-xs text-muted-foreground italic">
+                    <div className="p-6 bg-slate-50/50 border border-dashed border-border rounded-xl text-center text-xs text-muted-foreground italic">
                       No reference documents uploaded. This step is optional – you can proceed without uploading documents.
                     </div>
                   ) : (
@@ -1839,15 +1839,15 @@ export const BrandSetup = () => {
 
         {/* Persona CRUD Form Modal */}
         {personaModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white dark:bg-card rounded-t-2xl">
                 <h3 className="font-display text-lg font-bold text-foreground">
                   {editPersonaId ? 'Modify Content Persona' : 'Design Content Persona'}
                 </h3>
                 <button
                   onClick={closePersonaModal}
-                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -1946,9 +1946,9 @@ export const BrandSetup = () => {
 
         {/* View Document Summary / Edit Modal */}
         {selectedText !== null && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-            <div className="w-full max-w-2xl bg-white dark:bg-card border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
+            <div className="w-full max-w-2xl bg-white border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white dark:bg-card rounded-t-2xl">
                 <div>
                   <h3 className="font-display text-lg font-bold text-foreground">AI Grounding Summary Context</h3>
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5 max-w-md">{selectedFileName}</p>
@@ -1961,18 +1961,18 @@ export const BrandSetup = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 dark:bg-slate-900/20 border-y border-border max-h-[50vh] flex flex-col">
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-900/20 border-y border-border max-h-[50vh] flex flex-col">
                 {isEditingSummary ? (
                   <textarea
                     value={summaryTextVal}
                     onChange={(e) => setSummaryTextVal(e.target.value)}
-                    className="w-full flex-1 min-h-[25vh] p-3 text-foreground border border-border rounded-xl focus:outline-none text-sm bg-white dark:bg-card resize-y"
+                    className="w-full flex-1 min-h-[25vh] p-3 text-foreground border border-border rounded-xl focus:outline-none text-sm bg-white resize-y"
                     placeholder="Type or modify summary text here..."
                   />
                 ) : (
                   selectedText ? (
                     <div 
-                      className="text-xs md:text-sm text-slate-700 dark:text-slate-200 leading-relaxed space-y-4"
+                      className="text-xs md:text-sm text-slate-700 leading-relaxed space-y-4"
                       dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(selectedText) }}
                     />
                   ) : (
@@ -1981,7 +1981,7 @@ export const BrandSetup = () => {
                 )}
               </div>
 
-              <div className="p-4 border-t border-border flex justify-end gap-2 bg-card rounded-b-2xl">
+              <div className="p-4 border-t border-border flex justify-end gap-2 bg-white rounded-b-2xl">
                 {isEditingSummary ? (
                   <>
                     <button
@@ -2009,7 +2009,7 @@ export const BrandSetup = () => {
                     </button>
                     <button
                       onClick={() => setSelectedText(null)}
-                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground dark:text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-xl text-xs shadow-sm cursor-pointer"
                     >
                       Done
                     </button>
@@ -2089,9 +2089,7 @@ export const BrandSetup = () => {
               
               {/* Ready Badge banner */}
               <div className={`p-4 rounded-xl text-center space-y-1 ${
-                isBrandReady 
-                  ? "bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 text-emerald-800 dark:text-emerald-400" 
-                  : "bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 text-amber-800 dark:text-amber-400"
+                isBrandReady ? "bg-emerald-50 border border-emerald-100 text-emerald-800" : "bg-amber-50 border border-amber-100 text-amber-800"
               }`}>
                 <p className="text-xs font-bold uppercase tracking-wider">
                   {isBrandReady ? "🎉 Brand Ready" : "⚠️ Needs Training"}
@@ -2105,30 +2103,30 @@ export const BrandSetup = () => {
 
               {/* Stats stack */}
               <div className="space-y-2 pt-2 text-xs">
-                <div className="flex justify-between items-center border-b border-border pb-1.5">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
                   <span className="text-muted-foreground font-medium">Company Profile</span>
                   <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide ${
-                    companyName && website ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400" : "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400"
+                    companyName && website ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                   }`}>
                     {companyName && website ? "Completed" : "Pending"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center border-b border-border pb-1.5">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
                   <span className="text-muted-foreground font-medium">Audience Personas</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[9px]">
+                  <span className="font-bold text-foreground bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">
                     {personasData.length} Sourced
                   </span>
                 </div>
-                <div className="flex justify-between items-center border-b border-border pb-1.5">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
                   <span className="text-muted-foreground font-medium">Knowledge Sources</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[9px]">
+                  <span className="font-bold text-foreground bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">
                     {documentsData.length} Indexed
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-1">
                   <span className="text-muted-foreground font-medium">AI Summary</span>
                   <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide ${
-                    primaryDoc && (primaryDoc.summaryText || primaryDoc.summary_text || primaryDoc.summary || primaryDoc.extractedText || primaryDoc.extracted_text || primaryDoc.content) ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                    primaryDoc && (primaryDoc.summaryText || primaryDoc.summary_text || primaryDoc.summary || primaryDoc.extractedText || primaryDoc.extracted_text || primaryDoc.content) ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
                   }`}>
                     {primaryDoc && (primaryDoc.summaryText || primaryDoc.summary_text || primaryDoc.summary || primaryDoc.extractedText || primaryDoc.extracted_text || primaryDoc.content) ? "Available" : "Pending"}
                   </span>
@@ -2136,7 +2134,7 @@ export const BrandSetup = () => {
               </div>
             </div>
 
-            <div className="text-[10px] text-muted-foreground border-t border-border pt-3 flex justify-between items-center">
+            <div className="text-[10px] text-muted-foreground border-t border-slate-100 pt-3 flex justify-between items-center">
               <span>Last Updated:</span>
               <span className="font-bold text-foreground">
                 {primaryDoc ? new Date(primaryDoc.updatedAt || primaryDoc.updated_at || companyData?.updatedAt || companyData?.updated_at || Date.now()).toLocaleDateString() : (companyData ? new Date(companyData.updatedAt || companyData.updated_at || Date.now()).toLocaleDateString() : 'Today')}
@@ -2148,7 +2146,7 @@ export const BrandSetup = () => {
           <div className="lg:col-span-2 bg-card rounded-3xl border border-border flex flex-col justify-between relative overflow-hidden">
             
             {/* Header */}
-            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40 dark:bg-white/[0.02]">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
               <button
                 onClick={() => setIsUnderstandingExpanded(!isUnderstandingExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
@@ -2179,23 +2177,23 @@ export const BrandSetup = () => {
                       <div className="space-y-4 flex-1 flex flex-col justify-between">
                         
                         {/* Render Edit view or Markdown view */}
-                        <div className="flex-1 bg-slate-50 dark:bg-slate-900/40 border border-border rounded-xl p-4 min-h-[140px] text-xs leading-relaxed max-h-[220px] overflow-y-auto">
+                        <div className="flex-1 bg-slate-50/50 border border-border rounded-xl p-4 min-h-[140px] text-xs leading-relaxed max-h-[220px] overflow-y-auto">
                           {isEditingSummary ? (
                             <textarea
                               value={summaryTextVal}
                               onChange={(e) => setSummaryTextVal(e.target.value)}
-                              className="w-full h-[150px] p-2 text-foreground border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-xs bg-background resize-none"
+                              className="w-full h-[150px] p-2 text-foreground border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-xs bg-white resize-none"
                             />
                           ) : (
                             <div 
-                              className="space-y-3 text-slate-700 dark:text-slate-300"
+                              className="space-y-3 text-slate-700"
                               dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(activeSummary) }}
                             />
                           )}
                         </div>
 
                         {/* Actions Panel */}
-                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 border-t border-border">
+                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 border-t border-slate-100">
                           
                           {/* Summary Save/Cancel */}
                           <div className="flex gap-2">
@@ -2260,8 +2258,8 @@ export const BrandSetup = () => {
                     );
                   }
                   return (
-                    <div className="text-center p-8 border border-dashed border-border rounded-xl space-y-3 bg-slate-50/30 dark:bg-slate-950/20">
-                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">No AI Summary Drafted Yet</p>
+                    <div className="text-center p-8 border border-dashed border-border rounded-xl space-y-3 bg-slate-50/50">
+                      <p className="text-xs font-semibold text-slate-500">No AI Summary Drafted Yet</p>
                       <p className="text-[11px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
                         AI builds summaries automatically after Analyzing URLs or extracting documents.
                       </p>
@@ -2288,7 +2286,7 @@ export const BrandSetup = () => {
           <div id="section-company" className="bg-card rounded-3xl border border-border overflow-hidden">
             
             {/* Header toggle */}
-            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40 dark:bg-white/[0.02]">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
               <button
                 onClick={() => setIsCompanyExpanded(!isCompanyExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
@@ -2531,7 +2529,7 @@ export const BrandSetup = () => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
                       
                       {/* Logo & Colors Card */}
-                      <div className="bg-slate-50/30 dark:bg-slate-950/20 border border-border rounded-2xl p-5 text-center flex flex-col items-center space-y-4 md:col-span-1 justify-center min-h-[180px]">
+                      <div className="bg-slate-50/40 border border-border rounded-2xl p-5 text-center flex flex-col items-center space-y-4 md:col-span-1 justify-center min-h-[180px]">
                         {logo ? (
                           <div className="w-20 h-20 rounded-2xl bg-white border border-slate-200 flex items-center justify-center p-2 shadow-sm overflow-hidden">
                             <img
@@ -2541,7 +2539,7 @@ export const BrandSetup = () => {
                             />
                           </div>
                         ) : (
-                          <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-muted-foreground">
+                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-muted-foreground">
                             <Building size={28} />
                           </div>
                         )}
@@ -2599,7 +2597,7 @@ export const BrandSetup = () => {
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Key Competitors</span>
                             <div className="flex flex-wrap gap-1">
                               {competitors.map((c) => (
-                                <span key={c} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-border rounded text-[10px] font-medium text-slate-700 dark:text-slate-300">{c}</span>
+                                <span key={c} className="px-2 py-0.5 bg-slate-100 border border-border rounded text-[10px] font-medium text-slate-700">{c}</span>
                               ))}
                             </div>
                           </div>
@@ -2610,7 +2608,7 @@ export const BrandSetup = () => {
                     </div>
 
                     {/* Actions Panel */}
-                    <div className="flex justify-end gap-2 pt-4 border-t border-border">
+                    <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
                       <button
                         onClick={() => setIsViewDetailsOpen(true)}
                         className="px-4 py-2 border border-border bg-card hover:bg-slate-50 text-foreground font-bold rounded-lg text-xs shadow-sm cursor-pointer"
@@ -2637,7 +2635,7 @@ export const BrandSetup = () => {
           <div id="section-personas" className="bg-card rounded-3xl border border-border overflow-hidden">
             
             {/* Header toggle */}
-            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40 dark:bg-white/[0.02]">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
               <button
                 onClick={() => setIsPersonasExpanded(!isPersonasExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
@@ -2694,8 +2692,8 @@ export const BrandSetup = () => {
 
                 {/* Personas Cards grid */}
                 {personasData.length === 0 ? (
-                  <div className="text-center p-8 border border-dashed border-border rounded-2xl bg-slate-50/30 dark:bg-slate-950/20 space-y-4">
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No Personas Sourced Yet</p>
+                  <div className="text-center p-8 border border-dashed border-border rounded-2xl bg-slate-50/50 space-y-4">
+                    <p className="text-xs font-bold text-slate-500">No Personas Sourced Yet</p>
                     <p className="text-[11px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
                       Personas help Blog Studio adapt blog tone and messaging. Create one manually or generate automatically from your website crawl.
                     </p>
@@ -2740,13 +2738,13 @@ export const BrandSetup = () => {
  
                             {/* Attributes snippet */}
                             <div className="grid grid-cols-2 gap-2 text-[10px] pt-1">
-                              <div className="p-2 bg-slate-50 dark:bg-slate-900/40 rounded-lg border border-border">
+                              <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Tone</span>
                                 <span className="font-semibold text-primary truncate block">{p.tone || p.voice}</span>
                               </div>
-                              <div className="p-2 bg-slate-50 dark:bg-slate-900/40 rounded-lg border border-border">
+                              <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Writing Style</span>
-                                <span className="font-semibold text-slate-700 dark:text-slate-200 truncate block">{p.writingStyle || '—'}</span>
+                                <span className="font-semibold text-slate-700 truncate block">{p.writingStyle || '—'}</span>
                               </div>
                             </div>
 
@@ -2758,7 +2756,7 @@ export const BrandSetup = () => {
                           </div>
 
                           {/* Footer Actions */}
-                          <div className="flex justify-between items-center pt-3 border-t border-border mt-auto gap-2">
+                          <div className="flex justify-between items-center pt-3 border-t border-slate-100 mt-auto gap-2">
                             <button
                               onClick={() => setViewPersonaDetails(p)}
                               className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-border rounded-lg text-slate-650 hover:text-foreground font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all"
@@ -2800,7 +2798,7 @@ export const BrandSetup = () => {
           <div id="section-knowledge" className="bg-card rounded-3xl border border-border overflow-hidden">
             
             {/* Header toggle */}
-            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40 dark:bg-white/[0.02]">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-white/40">
               <button
                 onClick={() => setIsKnowledgeExpanded(!isKnowledgeExpanded)}
                 className="flex items-center gap-2.5 font-extrabold text-foreground text-sm text-left hover:opacity-80"
@@ -2928,7 +2926,7 @@ export const BrandSetup = () => {
                   <h4 className="font-display text-xs font-bold text-foreground">Active Knowledge Repositories</h4>
 
                   {documentsData.length === 0 ? (
-                    <div className="p-8 border border-dashed border-border rounded-2xl bg-slate-50/30 dark:bg-slate-950/20 text-center text-xs text-muted-foreground italic">
+                    <div className="p-8 border border-dashed border-border rounded-2xl bg-slate-50/50 text-center text-xs text-muted-foreground italic">
                       No grounding files indexed. Upload key PDF, Word, or TXT assets (optional).
                     </div>
                   ) : (
@@ -2969,7 +2967,7 @@ export const BrandSetup = () => {
                             </div>
 
                             {/* Footer Actions */}
-                            <div className="flex justify-end items-center gap-1.5 pt-2.5 border-t border-border">
+                            <div className="flex justify-end items-center gap-1.5 pt-2.5 border-t border-slate-100">
                               <button
                                 onClick={() => handleViewText(doc)}
                                 className="px-2 py-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-border rounded text-[10px] text-foreground font-bold flex items-center gap-0.5 cursor-pointer"
@@ -3074,9 +3072,9 @@ export const BrandSetup = () => {
 
         {/* Persona CRUD Form Modal */}
         {personaModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <h3 className="font-display text-lg font-bold text-foreground">
                   {editPersonaId ? 'Modify Content Persona' : 'Design Content Persona'}
                 </h3>
@@ -3181,9 +3179,9 @@ export const BrandSetup = () => {
 
         {/* View Document Summary / Edit Modal */}
         {selectedText !== null && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-2xl bg-white border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <div>
                   <h3 className="font-display text-lg font-bold text-foreground">AI Grounding Summary Context</h3>
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5 max-w-md">{selectedFileName}</p>
@@ -3196,7 +3194,7 @@ export const BrandSetup = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 dark:bg-slate-900/20 border-y border-border max-h-[50vh] flex flex-col">
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-50 border-y border-border max-h-[50vh] flex flex-col">
                 {isEditingSummary ? (
                   <textarea
                     value={summaryTextVal}
@@ -3216,12 +3214,12 @@ export const BrandSetup = () => {
                 )}
               </div>
 
-              <div className="p-4 border-t border-border flex justify-end gap-2 bg-card rounded-b-2xl">
+              <div className="p-4 border-t border-border flex justify-end gap-2 bg-white rounded-b-2xl">
                 {isEditingSummary ? (
                   <>
                     <button
                       onClick={() => setIsEditingSummary(false)}
-                      className="px-4 py-2 border border-slate-355 hover:bg-slate-50 dark:hover:bg-slate-800 text-foreground rounded-xl text-xs font-semibold cursor-pointer"
+                      className="px-4 py-2 border border-slate-355 hover:bg-slate-50 text-foreground rounded-xl text-xs font-semibold cursor-pointer"
                       disabled={updateSummaryMutation.isPending}
                     >
                       Cancel
@@ -3257,9 +3255,9 @@ export const BrandSetup = () => {
 
         {/* View Company Profile Details Read-Only Modal */}
         {isViewDetailsOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-3xl bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <h3 className="font-display text-lg font-bold text-foreground">Company Profile Details</h3>
                 <button
                   onClick={() => setIsViewDetailsOpen(false)}
@@ -3269,7 +3267,7 @@ export const BrandSetup = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-card">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-white dark:bg-card">
                 <div className="flex items-center gap-4 border-b border-border pb-4">
                   {logo ? (
                     <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1.5 overflow-hidden shadow-sm shrink-0">
@@ -3280,7 +3278,7 @@ export const BrandSetup = () => {
                       />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-muted-foreground">
+                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-muted-foreground">
                       <Building size={24} />
                     </div>
                   )}
@@ -3303,12 +3301,12 @@ export const BrandSetup = () => {
 
                 <div className="space-y-2">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product / Service Description</span>
-                  <p className="text-slate-700 bg-slate-50/30 dark:bg-slate-950/20 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{productDescription || '—'}</p>
+                  <p className="text-slate-700 bg-slate-50/50 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{productDescription || '—'}</p>
                 </div>
 
                 <div className="space-y-2">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Target Audience Focus</span>
-                  <p className="text-slate-700 bg-slate-50/30 dark:bg-slate-950/20 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{targetAudience || '—'}</p>
+                  <p className="text-slate-700 bg-slate-50/50 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{targetAudience || '—'}</p>
                 </div>
 
                 {competitors.length > 0 && (
@@ -3316,14 +3314,14 @@ export const BrandSetup = () => {
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Competitors</span>
                     <div className="flex flex-wrap gap-1.5">
                       {competitors.map((c) => (
-                        <span key={c} className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 border border-border rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300">{c}</span>
+                        <span key={c} className="px-2.5 py-1 bg-slate-100 border border-border rounded-lg text-xs font-semibold text-slate-700">{c}</span>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="p-4 border-t border-border flex justify-end bg-card rounded-b-2xl">
+              <div className="p-4 border-t border-border flex justify-end bg-white dark:bg-card rounded-b-2xl">
                 <button
                   onClick={() => setIsViewDetailsOpen(false)}
                   className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl text-xs cursor-pointer"
@@ -3337,9 +3335,9 @@ export const BrandSetup = () => {
 
         {/* Persona Details Viewer Modal */}
         {viewPersonaDetails && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cardlack/75 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl relative flex flex-col max-h-[90vh]">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-white rounded-t-2xl">
                 <h3 className="font-display text-lg font-bold text-foreground">Content Persona Details</h3>
                 <button
                   onClick={() => setViewPersonaDetails(null)}
@@ -3349,7 +3347,7 @@ export const BrandSetup = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-card">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs md:text-sm bg-white dark:bg-card">
                 <div className="flex items-center gap-4 border-b border-border pb-4">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-primary/10 to-accent/20 border border-primary/20 flex items-center justify-center font-extrabold text-primary text-sm shadow-sm select-none">
                     {(viewPersonaDetails.personaName || viewPersonaDetails.name) ? (viewPersonaDetails.personaName || viewPersonaDetails.name).split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'P'}
@@ -3367,17 +3365,17 @@ export const BrandSetup = () => {
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Writing Style</span>
-                    <p className="font-semibold text-slate-700 dark:text-slate-300">{viewPersonaDetails.writingStyle || '—'}</p>
+                    <p className="font-semibold text-slate-700">{viewPersonaDetails.writingStyle || '—'}</p>
                   </div>
                 </div>
 
                 <div className="space-y-2 text-left">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Description & Biography</span>
-                  <p className="text-slate-750 bg-slate-50/30 dark:bg-slate-950/20 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{viewPersonaDetails.description || viewPersonaDetails.notes || '—'}</p>
+                  <p className="text-slate-750 bg-slate-50/50 p-4 rounded-xl border border-border leading-relaxed whitespace-pre-wrap">{viewPersonaDetails.description || viewPersonaDetails.notes || '—'}</p>
                 </div>
               </div>
 
-              <div className="p-4 border-t border-border flex justify-end bg-card rounded-b-2xl">
+              <div className="p-4 border-t border-border flex justify-end bg-white dark:bg-card rounded-b-2xl">
                 <button
                   onClick={() => setViewPersonaDetails(null)}
                   className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-white font-extrabold rounded-xl text-xs cursor-pointer shadow-md hover:opacity-90"
