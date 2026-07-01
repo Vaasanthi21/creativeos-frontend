@@ -1413,7 +1413,7 @@ export const BrandSetup = () => {
                         onClick={() => {
                           setBrandColors([...brandColors, '#f25b18']);
                         }}
-                        className="px-3.5 py-2 border border-border hover:bg-slate-50 text-foreground font-semibold rounded-xl text-[10px] flex items-center gap-1 cursor-pointer h-10 shadow-sm"
+                        className="px-3.5 py-2 border border-border hover:bg-slate-50 dark:hover:bg-slate-800 text-foreground font-semibold rounded-xl text-[10px] flex items-center gap-1 cursor-pointer h-10 shadow-sm"
                       >
                         <Plus size={12} />
                         <span>Add Another Color</span>
@@ -1847,7 +1847,7 @@ export const BrandSetup = () => {
                 </h3>
                 <button
                   onClick={closePersonaModal}
-                  className="p-1 hover:bg-slate-100 text-muted-foreground hover:text-slate-650 rounded-lg transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -1947,7 +1947,7 @@ export const BrandSetup = () => {
         {/* View Document Summary / Edit Modal */}
         {selectedText !== null && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-            <div className="w-full max-w-2xl bg-white border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
+            <div className="w-full max-w-2xl bg-white dark:bg-card border border-border shadow-2xl rounded-2xl relative flex flex-col max-h-[85vh]">
               <div className="p-6 border-b border-border flex items-center justify-between bg-card rounded-t-2xl">
                 <div>
                   <h3 className="font-display text-lg font-bold text-foreground">AI Grounding Summary Context</h3>
@@ -1966,13 +1966,13 @@ export const BrandSetup = () => {
                   <textarea
                     value={summaryTextVal}
                     onChange={(e) => setSummaryTextVal(e.target.value)}
-                    className="w-full flex-1 min-h-[25vh] p-3 text-foreground border border-border rounded-xl focus:outline-none text-sm bg-white resize-y"
+                    className="w-full flex-1 min-h-[25vh] p-3 text-foreground border border-border rounded-xl focus:outline-none text-sm bg-white dark:bg-card resize-y"
                     placeholder="Type or modify summary text here..."
                   />
                 ) : (
                   selectedText ? (
                     <div 
-                      className="text-xs md:text-sm text-slate-700 leading-relaxed space-y-4"
+                      className="text-xs md:text-sm text-slate-700 dark:text-slate-200 leading-relaxed space-y-4"
                       dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(selectedText) }}
                     />
                   ) : (
@@ -2009,7 +2009,7 @@ export const BrandSetup = () => {
                     </button>
                     <button
                       onClick={() => setSelectedText(null)}
-                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+                      className="px-5 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground dark:text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
                     >
                       Done
                     </button>
@@ -2089,7 +2089,9 @@ export const BrandSetup = () => {
               
               {/* Ready Badge banner */}
               <div className={`p-4 rounded-xl text-center space-y-1 ${
-                isBrandReady ? "bg-emerald-50 border border-emerald-100 text-emerald-800" : "bg-amber-50 border border-amber-100 text-amber-800"
+                isBrandReady 
+                  ? "bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 text-emerald-800 dark:text-emerald-400" 
+                  : "bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 text-amber-800 dark:text-amber-400"
               }`}>
                 <p className="text-xs font-bold uppercase tracking-wider">
                   {isBrandReady ? "🎉 Brand Ready" : "⚠️ Needs Training"}
@@ -2738,11 +2740,11 @@ export const BrandSetup = () => {
  
                             {/* Attributes snippet */}
                             <div className="grid grid-cols-2 gap-2 text-[10px] pt-1">
-                              <div className="p-2 bg-slate-50/50 dark:bg-slate-900/40 rounded-lg border border-border">
+                              <div className="p-2 bg-slate-50 dark:bg-slate-900/40 rounded-lg border border-border">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Tone</span>
                                 <span className="font-semibold text-primary truncate block">{p.tone || p.voice}</span>
                               </div>
-                              <div className="p-2 bg-slate-50/50 dark:bg-slate-900/40 rounded-lg border border-border">
+                              <div className="p-2 bg-slate-50 dark:bg-slate-900/40 rounded-lg border border-border">
                                 <span className="block text-[8px] font-bold text-muted-foreground uppercase tracking-wide">Writing Style</span>
                                 <span className="font-semibold text-slate-700 dark:text-slate-200 truncate block">{p.writingStyle || '—'}</span>
                               </div>
@@ -3219,7 +3221,7 @@ export const BrandSetup = () => {
                   <>
                     <button
                       onClick={() => setIsEditingSummary(false)}
-                      className="px-4 py-2 border border-slate-355 hover:bg-slate-50 text-foreground rounded-xl text-xs font-semibold cursor-pointer"
+                      className="px-4 py-2 border border-slate-355 hover:bg-slate-50 dark:hover:bg-slate-800 text-foreground rounded-xl text-xs font-semibold cursor-pointer"
                       disabled={updateSummaryMutation.isPending}
                     >
                       Cancel
@@ -3278,7 +3280,7 @@ export const BrandSetup = () => {
                       />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-muted-foreground">
+                    <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-muted-foreground">
                       <Building size={24} />
                     </div>
                   )}
@@ -3314,7 +3316,7 @@ export const BrandSetup = () => {
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Competitors</span>
                     <div className="flex flex-wrap gap-1.5">
                       {competitors.map((c) => (
-                        <span key={c} className="px-2.5 py-1 bg-slate-100 border border-border rounded-lg text-xs font-semibold text-slate-700">{c}</span>
+                        <span key={c} className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 border border-border rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300">{c}</span>
                       ))}
                     </div>
                   </div>
@@ -3365,7 +3367,7 @@ export const BrandSetup = () => {
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Writing Style</span>
-                    <p className="font-semibold text-slate-700">{viewPersonaDetails.writingStyle || '—'}</p>
+                    <p className="font-semibold text-slate-700 dark:text-slate-300">{viewPersonaDetails.writingStyle || '—'}</p>
                   </div>
                 </div>
 
