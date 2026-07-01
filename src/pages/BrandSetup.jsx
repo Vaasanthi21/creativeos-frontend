@@ -1671,46 +1671,96 @@ export const BrandSetup = () => {
             {openAccordion === 'knowledge' && (
               <div className="p-6 border-t border-border bg-white/40 space-y-6">
                 
-                {/* File Upload box */}
-                <div className="bg-card rounded-xl p-5 border border-border flex flex-col justify-between min-h-[180px] space-y-4 shadow-sm w-full">
-                  <div>
-                    <h5 className="font-display font-bold text-foreground text-xs">Upload Grounding Document (Optional)</h5>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Upload PDFs, Word files, or TXT notes to ground the blog engine (Optional).</p>
+                {/* Inline URL crawler & Document uploader side-by-side */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                  
+                  {/* Website link crawl */}
+                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                    <div>
+                      <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
+                        <Globe size={14} className="text-primary" />
+                        <span>Analyze Additional Web URL</span>
+                      </h5>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                        Analyze documentation guides or campaign pages to feed the semantic blog writer.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 col-span-1">
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          value={websiteUrl}
+                          onChange={(e) => setWebsiteUrl(e.target.value)}
+                          placeholder="https://example.com/blog-reference"
+                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none"
+                          disabled={crawlMutation.isPending}
+                        />
+                        <button
+                          onClick={() => {
+                            if (!websiteUrl.trim()) {
+                              setErrorAlert('Enter URL first.');
+                              return;
+                            }
+                            crawlMutation.mutate(websiteUrl);
+                          }}
+                          disabled={crawlMutation.isPending}
+                          className="px-3 py-2 bg-[#f25b18] hover:bg-[#d84a0c] text-foreground font-extrabold rounded-xl text-[10px] flex items-center justify-center cursor-pointer shrink-0"
+                        >
+                          {crawlMutation.isPending ? <Loader2 size={10} className="animate-spin" /> : 'Analyze URL'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  <div
-                    onDragEnter={handleDrag}
-                    onDragOver={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDrop={handleDrop}
-                    className={`border border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all flex-1 ${
-                      dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30'
-                    }`}
-                  >
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      className="hidden"
-                      accept=".pdf,.docx,.txt"
-                      onChange={handleFileSelect}
-                    />
+                  {/* Attachment uploader */}
+                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                    <div>
+                      <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
+                        <FileText size={14} className="text-primary" />
+                        <span>Attach Grounding PDF / DOCX</span>
+                      </h5>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                        Upload wikis, whitepapers, or outlines. Maximum document size is 10MB.
+                      </p>
+                    </div>
 
-                    {uploadProgress !== null ? (
-                      <div className="w-full max-w-xs space-y-2 py-2">
-                        <Loader2 size={16} className="animate-spin text-primary mx-auto" />
-                        <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden border border-border">
-                          <div className="h-full bg-primary" style={{ width: `${uploadProgress}%` }} />
+                    {/* Drag Drop Area */}
+                    <div
+                      onDragEnter={handleDrag}
+                      onDragOver={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDrop={handleDrop}
+                      className={`border border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all flex-1 min-h-[80px] ${
+                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30'
+                      }`}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.docx,.txt"
+                        onChange={handleFileSelect}
+                      />
+
+                      {uploadProgress !== null ? (
+                        <div className="w-full max-w-xs space-y-2 py-2">
+                          <Loader2 size={16} className="animate-spin text-primary mx-auto" />
+                          <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden border border-border">
+                            <div className="h-full bg-primary" style={{ width: `${uploadProgress}%` }} />
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="cursor-pointer space-y-1.5" onClick={triggerFileSelect}>
-                        <UploadCloud size={20} className="text-muted-foreground mx-auto" />
-                        <span className="text-[10px] font-bold text-foreground block">
-                          Drop file here or <span className="text-primary hover:underline">browse files</span>
-                        </span>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="cursor-pointer space-y-1.5" onClick={triggerFileSelect}>
+                          <UploadCloud size={20} className="text-muted-foreground mx-auto" />
+                          <span className="text-[10px] font-bold text-foreground block">
+                            Drop file here or <span className="text-primary hover:underline">browse files</span>
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
+
                 </div>
 
                 {/* Sourced files list */}
