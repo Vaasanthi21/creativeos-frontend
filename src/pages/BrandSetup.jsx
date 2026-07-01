@@ -1675,7 +1675,7 @@ export const BrandSetup = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                   
                   {/* Website link crawl */}
-                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <Globe size={14} className="text-primary" />
@@ -1693,7 +1693,7 @@ export const BrandSetup = () => {
                           value={websiteUrl}
                           onChange={(e) => setWebsiteUrl(e.target.value)}
                           placeholder="https://example.com/blog-reference"
-                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none"
+                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-white dark:bg-card text-foreground focus:outline-none"
                           disabled={crawlMutation.isPending}
                         />
                         <button
@@ -1714,7 +1714,7 @@ export const BrandSetup = () => {
                   </div>
 
                   {/* Attachment uploader */}
-                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <FileText size={14} className="text-primary" />
@@ -1732,7 +1732,7 @@ export const BrandSetup = () => {
                       onDragLeave={handleDrag}
                       onDrop={handleDrop}
                       className={`border border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all flex-1 min-h-[80px] ${
-                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30'
+                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30 dark:bg-slate-950/10'
                       }`}
                     >
                       <input
@@ -1809,7 +1809,7 @@ export const BrandSetup = () => {
                               </button>
                               <button
                                 onClick={() => handleDeleteDoc(docId)}
-                                className="p-1 hover:bg-red-50 hover:text-red-600 rounded text-muted-foreground border border-transparent hover:border-red-100 transition-all cursor-pointer"
+                                className="p-1 hover:bg-red-500/10 hover:text-red-500 rounded text-muted-foreground border border-transparent hover:border-red-500/20 transition-all cursor-pointer"
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -2835,7 +2835,7 @@ export const BrandSetup = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                   
                   {/* Website link crawl */}
-                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <Globe size={14} className="text-primary" />
@@ -2853,7 +2853,7 @@ export const BrandSetup = () => {
                           value={websiteUrl}
                           onChange={(e) => setWebsiteUrl(e.target.value)}
                           placeholder="https://example.com/blog-reference"
-                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-white text-foreground focus:outline-none"
+                          className="flex-1 px-3 py-2 border border-border rounded-xl text-xs bg-white dark:bg-card text-foreground focus:outline-none"
                           disabled={crawlMutation.isPending}
                         />
                         <button
@@ -2874,7 +2874,7 @@ export const BrandSetup = () => {
                   </div>
 
                   {/* Attachment uploader */}
-                  <div className="p-4 bg-slate-50/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
+                  <div className="p-4 bg-slate-50/20 dark:bg-slate-950/20 border border-border rounded-2xl flex flex-col justify-between space-y-4 shadow-sm">
                     <div>
                       <h5 className="font-display font-bold text-foreground text-xs flex items-center gap-1.5">
                         <FileText size={14} className="text-primary" />
@@ -2892,7 +2892,7 @@ export const BrandSetup = () => {
                       onDragLeave={handleDrag}
                       onDrop={handleDrop}
                       className={`border border-dashed rounded-xl p-3 flex flex-col items-center justify-center text-center transition-all flex-1 ${
-                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30'
+                        dragActive ? 'border-primary bg-primary/5' : 'border-border bg-slate-50/30 dark:bg-slate-950/10'
                       }`}
                     >
                       <input
@@ -2945,7 +2945,7 @@ export const BrandSetup = () => {
                               
                               {/* File Name & Type */}
                               <div className="flex items-start gap-2.5">
-                                <div className="p-2 rounded bg-slate-100 text-slate-600 shrink-0">
+                                <div className="p-2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
                                   {docFileType === 'url' || docFileType === 'link' ? <Globe size={14} /> : <FileText size={14} />}
                                 </div>
                                 <div className="min-w-0">
@@ -2972,7 +2972,7 @@ export const BrandSetup = () => {
                             <div className="flex justify-end items-center gap-1.5 pt-2.5 border-t border-border">
                               <button
                                 onClick={() => handleViewText(doc)}
-                                className="px-2 py-1 bg-slate-50 hover:bg-slate-100 border border-border rounded text-[10px] text-foreground font-bold flex items-center gap-0.5 cursor-pointer"
+                                className="px-2 py-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-border rounded text-[10px] text-foreground font-bold flex items-center gap-0.5 cursor-pointer"
                               >
                                 <Eye size={10} />
                                 <span>View Summary</span>
