@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '../lib/AuthContext';
 import {
   Sparkles,
@@ -17,17 +17,17 @@ import {
   Image as ImageIcon,
   Compass,
   Check,
-  MousePointer,
-  Heart,
   Cpu,
-  Flame
+  Flame,
+  Sliders,
+  MoveHorizontal
 } from 'lucide-react';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
-  // Mouse coordinate tracking for interactive spotlight glow
+  // Mouse coordinate tracking for spotlight glow
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   useEffect(() => {
     const handleMove = (e) => {
@@ -35,6 +35,37 @@ export const LandingPage = () => {
     };
     window.addEventListener('mousemove', handleMove);
     return () => window.removeEventListener('mousemove', handleMove);
+  }, []);
+
+  // Image slider position state (percentage 0 to 100)
+  const [sliderPos, setSliderPos] = useState(50);
+  const sliderRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleSliderMove = (clientX) => {
+    if (!sliderRef.current) return;
+    const rect = sliderRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPos(percentage);
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches[0]) {
+      handleSliderMove(e.touches[0].clientX);
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isDragging) {
+      handleSliderMove(e.clientX);
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseUp = () => setIsDragging(false);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => window.removeEventListener('mouseup', handleMouseUp);
   }, []);
 
   const handleLaunch = (targetPath) => {
@@ -117,11 +148,7 @@ export const LandingPage = () => {
         }}
       />
 
-      {/* 3. FLOATING CYBER PARTS */}
-      <div className="absolute top-[25%] left-[8%] w-2 h-2 rounded-full bg-primary/45 animate-ping pointer-events-none" />
-      <div className="absolute bottom-[35%] right-[10%] w-1.5 h-1.5 rounded-full bg-cyan-400/40 animate-ping pointer-events-none" />
-
-      {/* 4. PREMIUM GLASS HEADER */}
+      {/* 3. PREMIUM GLASS HEADER */}
       <nav className="sticky top-0 z-50 w-full bg-slate-950/65 backdrop-blur-lg border-b border-white/[0.04] px-8 py-4.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative group">
@@ -144,8 +171,8 @@ export const LandingPage = () => {
         </div>
       </nav>
 
-      {/* 5. HERO PANEL */}
-      <div className="max-w-5xl mx-auto px-6 pt-16 pb-16 text-center relative z-10">
+      {/* 4. HERO PANEL */}
+      <div className="max-w-5xl mx-auto px-6 pt-16 pb-12 text-center relative z-10">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -157,8 +184,8 @@ export const LandingPage = () => {
             variants={fadeInUp}
             className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/[0.03] border border-white/[0.07] rounded-full text-[10px] font-extrabold uppercase tracking-widest text-primary shadow-sm hover:border-primary/30 transition-all duration-300"
           >
-            <Sparkles size={11} className="animate-spin text-accent" style={{ animationDuration: '3s' }} />
-            <span>Dual Creative Execution System</span>
+            <Sparkles size={11} className="text-accent animate-pulse" />
+            <span>Figma Blueprint to Production-Ready Code</span>
           </motion.div>
 
           {/* Heading */}
@@ -183,12 +210,203 @@ export const LandingPage = () => {
             variants={fadeInUp}
             className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed font-normal"
           >
-            Deploy corporate brand assets, auto-generate structured blog channels, and launch multi-layer analytics loops under a single premium dashboard.
+            Deploy brand assets, auto-generate blog channels, and launch multi-layer analytics loops under a single premium dashboard.
           </motion.p>
         </motion.div>
       </div>
 
-      {/* 6. ENHANCED PORTALS GRID */}
+      {/* 5. INTERACTIVE FIGMA VS PRODUCTION COMPARISON SLIDER */}
+      <div className="max-w-4xl mx-auto px-6 pb-20 relative z-10">
+        <div className="text-center space-y-2 mb-6">
+          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+            <Sliders size={14} className="text-primary" /> Interactive UI Visualizer
+          </h2>
+          <p className="text-[11px] text-muted-foreground">Slide to compare the Figma Blueprint (Left) with the Final Production-Coded UI (Right)</p>
+        </div>
+
+        <div 
+          ref={sliderRef}
+          onMouseMove={handleMouseMove}
+          onTouchMove={handleTouchMove}
+          className="h-[320px] sm:h-[400px] w-full rounded-3xl relative overflow-hidden border border-white/[0.08] shadow-2xl bg-slate-950 cursor-ew-resize select-none"
+        >
+          {/* RIGHT SIDE: Production Coded UI (Rendered) */}
+          <div className="absolute inset-0 w-full h-full p-6 flex gap-6 bg-slate-950">
+            {/* Mock Sidebar */}
+            <div className="w-1/4 h-full border border-white/[0.05] bg-slate-900/40 rounded-2xl p-4 flex flex-col justify-between hidden sm:flex">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-white/[0.05]">
+                  <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-primary to-accent" />
+                  <div className="h-2 w-16 bg-white/20 rounded" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-6 w-full bg-primary/10 border border-primary/20 rounded-lg flex items-center px-2">
+                    <div className="w-2 h-2 rounded-full bg-primary mr-2" />
+                    <div className="h-1.5 w-12 bg-primary/45 rounded" />
+                  </div>
+                  <div className="h-6 w-full hover:bg-white/[0.02] rounded-lg flex items-center px-2">
+                    <div className="w-2 h-2 rounded-full bg-slate-700 mr-2" />
+                    <div className="h-1.5 w-10 bg-white/10 rounded" />
+                  </div>
+                  <div className="h-6 w-full hover:bg-white/[0.02] rounded-lg flex items-center px-2">
+                    <div className="w-2 h-2 rounded-full bg-slate-700 mr-2" />
+                    <div className="h-1.5 w-14 bg-white/10 rounded" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 pt-2 border-t border-white/[0.05]">
+                <div className="w-5 h-5 rounded-full bg-slate-800" />
+                <div className="h-1.5 w-10 bg-white/10 rounded" />
+              </div>
+            </div>
+
+            {/* Mock Dashboard Area */}
+            <div className="flex-1 h-full flex flex-col justify-between">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-white/[0.05] pb-3">
+                <div className="space-y-1 text-left">
+                  <div className="h-3 w-28 bg-white/25 rounded" />
+                  <div className="h-2 w-16 bg-white/10 rounded" />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500/20 to-indigo-500/20 border border-cyan-500/30 flex items-center justify-center text-[10px] font-extrabold text-cyan-400">OS</div>
+              </div>
+
+              {/* Grid Content */}
+              <div className="grid grid-cols-2 gap-4 flex-1 py-4">
+                <div className="border border-white/[0.06] bg-slate-900/20 rounded-2xl p-4 flex flex-col justify-between text-left">
+                  <div>
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-2">
+                      <Sparkles size={14} />
+                    </div>
+                    <div className="h-2.5 w-20 bg-white/20 rounded mb-1" />
+                    <div className="h-1.5 w-28 bg-white/10 rounded" />
+                  </div>
+                  <div className="h-7 w-full bg-gradient-to-r from-primary to-accent text-white text-[9px] font-black rounded-lg flex items-center justify-center gap-1">
+                    <span>Activate</span> <ArrowRight size={10} />
+                  </div>
+                </div>
+
+                <div className="border border-white/[0.06] bg-slate-900/20 rounded-2xl p-4 flex flex-col justify-between text-left">
+                  <div>
+                    <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-2">
+                      <TrendingUp size={14} />
+                    </div>
+                    <div className="h-2.5 w-24 bg-white/20 rounded mb-1" />
+                    <div className="h-1.5 w-20 bg-white/10 rounded" />
+                  </div>
+                  <div className="h-7 w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[9px] font-black rounded-lg flex items-center justify-center gap-1">
+                    <span>Monitor</span> <ArrowRight size={10} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl flex items-center justify-between">
+                <span className="text-[9px] text-slate-400 flex items-center gap-1.5"><Cpu size={10} className="text-primary" /> Active Optimization Pipeline</span>
+                <span className="text-[9px] font-bold text-primary font-mono animate-pulse">Running</span>
+              </div>
+            </div>
+          </div>
+
+          {/* LEFT SIDE: Figma Blueprint (Masked) */}
+          <div 
+            className="absolute inset-0 h-full p-6 flex gap-6 bg-slate-950 border-r border-cyan-500/40"
+            style={{ 
+              width: `${sliderPos}%`,
+              transition: isDragging ? 'none' : 'width 0.15s ease-out'
+            }}
+          >
+            {/* Blueprint Overlay grids */}
+            <div className="absolute inset-0 bg-[radial-gradient(cyan_1px,transparent_1px)] bg-[size:16px_16px] opacity-20 pointer-events-none" />
+
+            {/* Mock Sidebar Blueprint */}
+            <div className="w-[185px] h-full border border-cyan-500/30 bg-cyan-950/10 rounded-2xl p-4 flex flex-col justify-between shrink-0 hidden sm:flex relative">
+              {/* Dimensions tag */}
+              <span className="absolute top-1 left-1 text-[7px] font-mono text-cyan-400">W: 185px</span>
+              
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-cyan-500/20">
+                  <div className="w-6 h-6 border border-cyan-500/40 border-dashed rounded" />
+                  <div className="h-1.5 w-12 bg-cyan-500/20 rounded" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-6 w-full border border-cyan-500/35 bg-cyan-500/10 rounded-lg flex items-center px-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mr-2" />
+                    <div className="h-1 w-10 bg-cyan-500/30 rounded" />
+                  </div>
+                  <div className="h-6 w-full border border-cyan-500/15 rounded-lg flex items-center px-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-800 mr-2" />
+                    <div className="h-1 w-8 bg-cyan-500/10 rounded" />
+                  </div>
+                </div>
+              </div>
+              <div className="h-1.5 w-10 bg-cyan-500/20 rounded" />
+            </div>
+
+            {/* Mock Dashboard Area Blueprint */}
+            <div className="w-[500px] h-full flex flex-col justify-between shrink-0 relative">
+              <span className="absolute top-1 left-1 text-[7px] font-mono text-cyan-400">Frame 01</span>
+              
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
+                <div className="space-y-1 text-left">
+                  <div className="h-2 w-20 bg-cyan-500/30 rounded" />
+                  <div className="h-1.5 w-12 bg-cyan-500/10 rounded" />
+                </div>
+                <div className="w-7 h-7 border border-cyan-500/40 rounded-full flex items-center justify-center text-[7px] font-mono text-cyan-400">NODE</div>
+              </div>
+
+              {/* Grid Content */}
+              <div className="grid grid-cols-2 gap-4 flex-1 py-4">
+                <div className="border border-cyan-500/25 bg-cyan-950/5 rounded-2xl p-4 flex flex-col justify-between text-left relative">
+                  <span className="absolute bottom-1 right-2 text-[6px] font-mono text-cyan-500/60">Component Card</span>
+                  <div>
+                    <div className="w-8 h-8 border border-cyan-500/40 border-dashed rounded flex items-center justify-center text-cyan-500 mb-2">
+                      +
+                    </div>
+                    <div className="h-2 w-14 bg-cyan-500/30 rounded mb-1" />
+                    <div className="h-1 w-20 bg-cyan-500/10 rounded" />
+                  </div>
+                  <div className="h-7 w-full border border-cyan-500/35 bg-cyan-500/15 rounded-lg flex items-center justify-center" />
+                </div>
+
+                <div className="border border-cyan-500/25 bg-cyan-950/5 rounded-2xl p-4 flex flex-col justify-between text-left relative">
+                  <div>
+                    <div className="w-8 h-8 border border-cyan-500/40 border-dashed rounded flex items-center justify-center text-cyan-500 mb-2">
+                      +
+                    </div>
+                    <div className="h-2 w-16 bg-cyan-500/30 rounded mb-1" />
+                    <div className="h-1 w-14 bg-cyan-500/10 rounded" />
+                  </div>
+                  <div className="h-7 w-full border border-cyan-500/35 bg-cyan-500/15 rounded-lg flex items-center justify-center" />
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="p-3 border border-cyan-500/20 bg-cyan-950/5 rounded-xl flex items-center justify-between">
+                <span className="text-[9px] text-cyan-500/60 font-mono">X: 24 Y: 320</span>
+                <span className="text-[9px] font-bold text-cyan-400 font-mono">Blueprint</span>
+              </div>
+            </div>
+          </div>
+
+          {/* SLIDER HANDLE BAR */}
+          <div 
+            onMouseDown={() => setIsDragging(true)}
+            className="absolute top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-accent to-primary cursor-ew-resize z-40"
+            style={{ 
+              left: `${sliderPos}%`,
+              transition: isDragging ? 'none' : 'left 0.15s ease-out'
+            }}
+          >
+            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-slate-900 border-2 border-primary flex items-center justify-center text-primary shadow-glow shadow-primary/30 active:scale-95 transition-transform duration-200">
+              <MoveHorizontal size={14} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 6. DUAL OS SELECTOR PORTALS */}
       <div className="max-w-5xl mx-auto px-6 pb-24 relative z-10">
         <motion.div
           variants={containerVariants}
@@ -222,28 +440,8 @@ export const LandingPage = () => {
                 </p>
               </div>
 
-              {/* FLOATING UI MOCKUP PREVIEW */}
-              <div className="h-28 rounded-2xl bg-slate-950/70 border border-white/[0.03] p-4 relative overflow-hidden flex flex-col justify-between select-none">
-                <div className="flex items-center justify-between border-b border-white/[0.05] pb-2">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">AI Content Factory</span>
-                  <div className="flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500/50" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500/50" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
-                  </div>
-                </div>
-                <div className="space-y-2 py-1">
-                  <div className="h-2 w-3/4 rounded bg-white/10" />
-                  <div className="h-2 w-1/2 rounded bg-white/5" />
-                </div>
-                <div className="flex justify-between items-center bg-white/[0.02] border border-white/[0.05] rounded-lg px-2 py-1">
-                  <span className="text-[8px] text-slate-400 flex items-center gap-1"><Cpu size={9} className="text-primary" /> Synthesizing blog draft...</span>
-                  <span className="text-[8px] font-bold text-primary font-mono animate-pulse">86%</span>
-                </div>
-              </div>
-
               {/* Features check list */}
-              <div className="space-y-2 pt-2 border-t border-slate-800/40">
+              <div className="space-y-2.5 pt-2 border-t border-slate-800/40">
                 {[
                   'Creative Studio outline builder',
                   'AI Image generation layout module',
@@ -294,33 +492,8 @@ export const LandingPage = () => {
                 </p>
               </div>
 
-              {/* FLOATING UI MOCKUP PREVIEW */}
-              <div className="h-28 rounded-2xl bg-slate-950/70 border border-white/[0.03] p-4 relative overflow-hidden flex flex-col justify-between select-none">
-                <div className="flex items-center justify-between border-b border-white/[0.05] pb-2">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Metrics Console</span>
-                  <span className="text-[8px] font-extrabold text-cyan-400 flex items-center gap-0.5"><Flame size={8} /> LIVE</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3 py-1">
-                  <div className="bg-white/[0.01] border border-white/[0.04] p-1.5 rounded-lg flex flex-col">
-                    <span className="text-[7px] text-slate-500 uppercase font-bold">Campaign CTR</span>
-                    <span className="text-[10px] font-black text-white font-mono">+4.8%</span>
-                  </div>
-                  <div className="bg-white/[0.01] border border-white/[0.04] p-1.5 rounded-lg flex flex-col">
-                    <span className="text-[7px] text-slate-500 uppercase font-bold">Total Conversions</span>
-                    <span className="text-[10px] font-black text-white font-mono">1.2K</span>
-                  </div>
-                </div>
-                <div className="h-1 bg-cyan-500/10 rounded-full overflow-hidden">
-                  <motion.div 
-                    animate={{ width: ['20%', '80%', '45%', '90%', '20%'] }} 
-                    transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                    className="h-full bg-cyan-400" 
-                  />
-                </div>
-              </div>
-
               {/* Features check list */}
-              <div className="space-y-2 pt-2 border-t border-slate-800/40">
+              <div className="space-y-2.5 pt-2 border-t border-slate-800/40">
                 {[
                   'LinkedIn campaign builder wizard',
                   'Audience persona profiles generator',
