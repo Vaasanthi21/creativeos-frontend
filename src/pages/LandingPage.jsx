@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import { useAuth } from '../lib/AuthContext';
 import {
   Sparkles,
@@ -90,15 +90,26 @@ export const LandingPage = () => {
   // Staggered letters for hero reveal
   const titleText = "CreativeStudio OS";
   
-  // Menu selection states (Tasteful list selection)
+  // Menu selection states
   const [activeTab, setActiveTab] = useState('generate');
+  const [isHoveringList, setIsHoveringList] = useState(false);
   
   // Interactive Drawer Dialog State (Shared Layout ID)
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // Floating image coordinates for cursor reveal mask
-  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
-  const [isHoveringList, setIsHoveringList] = useState(false);
+  // Hardware-accelerated cursor spring follower (no React re-renders on mousemove!)
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  
+  const springConfig = { damping: 30, stiffness: 280, mass: 0.15 };
+  const smoothMouseX = useSpring(mouseX, springConfig);
+  const smoothMouseY = useSpring(mouseY, springConfig);
+
+  const handleMouseMove = (e) => {
+    // Offset by 64px (half the follower's width) to center on cursor
+    mouseX.set(e.clientX - 64);
+    mouseY.set(e.clientY - 64);
+  };
 
   // Translation sandbox state
   const [rewriteMode, setRewriteMode] = useState('casual');
@@ -116,10 +127,6 @@ export const LandingPage = () => {
     } else {
       navigate(`/register?redirect=${encodeURIComponent(targetPath)}`);
     }
-  };
-
-  const handleMouseMove = (e) => {
-    setCursorPos({ x: e.clientX, y: e.clientY });
   };
 
   const rewriteDrafts = {
@@ -170,7 +177,7 @@ export const LandingPage = () => {
       path: '/video-studio',
       icon: Video,
       color: 'text-orange-500',
-      badgeColor: 'bg-orange-600/10 border-orange-650/20 text-orange-500',
+      badgeColor: 'bg-orange-650/10 border-orange-650/20 text-orange-500',
       imgPreview: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=300&auto=format&fit=crop'
     },
     {
@@ -276,32 +283,36 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* CURSOR IMAGE REVEAL MASK LAYER */}
-      {isHoveringList && (
-        <motion.div
-          animate={{ x: cursorPos.x - 60, y: cursorPos.y - 60 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 24, mass: 0.1 }}
-          className="fixed pointer-events-none z-40 w-32 h-32 rounded-full overflow-hidden border border-orange-500/40 shadow-2xl"
-          style={{ transform: 'translate3d(0, 0, 0)' }}
-        >
-          <AnimatePresence mode="wait">
-            {platformFeatures.map((feat) => {
-              if (feat.id !== activeTab) return null;
-              return (
-                <motion.img
-                  key={feat.id}
-                  src={feat.imgPreview}
-                  initial={{ scale: 1.2, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full h-full object-cover"
-                />
-              );
-            })}
-          </AnimatePresence>
-        </motion.div>
-      )}
+      {/* CURSOR IMAGE REVEAL MASK LAYER (Hardware-Accelerated Follower) */}
+      <AnimatePresence>
+        {isHoveringList && (
+          <motion.div
+            initial={{ scale: 0.2, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.2, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            style={{ x: smoothMouseX, y: smoothMouseY }}
+            className="fixed top-0 left-0 pointer-events-none z-40 w-32 h-32 rounded-full overflow-hidden border border-orange-500/40 shadow-2xl"
+          >
+            <AnimatePresence mode="wait">
+              {platformFeatures.map((feat) => {
+                if (feat.id !== activeTab) return null;
+                return (
+                  <motion.img
+                    key={feat.id}
+                    src={feat.imgPreview}
+                    initial={{ scale: 1.2, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="w-full h-full object-cover"
+                  />
+                );
+              })}
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* TASTEFUL STUDIO CATALOG MENU (Shared transitions) */}
       <section id="studios" className="max-w-5xl mx-auto px-6 py-12 relative z-10">
