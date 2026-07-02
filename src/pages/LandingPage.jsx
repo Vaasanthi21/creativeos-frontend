@@ -21,7 +21,9 @@ import {
   Flame,
   Sliders,
   MoveHorizontal,
-  Plus
+  Plus,
+  Lock,
+  FileText
 } from 'lucide-react';
 
 // Reusable 3D Tilt Card Wrapper using Framer Motion physics
@@ -239,7 +241,7 @@ export const LandingPage = () => {
       </nav>
 
       {/* 5. HERO SECTION */}
-      <div className="max-w-5xl mx-auto px-6 pt-16 pb-6 text-center relative z-10">
+      <div className="max-w-5xl mx-auto px-6 pt-16 pb-2 text-center relative z-10">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -258,7 +260,7 @@ export const LandingPage = () => {
           {/* Heading */}
           <motion.h1 
             variants={fadeInUp}
-            className="text-5xl sm:text-8xl font-display font-black tracking-tight text-white max-w-5xl mx-auto leading-[0.98] capitalize"
+            className="text-5xl sm:text-8xl font-display font-black tracking-tight text-white max-w-5xl mx-auto leading-[0.98] capitalize animate-fade-in"
           >
             The Ultimate{' '}
             <span className="relative inline-block">
@@ -280,21 +282,38 @@ export const LandingPage = () => {
         </motion.div>
       </div>
 
-      {/* 6. CENTRAL PORTAL CORE ORB */}
-      <div className="relative w-44 h-44 mx-auto my-12 z-10 flex items-center justify-center">
-        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-cyan-400 blur-2xl animate-pulse opacity-40" />
+      {/* 6. DUAL SWIRLING PORTAL ORB (IMAGE DRIVEN) */}
+      <div className="relative w-64 h-64 mx-auto my-10 z-10 flex items-center justify-center">
+        {/* Background glowing blob */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-cyan-400 blur-3xl opacity-35" />
+        
+        {/* Orbit ring 1 */}
+        <motion.div
+          animate={{ rotate: -360 }}
+          transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+          className="absolute w-80 h-80 rounded-full border border-dashed border-violet-500/20 flex items-center justify-center pointer-events-none"
+        >
+          <span className="w-2 h-2 rounded-full bg-violet-400 absolute top-0" />
+          <span className="w-2 h-2 rounded-full bg-cyan-400 absolute bottom-0" />
+        </motion.div>
+
+        {/* Orbit ring 2 */}
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-0 rounded-full border border-dashed border-violet-500/30 flex items-center justify-center"
+          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+          className="absolute w-[340px] h-[340px] rounded-full border border-dashed border-white/5 flex items-center justify-center pointer-events-none"
         >
-          <div className="w-1.5 h-1.5 rounded-full bg-violet-400 absolute top-0" />
-          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 absolute bottom-0" />
+          <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400 absolute left-0" />
         </motion.div>
-        <div className="absolute inset-4 rounded-full bg-slate-950/90 border border-white/[0.08] backdrop-blur-xl flex flex-col items-center justify-center shadow-2xl">
-          <Sparkles className="text-violet-400 w-7 h-7 animate-bounce duration-1000" />
-          <span className="text-[9px] font-mono font-bold tracking-widest text-slate-400 mt-2">OS CORE</span>
-        </div>
+
+        {/* 3D Generated Orb Asset */}
+        <motion.img
+          src="/web3_portal_orb.png"
+          alt="Web3 Portal Orb"
+          className="w-56 h-56 object-contain relative z-10 drop-shadow-[0_0_35px_rgba(139,92,246,0.3)] pointer-events-none"
+          animate={{ y: [0, -15, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        />
       </div>
 
       {/* 7. BROWSER FRAME COMPARISON SLIDER */}
@@ -511,7 +530,7 @@ export const LandingPage = () => {
           animate="visible"
           className="grid grid-cols-1 md:grid-cols-2 gap-8"
         >
-          {/* PORTAL A: CREATIVE OS CARD */}
+          {/* PORTAL A: CREATIVE OS CARD (VIOLET/FUCHSIA GLOW & TILT) */}
           <TiltCard
             glowColor="rgba(139,92,246,0.18)"
             className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-8 flex flex-col justify-between space-y-8 overflow-hidden hover:border-violet-500/40 hover:shadow-[0_0_50px_rgba(139,92,246,0.12)] transition-all duration-300"
@@ -559,7 +578,7 @@ export const LandingPage = () => {
             </button>
           </TiltCard>
 
-          {/* PORTAL B: GROWTH OS CARD */}
+          {/* PORTAL B: GROWTH OS CARD (CYAN/EMERALD GLOW & TILT) */}
           <TiltCard
             glowColor="rgba(6,182,212,0.18)"
             className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-8 flex flex-col justify-between space-y-8 overflow-hidden hover:border-cyan-500/40 hover:shadow-[0_0_50px_rgba(6,182,212,0.12)] transition-all duration-300"
@@ -609,52 +628,145 @@ export const LandingPage = () => {
         </motion.div>
       </div>
 
-      {/* 9. VIEWPORT TRIGGERED SYSTEM HIGHLIGHTS */}
-      <div className="border-t border-white/[0.02] bg-slate-950/50 py-24 relative z-10">
+      {/* 9. DRIBBBLE-STYLE BENTO GRID FEATURE SHOWCASE */}
+      <div className="border-t border-white/[0.02] bg-slate-950/60 py-28 relative z-10">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center space-y-4 mb-20">
-            <h3 className="font-display text-3xl font-black text-white">Consolidated OS Engine</h3>
+            <h3 className="font-display text-4xl font-black text-white">Consolidated OS Engine</h3>
             <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
               How our system bridges creative expression and growth metrics natively.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                title: 'Market Research',
-                desc: 'Scrapes competitor SEO keywords, monitors trending news logs, and generates briefs instantly.',
-                icon: Globe
-              },
-              {
-                title: 'Multi-Channel Layouts',
-                desc: 'Draft blogs once, then automatically compile and reformat for LinkedIn, Medium, and Substack channels.',
-                icon: Layout
-              },
-              {
-                title: 'Core AI Grounding',
-                desc: 'References target company files, corporate case studies, and tone rules to maintain strict factual consistency.',
-                icon: Brain
-              }
-            ].map((card, idx) => {
-              const CardIcon = card.icon;
-              return (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 35 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-80px' }}
-                  transition={{ duration: 0.6, delay: idx * 0.15 }}
-                  className="bg-slate-900/20 border border-white/[0.03] rounded-2xl p-6.5 space-y-4 text-left hover:border-violet-500/25 transition duration-300"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-slate-900 border border-white/[0.06] flex items-center justify-center text-violet-400 shadow-sm">
-                    <CardIcon size={16} />
+          {/* Bento Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Bento Card 1: Brand Grounding Engine (Col Span 2) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.5 }}
+              className="md:col-span-2 bg-slate-900/30 border border-white/[0.04] hover:border-violet-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
+            >
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 mb-4 shadow-sm">
+                  <Brain size={18} />
+                </div>
+                <h4 className="font-display font-black text-white text-xl">Core AI Grounding Engine</h4>
+                <p className="text-xs text-slate-400 leading-relaxed font-normal mt-2">
+                  AI references uploaded corporate wikis, pitch decks, and audience guidelines to ensure every article draft maintains strict factual consistency.
+                </p>
+              </div>
+
+              {/* Interactive Mock Doc Checklist */}
+              <div className="bg-slate-950/70 border border-white/[0.03] p-4.5 rounded-2xl space-y-3">
+                <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 tracking-wider">
+                  <span>GROUNDING DOCUMENTS</span>
+                  <span className="text-violet-400">✓ GROUNDED</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs p-2 bg-white/[0.01] border border-white/[0.03] rounded-lg">
+                    <span className="text-slate-300 flex items-center gap-2"><FileText size={12} className="text-violet-400" /> pitch_deck_v3.pdf</span>
+                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Indexed</span>
                   </div>
-                  <h4 className="font-display font-extrabold text-white text-base">{card.title}</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed font-normal">{card.desc}</p>
-                </motion.div>
-              );
-            })}
+                  <div className="flex items-center justify-between text-xs p-2 bg-white/[0.01] border border-white/[0.03] rounded-lg">
+                    <span className="text-slate-300 flex items-center gap-2"><FileText size={12} className="text-violet-400" /> brand_voice_guide.docx</span>
+                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Indexed</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Bento Card 2: Interactive Persona Selector (Col Span 1) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="bg-slate-900/30 border border-white/[0.04] hover:border-violet-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
+            >
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 mb-4 shadow-sm">
+                  <Compass size={18} />
+                </div>
+                <h4 className="font-display font-black text-white text-xl">Interactive Personas</h4>
+                <p className="text-xs text-slate-400 leading-relaxed font-normal mt-2">
+                  Configure custom buyer personas with distinct writing speeds, vocabularies, and demographics.
+                </p>
+              </div>
+
+              {/* Mini Interactive Persona Badge */}
+              <div className="bg-slate-950/70 border border-white/[0.03] p-4 rounded-2xl flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-500 to-fuchsia-500 flex items-center justify-center font-black text-xs text-white">
+                  TE
+                </div>
+                <div className="text-left space-y-0.5">
+                  <span className="text-xs font-bold text-white block">Tech Exec</span>
+                  <span className="text-[9px] text-violet-400 font-bold uppercase tracking-wider block">Analytical Tone</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Bento Card 3: Multi-Platform Publisher (Col Span 1) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-slate-900/30 border border-white/[0.04] hover:border-cyan-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
+            >
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-4 shadow-sm">
+                  <Layout size={18} />
+                </div>
+                <h4 className="font-display font-black text-white text-xl">Multi-Channel Layouts</h4>
+                <p className="text-xs text-slate-400 leading-relaxed font-normal mt-2">
+                  Draft blogs once, then compile and reformat for LinkedIn, Medium, and Substack channels.
+                </p>
+              </div>
+
+              {/* Connected Icons visual mockup */}
+              <div className="bg-slate-950/70 border border-white/[0.03] p-4 rounded-2xl flex justify-between items-center relative overflow-hidden">
+                <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-[10px] font-bold text-cyan-400">LI</div>
+                <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-[10px] font-bold text-cyan-400">MD</div>
+                <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-[10px] font-bold text-cyan-400">SU</div>
+              </div>
+            </motion.div>
+
+            {/* Bento Card 4: Campaigns metrics tracker (Col Span 2) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.5, delay: 0.45 }}
+              className="md:col-span-2 bg-slate-900/30 border border-white/[0.04] hover:border-cyan-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
+            >
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-4 shadow-sm">
+                  <BarChart3 size={18} />
+                </div>
+                <h4 className="font-display font-black text-white text-xl">Real-Time Campaigns Console</h4>
+                <p className="text-xs text-slate-400 leading-relaxed font-normal mt-2">
+                  Launch automated LinkedIn campaigns, recharge wallets, map conversions, and run data audits.
+                </p>
+              </div>
+
+              {/* Live Metric Graph visual mockup */}
+              <div className="bg-slate-950/70 border border-white/[0.03] p-4.5 rounded-2xl space-y-3">
+                <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+                  <span>CTR ANALYTICS</span>
+                  <span className="text-cyan-400 font-mono font-black">+14.2%</span>
+                </div>
+                <div className="h-10 bg-cyan-500/5 border border-cyan-500/20 rounded-lg overflow-hidden flex items-end px-2 gap-1.5">
+                  <div className="w-full h-[30%] bg-cyan-400/40 rounded-t" />
+                  <div className="w-full h-[60%] bg-cyan-400/60 rounded-t" />
+                  <div className="w-full h-[45%] bg-cyan-400/40 rounded-t" />
+                  <div className="w-full h-[85%] bg-cyan-400 rounded-t" />
+                </div>
+              </div>
+            </motion.div>
+
           </div>
         </div>
       </div>
