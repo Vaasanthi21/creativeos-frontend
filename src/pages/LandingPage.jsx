@@ -20,7 +20,8 @@ import {
   Cpu,
   Flame,
   Sliders,
-  MoveHorizontal
+  MoveHorizontal,
+  Plus
 } from 'lucide-react';
 
 // Reusable 3D Tilt Card Wrapper using Framer Motion physics
@@ -32,8 +33,8 @@ const TiltCard = ({ children, className, glowColor }) => {
   const mouseY = useMotionValue(0);
 
   // Rotation ranges
-  const rotateX = useTransform(mouseY, [-200, 200], [10, -10]);
-  const rotateY = useTransform(mouseX, [-200, 200], [-10, 10]);
+  const rotateX = useTransform(mouseY, [-200, 200], [12, -12]);
+  const rotateY = useTransform(mouseX, [-200, 200], [-12, 12]);
 
   // Spring physics for buttery-smooth interpolation
   const springConfig = { damping: 25, stiffness: 150, mass: 0.5 };
@@ -160,15 +161,18 @@ export const LandingPage = () => {
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-100 overflow-hidden font-display select-none">
       
-      {/* 1. INTERACTIVE MOUSE SPOTLIGHT (VIOLET/CYAN INTERACTION) */}
+      {/* 1. STAR LIGHT STARS BACKDROP */}
+      <div className="absolute inset-0 bg-[radial-gradient(white_1px,transparent_1px)] bg-[size:32px_32px] opacity-10 pointer-events-none" />
+
+      {/* 2. INTERACTIVE MOUSE SPOTLIGHT */}
       <div
         className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300 opacity-70 hidden md:block"
         style={{
-          background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(139,92,246,0.06) 0%, rgba(6,182,212,0.05) 50%, transparent 100%)`
+          background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(139,92,246,0.08) 0%, rgba(6,182,212,0.06) 50%, transparent 100%)`
         }}
       />
 
-      {/* 2. DYNAMIC GRADIENT BACKDROP BLOBS */}
+      {/* 3. DYNAMIC NEBULA BLOBS */}
       <motion.div
         animate={{
           x: [0, 80, -40, 0],
@@ -181,7 +185,7 @@ export const LandingPage = () => {
           repeat: Infinity,
           ease: 'easeInOut'
         }}
-        className="absolute top-[-25%] left-[-15%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tr from-violet-600/10 to-fuchsia-600/5 blur-[140px] pointer-events-none"
+        className="absolute top-[-25%] left-[-15%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tr from-violet-600/15 to-fuchsia-600/5 blur-[140px] pointer-events-none"
       />
       
       <motion.div
@@ -196,19 +200,20 @@ export const LandingPage = () => {
           repeat: Infinity,
           ease: 'easeInOut'
         }}
-        className="absolute bottom-[-20%] right-[-15%] w-[65vw] h-[65vw] rounded-full bg-gradient-to-br from-cyan-500/10 to-emerald-500/5 blur-[160px] pointer-events-none"
+        className="absolute bottom-[-20%] right-[-15%] w-[65vw] h-[65vw] rounded-full bg-gradient-to-br from-cyan-500/15 to-emerald-500/5 blur-[160px] pointer-events-none"
       />
 
-      {/* Cybernetic grid line overlay */}
+      {/* Cybernetic grid overlay */}
       <div 
-        className="absolute inset-0 bg-[linear-gradient(to_right,#1e1b4b_1px,transparent_1px),linear-gradient(to_bottom,#1e1b4b_1px,transparent_1px)] bg-[size:4.5rem_4.5rem] opacity-25"
+        className="absolute inset-0 bg-[linear-gradient(to_right,#1e1b4b_1px,transparent_1px),linear-gradient(to_bottom,#1e1b4b_1px,transparent_1px)] bg-[size:4.5rem_4.5rem] opacity-25 animate-pulse"
         style={{ 
           maskImage: 'radial-gradient(ellipse 65% 55% at 50% 50%, #000 60%, transparent 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at 50% 50%, #000 60%, transparent 100%)'
+          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at 50% 50%, #000 60%, transparent 100%)',
+          animationDuration: '8s'
         }}
       />
 
-      {/* 3. PREMIUM GLASS NAVIGATION HEADER */}
+      {/* 4. PREMIUM GLASS NAVIGATION HEADER */}
       <nav className="sticky top-0 z-50 w-full bg-slate-950/65 backdrop-blur-lg border-b border-white/[0.04] px-8 py-4.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative group">
@@ -233,241 +238,272 @@ export const LandingPage = () => {
         </div>
       </nav>
 
-      {/* 4. HERO SECTION */}
-      <div className="max-w-5xl mx-auto px-6 pt-16 pb-12 text-center relative z-10">
+      {/* 5. HERO SECTION */}
+      <div className="max-w-5xl mx-auto px-6 pt-16 pb-6 text-center relative z-10">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="space-y-6"
+          className="space-y-8"
         >
-          {/* Animated badge */}
+          {/* Glowing badge */}
           <motion.div 
             variants={fadeInUp}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/[0.03] border border-white/[0.07] rounded-full text-[10px] font-extrabold uppercase tracking-widest text-violet-400 shadow-sm hover:border-violet-500/30 transition-all duration-300"
+            className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-violet-500/10 border border-violet-500/25 rounded-full text-[10px] font-extrabold uppercase tracking-widest text-violet-400 shadow-[0_0_15px_rgba(139,92,246,0.15)] hover:border-violet-500/40 transition-all duration-300"
           >
-            <Sparkles size={11} className="text-fuchsia-400 animate-pulse" />
+            <Sparkles size={11} className="text-fuchsia-400 animate-spin" style={{ animationDuration: '4s' }} />
             <span>Figma Blueprint to Production-Ready Code</span>
           </motion.div>
 
           {/* Heading */}
           <motion.h1 
             variants={fadeInUp}
-            className="text-4xl sm:text-7xl font-display font-black tracking-tight text-white max-w-4xl mx-auto leading-[1.05] capitalize"
+            className="text-5xl sm:text-8xl font-display font-black tracking-tight text-white max-w-5xl mx-auto leading-[0.98] capitalize"
           >
-            The Next Era of{' '}
+            The Ultimate{' '}
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">Creative OS</span>
-              <span className="absolute left-0 bottom-1 w-full h-[3px] bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full opacity-60" />
+              <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-500 bg-clip-text text-transparent">AI Platform</span>
             </span>{' '}
-            &{' '}
+            For{' '}
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Growth OS</span>
-              <span className="absolute left-0 bottom-1 w-full h-[3px] bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full opacity-60" />
+              <span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Content & Growth</span>
             </span>
           </motion.h1>
 
           {/* Subheading */}
           <motion.p 
             variants={fadeInUp}
-            className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed font-normal"
+            className="text-xs sm:text-base text-slate-400 max-w-3xl mx-auto leading-relaxed font-normal"
           >
-            Deploy brand assets, auto-generate blog channels, and launch multi-layer analytics loops under a single premium dashboard.
+            Unify your creative engines and distribution metrics. Build personas, crawl sources, generate blogs, and optimize campaigns inside a single dynamic environment.
           </motion.p>
         </motion.div>
       </div>
 
-      {/* 5. INTERACTIVE FIGMA VS PRODUCTION COMPARISON SLIDER */}
-      <div className="max-w-4xl mx-auto px-6 pb-20 relative z-10">
-        <div className="text-center space-y-2 mb-6">
-          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+      {/* 6. CENTRAL PORTAL CORE ORB */}
+      <div className="relative w-44 h-44 mx-auto my-12 z-10 flex items-center justify-center">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-cyan-400 blur-2xl animate-pulse opacity-40" />
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+          className="absolute inset-0 rounded-full border border-dashed border-violet-500/30 flex items-center justify-center"
+        >
+          <div className="w-1.5 h-1.5 rounded-full bg-violet-400 absolute top-0" />
+          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 absolute bottom-0" />
+        </motion.div>
+        <div className="absolute inset-4 rounded-full bg-slate-950/90 border border-white/[0.08] backdrop-blur-xl flex flex-col items-center justify-center shadow-2xl">
+          <Sparkles className="text-violet-400 w-7 h-7 animate-bounce duration-1000" />
+          <span className="text-[9px] font-mono font-bold tracking-widest text-slate-400 mt-2">OS CORE</span>
+        </div>
+      </div>
+
+      {/* 7. BROWSER FRAME COMPARISON SLIDER */}
+      <div className="max-w-4xl mx-auto px-6 pb-24 relative z-10">
+        <div className="text-center space-y-2 mb-8">
+          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
             <Sliders size={14} className="text-violet-400" /> Interactive UI Visualizer
           </h2>
-          <p className="text-[11px] text-muted-foreground">Slide to compare the Figma Blueprint (Left) with the Final Production-Coded UI (Right)</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Slide to compare the Figma Blueprint (Left) with the Coded UI (Right)</p>
         </div>
 
-        <div 
-          ref={sliderRef}
-          onMouseMove={handleMouseMove}
-          onTouchMove={handleTouchMove}
-          className="h-[320px] sm:h-[400px] w-full rounded-3xl relative overflow-hidden border border-white/[0.08] shadow-2xl bg-slate-950 cursor-ew-resize select-none"
-        >
-          {/* RIGHT SIDE: Production Coded UI (VIOLET/PINK RENDERED THEME) */}
-          <div className="absolute inset-0 w-full h-full p-6 flex gap-6 bg-slate-950">
-            {/* Mock Sidebar */}
-            <div className="w-1/4 h-full border border-white/[0.05] bg-slate-900/40 rounded-2xl p-4 flex flex-col justify-between hidden sm:flex">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 pb-3 border-b border-white/[0.05]">
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-violet-500 to-fuchsia-500" />
-                  <div className="h-2 w-16 bg-white/20 rounded" />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-6 w-full bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center px-2">
-                    <div className="w-2 h-2 rounded-full bg-violet-500 mr-2" />
-                    <div className="h-1.5 w-12 bg-violet-500/45 rounded" />
-                  </div>
-                  <div className="h-6 w-full hover:bg-white/[0.02] rounded-lg flex items-center px-2">
-                    <div className="w-2 h-2 rounded-full bg-slate-700 mr-2" />
-                    <div className="h-1.5 w-10 bg-white/10 rounded" />
-                  </div>
-                  <div className="h-6 w-full hover:bg-white/[0.02] rounded-lg flex items-center px-2">
-                    <div className="w-2 h-2 rounded-full bg-slate-700 mr-2" />
-                    <div className="h-1.5 w-14 bg-white/10 rounded" />
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 pt-2 border-t border-white/[0.05]">
-                <div className="w-5 h-5 rounded-full bg-slate-800" />
-                <div className="h-1.5 w-10 bg-white/10 rounded" />
-              </div>
+        {/* Browser window wrap */}
+        <div className="rounded-3xl border border-white/[0.08] overflow-hidden shadow-2xl bg-slate-950 shadow-violet-500/5">
+          {/* Browser header */}
+          <div className="bg-slate-900/60 border-b border-white/[0.05] px-5 py-3.5 flex items-center justify-between">
+            <div className="flex gap-2">
+              <span className="w-3 h-3 rounded-full bg-red-500/60" />
+              <span className="w-3 h-3 rounded-full bg-yellow-500/60" />
+              <span className="w-3 h-3 rounded-full bg-emerald-500/60" />
             </div>
-
-            {/* Mock Dashboard Area */}
-            <div className="flex-1 h-full flex flex-col justify-between">
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-white/[0.05] pb-3">
-                <div className="space-y-1 text-left">
-                  <div className="h-3 w-28 bg-white/25 rounded" />
-                  <div className="h-2 w-16 bg-white/10 rounded" />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-500/20 to-fuchsia-500/20 border border-violet-500/30 flex items-center justify-center text-[10px] font-extrabold text-violet-400">OS</div>
-              </div>
-
-              {/* Grid Content */}
-              <div className="grid grid-cols-2 gap-4 flex-1 py-4">
-                <div className="border border-white/[0.06] bg-slate-900/20 rounded-2xl p-4 flex flex-col justify-between text-left">
-                  <div>
-                    <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 mb-2">
-                      <Sparkles size={14} />
-                    </div>
-                    <div className="h-2.5 w-20 bg-white/20 rounded mb-1" />
-                    <div className="h-1.5 w-28 bg-white/10 rounded" />
-                  </div>
-                  <div className="h-7 w-full bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-[9px] font-black rounded-lg flex items-center justify-center gap-1">
-                    <span>Activate</span> <ArrowRight size={10} />
-                  </div>
-                </div>
-
-                <div className="border border-white/[0.06] bg-slate-900/20 rounded-2xl p-4 flex flex-col justify-between text-left">
-                  <div>
-                    <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-2">
-                      <TrendingUp size={14} />
-                    </div>
-                    <div className="h-2.5 w-24 bg-white/20 rounded mb-1" />
-                    <div className="h-1.5 w-20 bg-white/10 rounded" />
-                  </div>
-                  <div className="h-7 w-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-[9px] font-black rounded-lg flex items-center justify-center gap-1">
-                    <span>Monitor</span> <ArrowRight size={10} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className="p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl flex items-center justify-between">
-                <span className="text-[9px] text-slate-400 flex items-center gap-1.5"><Cpu size={10} className="text-violet-400" /> Active Optimization Pipeline</span>
-                <span className="text-[9px] font-bold text-violet-400 font-mono animate-pulse">Running</span>
-              </div>
+            <div className="text-[9px] text-slate-400 bg-slate-950/80 px-6 py-1 rounded-md border border-white/[0.03] select-none font-mono">
+              creativestudio.os/sandbox
             </div>
+            <div className="w-10" />
           </div>
 
-          {/* LEFT SIDE: Figma Blueprint (Masked, Cyan wireframes) */}
           <div 
-            className="absolute inset-0 h-full p-6 flex gap-6 bg-slate-950 border-r border-cyan-500/40"
-            style={{ 
-              width: `${sliderPos}%`,
-              transition: isDragging ? 'none' : 'width 0.15s ease-out'
-            }}
+            ref={sliderRef}
+            onMouseMove={handleMouseMove}
+            onTouchMove={handleTouchMove}
+            className="h-[320px] sm:h-[400px] w-full relative overflow-hidden cursor-ew-resize select-none bg-slate-950"
           >
-            {/* Blueprint Overlay grids */}
-            <div className="absolute inset-0 bg-[radial-gradient(cyan_1px,transparent_1px)] bg-[size:16px_16px] opacity-20 pointer-events-none" />
-
-            {/* Mock Sidebar Blueprint */}
-            <div className="w-[185px] h-full border border-cyan-500/30 bg-cyan-950/10 rounded-2xl p-4 flex flex-col justify-between shrink-0 hidden sm:flex relative">
-              <span className="absolute top-1 left-1 text-[7px] font-mono text-cyan-400">W: 185px</span>
-              
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 pb-3 border-b border-cyan-500/20">
-                  <div className="w-6 h-6 border border-cyan-500/40 border-dashed rounded" />
-                  <div className="h-1.5 w-12 bg-cyan-500/20 rounded" />
+            {/* RIGHT SIDE: Production Coded UI */}
+            <div className="absolute inset-0 w-full h-full p-6 flex gap-6 bg-slate-950">
+              {/* Mock Sidebar */}
+              <div className="w-1/4 h-full border border-white/[0.05] bg-slate-900/40 rounded-2xl p-4 flex flex-col justify-between hidden sm:flex">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-3 border-b border-white/[0.05]">
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-violet-500 to-fuchsia-500" />
+                    <div className="h-2 w-16 bg-white/20 rounded" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-6 w-full bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center px-2">
+                      <div className="w-2 h-2 rounded-full bg-violet-500 mr-2" />
+                      <div className="h-1.5 w-12 bg-violet-500/45 rounded" />
+                    </div>
+                    <div className="h-6 w-full hover:bg-white/[0.02] rounded-lg flex items-center px-2">
+                      <div className="w-2 h-2 rounded-full bg-slate-700 mr-2" />
+                      <div className="h-1.5 w-10 bg-white/10 rounded" />
+                    </div>
+                    <div className="h-6 w-full hover:bg-white/[0.02] rounded-lg flex items-center px-2">
+                      <div className="w-2 h-2 rounded-full bg-slate-700 mr-2" />
+                      <div className="h-1.5 w-14 bg-white/10 rounded" />
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="h-6 w-full border border-cyan-500/35 bg-cyan-500/10 rounded-lg flex items-center px-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mr-2" />
-                    <div className="h-1 w-10 bg-cyan-500/30 rounded" />
-                  </div>
-                  <div className="h-6 w-full border border-cyan-500/15 rounded-lg flex items-center px-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-800 mr-2" />
-                    <div className="h-1 w-8 bg-cyan-500/10 rounded" />
-                  </div>
+                <div className="flex items-center gap-2 pt-2 border-t border-white/[0.05]">
+                  <div className="w-5 h-5 rounded-full bg-slate-800" />
+                  <div className="h-1.5 w-10 bg-white/10 rounded" />
                 </div>
               </div>
-              <div className="h-1.5 w-10 bg-cyan-500/20 rounded" />
+
+              {/* Mock Dashboard Area */}
+              <div className="flex-1 h-full flex flex-col justify-between">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-white/[0.05] pb-3">
+                  <div className="space-y-1 text-left">
+                    <div className="h-3 w-28 bg-white/25 rounded" />
+                    <div className="h-2 w-16 bg-white/10 rounded" />
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-500/20 to-fuchsia-500/20 border border-violet-500/30 flex items-center justify-center text-[10px] font-extrabold text-violet-400">OS</div>
+                </div>
+
+                {/* Grid Content */}
+                <div className="grid grid-cols-2 gap-4 flex-1 py-4">
+                  <div className="border border-white/[0.06] bg-slate-900/20 rounded-2xl p-4 flex flex-col justify-between text-left">
+                    <div>
+                      <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 mb-2">
+                        <Sparkles size={14} />
+                      </div>
+                      <div className="h-2.5 w-20 bg-white/20 rounded mb-1" />
+                      <div className="h-1.5 w-28 bg-white/10 rounded" />
+                    </div>
+                    <div className="h-7 w-full bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-[9px] font-black rounded-lg flex items-center justify-center gap-1">
+                      <span>Activate</span> <ArrowRight size={10} />
+                    </div>
+                  </div>
+
+                  <div className="border border-white/[0.06] bg-slate-900/20 rounded-2xl p-4 flex flex-col justify-between text-left">
+                    <div>
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-2">
+                        <TrendingUp size={14} />
+                      </div>
+                      <div className="h-2.5 w-24 bg-white/20 rounded mb-1" />
+                      <div className="h-1.5 w-20 bg-white/10 rounded" />
+                    </div>
+                    <div className="h-7 w-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-[9px] font-black rounded-lg flex items-center justify-center gap-1">
+                      <span>Monitor</span> <ArrowRight size={10} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl flex items-center justify-between">
+                  <span className="text-[9px] text-slate-400 flex items-center gap-1.5"><Cpu size={10} className="text-violet-400" /> Active Optimization Pipeline</span>
+                  <span className="text-[9px] font-bold text-violet-400 font-mono animate-pulse">Running</span>
+                </div>
+              </div>
             </div>
 
-            {/* Mock Dashboard Area Blueprint */}
-            <div className="w-[500px] h-full flex flex-col justify-between shrink-0 relative">
-              <span className="absolute top-1 left-1 text-[7px] font-mono text-cyan-400">Frame 01</span>
-              
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
-                <div className="space-y-1 text-left">
-                  <div className="h-2 w-20 bg-cyan-500/30 rounded" />
-                  <div className="h-1.5 w-12 bg-cyan-500/10 rounded" />
+            {/* LEFT SIDE: Figma Blueprint */}
+            <div 
+              className="absolute inset-0 h-full p-6 flex gap-6 bg-slate-950 border-r border-cyan-500/40"
+              style={{ 
+                width: `${sliderPos}%`,
+                transition: isDragging ? 'none' : 'width 0.15s ease-out'
+              }}
+            >
+              {/* Blueprint Overlay grids */}
+              <div className="absolute inset-0 bg-[radial-gradient(cyan_1px,transparent_1px)] bg-[size:16px_16px] opacity-20 pointer-events-none" />
+
+              {/* Mock Sidebar Blueprint */}
+              <div className="w-[185px] h-full border border-cyan-500/30 bg-cyan-950/10 rounded-2xl p-4 flex flex-col justify-between shrink-0 hidden sm:flex relative">
+                <span className="absolute top-1 left-1 text-[7px] font-mono text-cyan-400">W: 185px</span>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-3 border-b border-cyan-500/20">
+                    <div className="w-6 h-6 border border-cyan-500/40 border-dashed rounded" />
+                    <div className="h-1.5 w-12 bg-cyan-500/20 rounded" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-6 w-full border border-cyan-500/35 bg-cyan-500/10 rounded-lg flex items-center px-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mr-2" />
+                      <div className="h-1 w-10 bg-cyan-500/30 rounded" />
+                    </div>
+                    <div className="h-6 w-full border border-cyan-500/15 rounded-lg flex items-center px-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-800 mr-2" />
+                      <div className="h-1 w-8 bg-cyan-500/10 rounded" />
+                    </div>
+                  </div>
                 </div>
-                <div className="w-7 h-7 border border-cyan-500/40 rounded-full flex items-center justify-center text-[7px] font-mono text-cyan-400">NODE</div>
+                <div className="h-1.5 w-10 bg-cyan-500/20 rounded" />
               </div>
 
-              {/* Grid Content */}
-              <div className="grid grid-cols-2 gap-4 flex-1 py-4">
-                <div className="border border-cyan-500/25 bg-cyan-950/5 rounded-2xl p-4 flex flex-col justify-between text-left relative">
-                  <span className="absolute bottom-1 right-2 text-[6px] font-mono text-cyan-500/60">Component Card</span>
-                  <div>
-                    <div className="w-8 h-8 border border-cyan-500/40 border-dashed rounded flex items-center justify-center text-cyan-500 mb-2">
-                      +
-                    </div>
-                    <div className="h-2 w-14 bg-cyan-500/30 rounded mb-1" />
-                    <div className="h-1 w-20 bg-cyan-500/10 rounded" />
+              {/* Mock Dashboard Area Blueprint */}
+              <div className="w-[500px] h-full flex flex-col justify-between shrink-0 relative">
+                <span className="absolute top-1 left-1 text-[7px] font-mono text-cyan-400">Frame 01</span>
+                
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
+                  <div className="space-y-1 text-left">
+                    <div className="h-2 w-20 bg-cyan-500/30 rounded" />
+                    <div className="h-1.5 w-12 bg-cyan-500/10 rounded" />
                   </div>
-                  <div className="h-7 w-full border border-cyan-500/35 bg-cyan-500/15 rounded-lg flex items-center justify-center" />
+                  <div className="w-7 h-7 border border-cyan-500/40 rounded-full flex items-center justify-center text-[7px] font-mono text-cyan-400">NODE</div>
                 </div>
 
-                <div className="border border-cyan-500/25 bg-cyan-950/5 rounded-2xl p-4 flex flex-col justify-between text-left relative">
-                  <div>
-                    <div className="w-8 h-8 border border-cyan-500/40 border-dashed rounded flex items-center justify-center text-cyan-500 mb-2">
-                      +
+                {/* Grid Content */}
+                <div className="grid grid-cols-2 gap-4 flex-1 py-4">
+                  <div className="border border-cyan-500/25 bg-cyan-950/5 rounded-2xl p-4 flex flex-col justify-between text-left relative">
+                    <span className="absolute bottom-1 right-2 text-[6px] font-mono text-cyan-500/60">Component Card</span>
+                    <div>
+                      <div className="w-8 h-8 border border-cyan-500/40 border-dashed rounded flex items-center justify-center text-cyan-500 mb-2">
+                        +
+                      </div>
+                      <div className="h-2 w-14 bg-cyan-500/30 rounded mb-1" />
+                      <div className="h-1 w-20 bg-cyan-500/10 rounded" />
                     </div>
-                    <div className="h-2 w-16 bg-cyan-500/30 rounded mb-1" />
-                    <div className="h-1 w-14 bg-cyan-500/10 rounded" />
+                    <div className="h-7 w-full border border-cyan-500/35 bg-cyan-500/15 rounded-lg flex items-center justify-center" />
                   </div>
-                  <div className="h-7 w-full border border-cyan-500/35 bg-cyan-500/15 rounded-lg flex items-center justify-center" />
-                </div>
-              </div>
 
-              {/* Progress bar */}
-              <div className="p-3 border border-cyan-500/20 bg-cyan-950/5 rounded-xl flex items-center justify-between">
-                <span className="text-[9px] text-cyan-500/60 font-mono">X: 24 Y: 320</span>
-                <span className="text-[9px] font-bold text-cyan-400 font-mono">Blueprint</span>
+                  <div className="border border-cyan-500/25 bg-cyan-950/5 rounded-2xl p-4 flex flex-col justify-between text-left relative">
+                    <div>
+                      <div className="w-8 h-8 border border-cyan-500/40 border-dashed rounded flex items-center justify-center text-cyan-500 mb-2">
+                        +
+                      </div>
+                      <div className="h-2 w-16 bg-cyan-500/30 rounded mb-1" />
+                      <div className="h-1 w-14 bg-cyan-500/10 rounded" />
+                    </div>
+                    <div className="h-7 w-full border border-cyan-500/35 bg-cyan-500/15 rounded-lg flex items-center justify-center" />
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="p-3 border border-cyan-500/20 bg-cyan-950/5 rounded-xl flex items-center justify-between">
+                  <span className="text-[9px] text-cyan-500/60 font-mono">X: 24 Y: 320</span>
+                  <span className="text-[9px] font-bold text-cyan-400 font-mono">Blueprint</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* SLIDER HANDLE BAR */}
-          <div 
-            onMouseDown={() => setIsDragging(true)}
-            className="absolute top-0 bottom-0 w-0.5 bg-gradient-to-b from-violet-500 via-fuchsia-500 to-violet-500 cursor-ew-resize z-40"
-            style={{ 
-              left: `${sliderPos}%`,
-              transition: isDragging ? 'none' : 'left 0.15s ease-out'
-            }}
-          >
-            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-slate-900 border-2 border-violet-500 flex items-center justify-center text-violet-400 shadow-glow shadow-violet-500/30 active:scale-95 transition-transform duration-200">
-              <MoveHorizontal size={14} />
+            {/* SLIDER HANDLE BAR */}
+            <div 
+              onMouseDown={() => setIsDragging(true)}
+              className="absolute top-0 bottom-0 w-0.5 bg-gradient-to-b from-violet-500 via-fuchsia-500 to-violet-500 cursor-ew-resize z-40"
+              style={{ 
+                left: `${sliderPos}%`,
+                transition: isDragging ? 'none' : 'left 0.15s ease-out'
+              }}
+            >
+              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-slate-900 border-2 border-violet-500 flex items-center justify-center text-violet-400 shadow-glow shadow-violet-500/30 active:scale-95 transition-transform duration-200">
+                <MoveHorizontal size={14} />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 6. DUAL OS SELECTOR PORTALS (3D TILT INTEGRATION) */}
+      {/* 8. DUAL OS SELECTOR PORTALS */}
       <div className="max-w-5xl mx-auto px-6 pb-24 relative z-10">
         <motion.div
           variants={containerVariants}
@@ -475,10 +511,10 @@ export const LandingPage = () => {
           animate="visible"
           className="grid grid-cols-1 md:grid-cols-2 gap-8"
         >
-          {/* PORTAL A: CREATIVE OS CARD (VIOLET/FUCHSIA GLOW & TILT) */}
+          {/* PORTAL A: CREATIVE OS CARD */}
           <TiltCard
-            glowColor="rgba(139,92,246,0.15)"
-            className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-8 flex flex-col justify-between space-y-8 overflow-hidden hover:border-violet-500/40 hover:shadow-[0_0_50px_rgba(139,92,246,0.1)] transition-all duration-300"
+            glowColor="rgba(139,92,246,0.18)"
+            className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-8 flex flex-col justify-between space-y-8 overflow-hidden hover:border-violet-500/40 hover:shadow-[0_0_50px_rgba(139,92,246,0.12)] transition-all duration-300"
           >
             <div className="space-y-6">
               {/* Header details */}
@@ -493,7 +529,7 @@ export const LandingPage = () => {
               <div className="space-y-2 text-left">
                 <h3 className="font-display text-2xl font-black text-white group-hover:text-violet-400 transition-colors">Creative OS</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  The automated content production core. Author high-quality articles, design social art styles, and compile assets grounded in your brand specs.
+                  The automated content production core. Author articles, design social art styles, and compile assets grounded in your brand voice.
                 </p>
               </div>
 
@@ -523,10 +559,10 @@ export const LandingPage = () => {
             </button>
           </TiltCard>
 
-          {/* PORTAL B: GROWTH OS CARD (CYAN/EMERALD GLOW & TILT) */}
+          {/* PORTAL B: GROWTH OS CARD */}
           <TiltCard
-            glowColor="rgba(6,182,212,0.15)"
-            className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-8 flex flex-col justify-between space-y-8 overflow-hidden hover:border-cyan-500/40 hover:shadow-[0_0_50px_rgba(6,182,212,0.1)] transition-all duration-300"
+            glowColor="rgba(6,182,212,0.18)"
+            className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-8 flex flex-col justify-between space-y-8 overflow-hidden hover:border-cyan-500/40 hover:shadow-[0_0_50px_rgba(6,182,212,0.12)] transition-all duration-300"
           >
             <div className="space-y-6">
               {/* Header details */}
@@ -551,7 +587,7 @@ export const LandingPage = () => {
                   'LinkedIn campaign builder wizard',
                   'Audience persona profiles generator',
                   'Multi-channel performance trackers',
-                  'Stripe-powered dynamic ad wallets'
+                  'Stripe-powered ad wallet manager'
                 ].map((feat, idx) => (
                   <div key={idx} className="flex items-center gap-2.5 text-xs font-semibold text-slate-300">
                     <Check size={12} className="text-cyan-400 shrink-0" />
@@ -573,7 +609,7 @@ export const LandingPage = () => {
         </motion.div>
       </div>
 
-      {/* 7. VIEWPORT TRIGGERED SYSTEM HIGHLIGHTS */}
+      {/* 9. VIEWPORT TRIGGERED SYSTEM HIGHLIGHTS */}
       <div className="border-t border-white/[0.02] bg-slate-950/50 py-24 relative z-10">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center space-y-4 mb-20">
@@ -592,7 +628,7 @@ export const LandingPage = () => {
               },
               {
                 title: 'Multi-Channel Layouts',
-                desc: 'Draft blogs once, then reformat and publish for LinkedIn, Medium, and Substack channels.',
+                desc: 'Draft blogs once, then automatically compile and reformat for LinkedIn, Medium, and Substack channels.',
                 icon: Layout
               },
               {
@@ -609,7 +645,7 @@ export const LandingPage = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-80px' }}
                   transition={{ duration: 0.6, delay: idx * 0.15 }}
-                  className="bg-slate-900/20 border border-white/[0.03] rounded-2xl p-6.5 space-y-4 text-left hover:border-violet-500/20 transition duration-300"
+                  className="bg-slate-900/20 border border-white/[0.03] rounded-2xl p-6.5 space-y-4 text-left hover:border-violet-500/25 transition duration-300"
                 >
                   <div className="w-10 h-10 rounded-xl bg-slate-900 border border-white/[0.06] flex items-center justify-center text-violet-400 shadow-sm">
                     <CardIcon size={16} />
@@ -623,7 +659,7 @@ export const LandingPage = () => {
         </div>
       </div>
 
-      {/* 8. FOOTER */}
+      {/* 10. FOOTER */}
       <footer className="border-t border-white/[0.02] py-8 text-center text-xs text-slate-500 relative z-10 bg-slate-950">
         <p>&copy; 2026 CreativeStudio OS. All rights reserved.</p>
       </footer>
