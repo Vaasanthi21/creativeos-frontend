@@ -254,7 +254,7 @@ export const LandingPage = () => {
   }, [isTimelinePaused]);
 
   return (
-    <div className="relative min-h-screen bg-slate-950 text-slate-100 overflow-hidden font-display select-none">
+    <div className="dark relative min-h-screen bg-background text-foreground overflow-hidden font-display select-none">
 
       {/* 1. STAR LIGHT STARS BACKDROP */}
       <div className="absolute inset-0 bg-[radial-gradient(white_1px,transparent_1px)] bg-[size:32px_32px] opacity-10 pointer-events-none" />
@@ -309,15 +309,15 @@ export const LandingPage = () => {
       />
 
       {/* 4. PREMIUM GLASS NAVIGATION HEADER */}
-      <nav className="sticky top-0 z-50 w-full bg-slate-950/65 backdrop-blur-lg border-b border-white/[0.04] px-8 py-4.5 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 w-full bg-background/65 backdrop-blur-lg border-b border-white/[0.04] px-8 py-4.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl blur opacity-70 group-hover:opacity-100 transition duration-300" />
-            <div className="relative w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center font-extrabold text-white text-base">
+            <div className="relative w-9 h-9 rounded-xl bg-background flex items-center justify-center font-extrabold text-foreground text-base">
               C
             </div>
           </div>
-          <span className="font-display font-black tracking-tight text-white text-base">
+          <span className="font-display font-black tracking-tight text-foreground text-base">
             CreativeStudio <span className="bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">OS</span>
           </span>
         </div>
@@ -325,7 +325,7 @@ export const LandingPage = () => {
         <div>
           <button
             onClick={() => handleLaunch('/generate')}
-            className="px-5 py-2.5 bg-white/5 border border-white/10 hover:border-orange-500/40 hover:bg-orange-500/5 text-slate-200 hover:text-white font-extrabold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-2"
+            className="px-5 py-2.5 bg-white/5 border border-white/10 hover:border-orange-500/40 hover:bg-orange-500/5 text-muted-foreground hover:text-foreground font-extrabold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-2"
           >
             <span>Launch Portal</span>
             <ArrowRight size={13} className="text-orange-400" />
@@ -353,7 +353,7 @@ export const LandingPage = () => {
           {/* Heading */}
           <motion.h1
             variants={fadeInUp}
-            className="text-5xl sm:text-8xl font-display font-black tracking-tight text-white max-w-5xl mx-auto leading-[0.98] capitalize animate-fade-in"
+            className="text-5xl sm:text-8xl font-display font-black tracking-tight text-foreground max-w-5xl mx-auto leading-[0.98] capitalize animate-fade-in"
           >
             The Ultimate{' '}
             <span className="relative inline-block">
@@ -361,14 +361,14 @@ export const LandingPage = () => {
             </span>{' '}
             For{' '}
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-orange-550 to-amber-500 bg-clip-text text-transparent">Content & Growth</span>
+              <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">Content & Growth</span>
             </span>
           </motion.h1>
 
           {/* Subheading */}
           <motion.p
             variants={fadeInUp}
-            className="text-xs sm:text-base text-slate-400 max-w-3xl mx-auto leading-relaxed font-normal"
+            className="text-xs sm:text-base text-muted-foreground max-w-3xl mx-auto leading-relaxed font-normal"
           >
             Unify your creative engines and distribution metrics. Build personas, crawl sources, generate blogs, and optimize campaigns inside a single dynamic environment.
           </motion.p>
@@ -396,7 +396,7 @@ export const LandingPage = () => {
           <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 absolute left-0" />
         </motion.div>
 
-        {/* Code-drawn core — Orange Base */}
+        {/* Code-drawn core — Orange Base, bound to HSL variables */}
         <motion.div
           className="relative w-56 h-56 rounded-full z-10 pointer-events-none"
           animate={{ y: [0, -15, 0] }}
@@ -406,7 +406,7 @@ export const LandingPage = () => {
             className="absolute inset-0 rounded-full"
             style={{
               background:
-                'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.95) 0%, rgba(253,230,138,0.9) 10%, rgba(249,115,22,0.85) 28%, rgba(194,65,12,0.9) 52%, rgba(15,17,33,1) 78%)',
+                'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.95) 0%, rgba(253,230,138,0.9) 10%, rgba(249,115,22,0.85) 28%, rgba(194,65,12,0.9) 52%, hsl(var(--background)) 78%)',
               boxShadow: '0 0 70px rgba(249,115,22,0.45), inset -18px -18px 50px rgba(0,0,0,0.55)'
             }}
           />
@@ -444,7 +444,7 @@ export const LandingPage = () => {
       {/* 7. AUTO-ROTATING 3D COVERFLOW FEATURE CARDS (Medium Cards) */}
       <div className="max-w-6xl mx-auto px-6 pb-24 relative z-10 text-center">
         <div className="space-y-2 mb-10">
-          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
             <Zap size={14} className="text-orange-400" /> Transform Your Workflow
           </h2>
           <p className="text-[10px] sm:text-xs text-muted-foreground">Cycles automatically — hover to pause, click a card to jump to it.</p>
@@ -478,15 +478,15 @@ export const LandingPage = () => {
                 animate={{ x: translateX, scale, rotateY, opacity }}
                 transition={{ type: 'spring', stiffness: 140, damping: 22 }}
                 style={{ zIndex, transformStyle: 'preserve-3d' }}
-                className="absolute w-[330px] sm:w-[370px] h-[380px] sm:h-[420px] cursor-pointer bg-slate-900/70 border border-white/[0.06] rounded-3xl p-8 flex flex-col justify-between backdrop-blur-sm shadow-2xl"
+                className="absolute w-[330px] sm:w-[370px] h-[380px] sm:h-[420px] cursor-pointer bg-card/75 border border-white/[0.06] rounded-3xl p-8 flex flex-col justify-between backdrop-blur-sm shadow-2xl"
               >
                 <div className="space-y-6">
                   <div className={`w-14 h-14 rounded-2xl ${card.iconBg} border ${card.iconBorder} flex items-center justify-center ${card.iconColor} shadow-sm`}>
                     <card.icon size={24} />
                   </div>
                   <div className="space-y-3 text-left">
-                    <h3 className="font-display text-xl font-black text-white">{card.title}</h3>
-                    <p className="text-sm text-slate-400 leading-relaxed font-normal">
+                    <h3 className="font-display text-xl font-black text-foreground">{card.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed font-normal">
                       {card.desc}
                     </p>
                   </div>
@@ -527,7 +527,7 @@ export const LandingPage = () => {
       {/* 8. AUTO-PLAYING WORKFLOW TIMELINE */}
       <div className="max-w-5xl mx-auto px-6 pb-24 relative z-10">
         <div className="text-center space-y-2 mb-14">
-          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
             <Workflow size={14} className="text-orange-400" /> How It Flows
           </h2>
           <p className="text-[10px] sm:text-xs text-muted-foreground">Plays automatically — hover to pause, click a step to jump to it.</p>
@@ -567,7 +567,7 @@ export const LandingPage = () => {
                   >
                     <step.icon size={20} className={isActive || isPast ? 'text-slate-950' : 'text-slate-500'} />
                   </motion.div>
-                  <span className={`text-[11px] sm:text-xs font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                  <span className={`text-[11px] sm:text-xs font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
                     {step.title}
                   </span>
                 </button>
@@ -586,14 +586,14 @@ export const LandingPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -16 }}
                     transition={{ duration: 0.35 }}
-                    className="bg-slate-900/40 border border-white/[0.06] rounded-3xl p-8 sm:p-10 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-8 items-center"
+                    className="bg-card/45 border border-white/[0.06] rounded-3xl p-8 sm:p-10 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-8 items-center"
                   >
                     <div className="text-left space-y-3">
                       <span className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: step.solidColor }}>
                         Step {idx + 1} of {workflowSteps.length}
                       </span>
-                      <h3 className="font-display text-2xl sm:text-3xl font-black text-white">{step.title}</h3>
-                      <p className="text-sm text-slate-400 leading-relaxed max-w-md">{step.desc}</p>
+                      <h3 className="font-display text-2xl sm:text-3xl font-black text-foreground">{step.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed max-w-md">{step.desc}</p>
                     </div>
 
                     {/* Small per-step visual mockup */}
@@ -618,11 +618,11 @@ export const LandingPage = () => {
 
 
       {/* 9. DRIBBBLE-STYLE BENTO GRID FEATURE SHOWCASE */}
-      <div className="border-t border-white/[0.02] bg-slate-950/60 py-28 relative z-10">
+      <div className="border-t border-white/[0.02] bg-background/60 py-28 relative z-10">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center space-y-4 mb-20">
-            <h3 className="font-display text-4xl font-black text-white">Consolidated OS Engine</h3>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
+            <h3 className="font-display text-4xl font-black text-foreground">Consolidated OS Engine</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
               How our system bridges creative expression and growth metrics natively.
             </p>
           </div>
@@ -636,31 +636,31 @@ export const LandingPage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.5 }}
-              className="md:col-span-2 bg-slate-900/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
+              className="md:col-span-2 bg-card/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
             >
               <div>
                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-4 shadow-sm">
                   <Brain size={18} />
                 </div>
-                <h4 className="font-display font-black text-white text-xl">Core AI Grounding Engine</h4>
-                <p className="text-xs text-slate-400 leading-relaxed font-normal mt-2">
+                <h4 className="font-display font-black text-foreground text-xl">Core AI Grounding Engine</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed font-normal mt-2">
                   AI references uploaded corporate wikis, pitch decks, and audience guidelines to ensure every article draft maintains strict factual consistency.
                 </p>
               </div>
 
               {/* Interactive Mock Doc Checklist */}
-              <div className="bg-slate-950/70 border border-white/[0.03] p-4.5 rounded-2xl space-y-3">
-                <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 tracking-wider">
+              <div className="bg-background/70 border border-white/[0.03] p-4.5 rounded-2xl space-y-3">
+                <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground tracking-wider">
                   <span>GROUNDING DOCUMENTS</span>
                   <span className="text-orange-400">✓ GROUNDED</span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs p-2 bg-white/[0.01] border border-white/[0.03] rounded-lg">
-                    <span className="text-slate-300 flex items-center gap-2"><FileText size={12} className="text-orange-400" /> pitch_deck_v3.pdf</span>
+                    <span className="text-slate-350 flex items-center gap-2"><FileText size={12} className="text-orange-400" /> pitch_deck_v3.pdf</span>
                     <span className="text-[10px] text-orange-400 font-bold bg-orange-550/10 px-2 py-0.5 rounded border border-orange-500/20">Indexed</span>
                   </div>
                   <div className="flex items-center justify-between text-xs p-2 bg-white/[0.01] border border-white/[0.03] rounded-lg">
-                    <span className="text-slate-300 flex items-center gap-2"><FileText size={12} className="text-orange-400" /> brand_voice_guide.docx</span>
+                    <span className="text-slate-350 flex items-center gap-2"><FileText size={12} className="text-orange-400" /> brand_voice_guide.docx</span>
                     <span className="text-[10px] text-orange-400 font-bold bg-orange-550/10 px-2 py-0.5 rounded border border-orange-500/20">Indexed</span>
                   </div>
                 </div>
@@ -673,20 +673,20 @@ export const LandingPage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.5, delay: 0.15 }}
-              className="bg-slate-900/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
+              className="bg-card/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
             >
               <div>
                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-4 shadow-sm">
                   <Compass size={18} />
                 </div>
-                <h4 className="font-display font-black text-white text-xl">Interactive Personas</h4>
-                <p className="text-xs text-slate-400 leading-relaxed font-normal mt-2">
+                <h4 className="font-display font-black text-foreground text-xl">Interactive Personas</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed font-normal mt-2">
                   Configure custom buyer personas with distinct writing speeds, vocabularies, and demographics.
                 </p>
               </div>
 
               {/* Mini Interactive Persona Badge */}
-              <div className="bg-slate-950/70 border border-white/[0.03] p-4 rounded-2xl flex items-center gap-3">
+              <div className="bg-background/70 border border-white/[0.03] p-4 rounded-2xl flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center font-black text-xs text-white">
                   TE
                 </div>
@@ -703,20 +703,20 @@ export const LandingPage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-slate-900/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
+              className="bg-card/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
             >
               <div>
                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-4 shadow-sm">
                   <Layout size={18} />
                 </div>
-                <h4 className="font-display font-black text-white text-xl">Multi-Channel Layouts</h4>
-                <p className="text-xs text-slate-400 leading-relaxed font-normal mt-2">
+                <h4 className="font-display font-black text-foreground text-xl">Multi-Channel Layouts</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed font-normal mt-2">
                   Draft blogs once, then compile and reformat for LinkedIn, Medium, and Substack channels.
                 </p>
               </div>
 
               {/* Connected Icons visual mockup */}
-              <div className="bg-slate-950/70 border border-white/[0.03] p-4 rounded-2xl flex justify-between items-center relative overflow-hidden">
+              <div className="bg-background/70 border border-white/[0.03] p-4 rounded-2xl flex justify-between items-center relative overflow-hidden">
                 <div className="w-7 h-7 rounded-lg bg-orange-550/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">LI</div>
                 <div className="w-7 h-7 rounded-lg bg-orange-550/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">MD</div>
                 <div className="w-7 h-7 rounded-lg bg-orange-550/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">SU</div>
@@ -729,25 +729,25 @@ export const LandingPage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.5, delay: 0.45 }}
-              className="md:col-span-2 bg-slate-900/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
+              className="md:col-span-2 bg-card/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
             >
               <div>
                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-4 shadow-sm">
                   <BarChart3 size={18} />
                 </div>
-                <h4 className="font-display font-black text-white text-xl">Real-Time Campaigns Console</h4>
-                <p className="text-xs text-slate-400 leading-relaxed font-normal mt-2">
+                <h4 className="font-display font-black text-foreground text-xl">Real-Time Campaigns Console</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed font-normal mt-2">
                   Launch automated LinkedIn campaigns, recharge wallets, map conversions, and run data audits.
                 </p>
               </div>
 
               {/* Live Metric Graph visual mockup */}
-              <div className="bg-slate-950/70 border border-white/[0.03] p-4.5 rounded-2xl space-y-3">
-                <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+              <div className="bg-background/70 border border-white/[0.03] p-4.5 rounded-2xl space-y-3">
+                <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground">
                   <span>CTR ANALYTICS</span>
                   <span className="text-orange-400 font-mono font-black">+14.2%</span>
                 </div>
-                <div className="h-10 bg-orange-500/10 border border-orange-550/5 rounded-lg overflow-hidden flex items-end px-2 gap-1.5">
+                <div className="h-10 bg-orange-500/10 border border-orange-555/5 rounded-lg overflow-hidden flex items-end px-2 gap-1.5">
                   <div className="w-full h-[30%] bg-orange-400/40 rounded-t" />
                   <div className="w-full h-[60%] bg-orange-400/60 rounded-t" />
                   <div className="w-full h-[45%] bg-orange-400/40 rounded-t" />
@@ -761,7 +761,7 @@ export const LandingPage = () => {
       </div>
 
       {/* 10. FOOTER */}
-      <footer className="border-t border-white/[0.02] py-8 text-center text-xs text-slate-500 relative z-10 bg-slate-950">
+      <footer className="border-t border-white/[0.02] py-8 text-center text-xs text-muted-foreground relative z-10 bg-background">
         <p>&copy; 2026 CreativeStudio OS. All rights reserved.</p>
       </footer>
     </div>
