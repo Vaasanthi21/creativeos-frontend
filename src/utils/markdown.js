@@ -18,10 +18,10 @@ const parseMarkdownTables = (html) => {
   };
 
   const generateHtmlTable = (header, alignments, rows) => {
-    let tableHtml = '<table class="min-w-full divide-y divide-white/5 text-sm my-6 border border-white/10 rounded-xl" style="width: 100%; border-collapse: collapse; margin: 24px 0; border: 1px solid #e2e8f0;">\n';
+    let tableHtml = '<table class="min-w-full divide-y divide-border text-sm my-6 border border-border rounded-xl" style="width: 100%; border-collapse: collapse; margin: 24px 0;">\n';
     
     // Header
-    tableHtml += '  <thead class="bg-white/5 text-slate-200" style="background-color: #f8fafc;">\n';
+    tableHtml += '  <thead class="bg-muted text-foreground">\n';
     tableHtml += '    <tr>\n';
     header.forEach((cell, idx) => {
       const align = alignments[idx] || 'left';
@@ -29,15 +29,15 @@ const parseMarkdownTables = (html) => {
       if (align === 'center') alignClass = 'text-center';
       if (align === 'right') alignClass = 'text-right';
       const alignStyle = `text-align: ${align || 'left'};`;
-      tableHtml += `      <th class="px-4 py-3 ${alignClass} font-semibold text-slate-700" style="${alignStyle} padding: 12px 16px; font-weight: 600; border: 1px solid #e2e8f0; color: #334155;">${cell}</th>\n`;
+      tableHtml += `      <th class="px-4 py-3 ${alignClass} font-semibold text-foreground border border-border" style="${alignStyle} padding: 12px 16px; font-weight: 600;">${cell}</th>\n`;
     });
     tableHtml += '    </tr>\n';
     tableHtml += '  </thead>\n';
     
     // Body
-    tableHtml += '  <tbody class="divide-y divide-white/5 text-slate-300">\n';
+    tableHtml += '  <tbody class="divide-y divide-border text-muted-foreground">\n';
     rows.forEach(row => {
-      tableHtml += '    <tr class="hover:bg-white/[0.02] transition-colors">\n';
+      tableHtml += '    <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">\n';
       for (let idx = 0; idx < header.length; idx++) {
         const cell = row[idx] !== undefined ? row[idx] : '';
         const align = alignments[idx] || 'left';
@@ -45,7 +45,7 @@ const parseMarkdownTables = (html) => {
         if (align === 'center') alignClass = 'text-center';
         if (align === 'right') alignClass = 'text-right';
         const alignStyle = `text-align: ${align || 'left'};`;
-        tableHtml += `      <td class="px-4 py-3 ${alignClass}" style="${alignStyle} padding: 12px 16px; border: 1px solid #e2e8f0;">${cell}</td>\n`;
+        tableHtml += `      <td class="px-4 py-3 ${alignClass} border border-border" style="${alignStyle} padding: 12px 16px;">${cell}</td>\n`;
       }
       tableHtml += '    </tr>\n';
     });
@@ -114,29 +114,29 @@ export const renderMarkdownToHTML = (markdown) => {
 
   // 1. Code blocks: ```language ... ``` (supporting both Unix \n and Windows \r\n line endings)
   html = html.replace(/```(?:[a-zA-Z0-9]+)?\r?\n([\s\S]*?)\r?\n```/g, (match, code) => {
-    return `<pre class="bg-black/40 border border-white/5 p-4 rounded-xl font-mono text-xs text-slate-300 my-4 overflow-x-auto select-text"><code>${code}</code></pre>`;
+    return `<pre class="bg-black/5 dark:bg-black/40 border border-border dark:border-white/5 p-4 rounded-xl font-mono text-xs text-foreground dark:text-slate-300 my-4 overflow-x-auto select-text"><code>${code}</code></pre>`;
   });
 
   // 2. Inline code: `code`
-  html = html.replace(/`([^`\n]+)`/g, '<code class="bg-white/10 px-1 py-0.5 rounded font-mono text-xs text-primary">$1</code>');
+  html = html.replace(/`([^`\n]+)`/g, '<code class="bg-slate-100 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-xs text-primary">$1</code>');
 
   // 3. Headings: #, ##, ###, ####, #####, ######
-  html = html.replace(/^###### (.*?)$/gm, '<h6 class="text-xs font-bold text-slate-400 mt-3 mb-1">$1</h6>');
-  html = html.replace(/^##### (.*?)$/gm, '<h6 class="text-xs font-bold text-slate-300 mt-4 mb-2">$1</h6>');
-  html = html.replace(/^#### (.*?)$/gm, '<h5 class="text-xs md:text-sm font-bold text-white mt-4 mb-2">$1</h5>');
-  html = html.replace(/^### (.*?)$/gm, '<h4 class="text-sm md:text-base font-bold text-white mt-5 mb-2">$1</h4>');
-  html = html.replace(/^## (.*?)$/gm, '<h3 class="text-base md:text-lg font-bold text-white mt-6 mb-3">$1</h3>');
-  html = html.replace(/^# (.*?)$/gm, '<h2 class="text-lg md:text-xl font-bold text-white mt-7 mb-4">$1</h2>');
+  html = html.replace(/^###### (.*?)$/gm, '<h6 class="text-xs font-bold text-muted-foreground mt-3 mb-1">$1</h6>');
+  html = html.replace(/^##### (.*?)$/gm, '<h6 class="text-xs font-bold text-muted-foreground/80 mt-4 mb-2">$1</h6>');
+  html = html.replace(/^#### (.*?)$/gm, '<h5 class="text-xs md:text-sm font-bold text-foreground mt-4 mb-2">$1</h5>');
+  html = html.replace(/^### (.*?)$/gm, '<h4 class="text-sm md:text-base font-bold text-foreground mt-5 mb-2">$1</h4>');
+  html = html.replace(/^## (.*?)$/gm, '<h3 class="text-base md:text-lg font-bold text-foreground mt-6 mb-3">$1</h3>');
+  html = html.replace(/^# (.*?)$/gm, '<h2 class="text-lg md:text-xl font-bold text-foreground mt-7 mb-4">$1</h2>');
 
   // 4. Bold: **text**
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-white">$1</strong>');
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-foreground">$1</strong>');
 
   // 5. Italic: *text* or _text_
-  html = html.replace(/\*([^*]+)\*/g, '<em class="italic text-slate-300">$1</em>');
-  html = html.replace(/_([^_]+)_/g, '<em class="italic text-slate-300">$1</em>');
+  html = html.replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>');
+  html = html.replace(/_([^_]+)_/g, '<em class="italic">$1</em>');
 
   // 5.2. Images: ![alt](url)
-  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rounded-xl border border-white/10 my-4 max-w-full h-auto block" style="max-width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin: 16px 0; display: block;" />');
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rounded-xl border border-border dark:border-white/10 my-4 max-w-full h-auto block" style="max-width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin: 16px 0; display: block;" />');
 
   // 5.3. Links: [text](url)
   html = html.replace(/(?<!\!)\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary hover:underline" style="color: #f25b18; text-decoration: underline;" target="_blank" rel="noopener noreferrer">$1</a>');
@@ -159,7 +159,7 @@ export const renderMarkdownToHTML = (markdown) => {
     if ((line.startsWith('- ') || line.startsWith('* ')) && !inPre) {
       let content = line.substring(2);
       if (!inList) {
-        lines[i] = `<ul class="list-disc ml-5 my-3 text-slate-300 space-y-1"><li>${content}</li>`;
+        lines[i] = `<ul class="list-disc ml-5 my-3 space-y-1"><li>${content}</li>`;
         inList = true;
       } else {
         lines[i] = `<li>${content}</li>`;
@@ -193,7 +193,7 @@ export const renderMarkdownToHTML = (markdown) => {
         line.startsWith('</th');
 
       if (line && !isBlockHtml && !inPre) {
-        lines[i] = `<p class="mb-3 leading-relaxed text-slate-300">${line}</p>`;
+        lines[i] = `<p class="mb-3 leading-relaxed">${line}</p>`;
       }
     }
 
