@@ -22,82 +22,121 @@ import {
   Layers,
   ArrowUpRight,
   X,
-  Lock
+  Lock,
+  Search,
+  UploadCloud,
+  FileCode,
+  DollarSign,
+  TrendingUp,
+  SlidersHorizontal,
+  Volume2
 } from 'lucide-react';
 
-// Floating Particles Backdrop
-const ParticlesBg = () => {
+// Grid warping backdrop canvas
+const WarpGridBg = () => {
   const canvasRef = useRef(null);
+  const mouseRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    let animationFrameId;
+    let frameId;
 
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let w = (canvas.width = window.innerWidth);
+    let h = (canvas.height = window.innerHeight);
 
     const handleResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    };
+    const handleMouseMove = (e) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
     };
     window.addEventListener('resize', handleResize);
+    window.addEventListener('mousemove', handleMouseMove);
 
-    const particles = [];
-    for (let i = 0; i < 40; i++) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        radius: Math.random() * 1.2 + 0.4,
-        vx: Math.random() * 0.3 - 0.15,
-        vy: Math.random() * 0.3 - 0.15,
-        alpha: Math.random() * 0.4 + 0.1
-      });
+    const gridSpacing = 64;
+    const cols = Math.ceil(w / gridSpacing) + 1;
+    const rows = Math.ceil(h / gridSpacing) + 1;
+
+    const points = [];
+    for (let x = 0; x < cols; x++) {
+      for (let y = 0; y < rows; y++) {
+        points.push({
+          ox: x * gridSpacing,
+          oy: y * gridSpacing,
+          x: x * gridSpacing,
+          y: y * gridSpacing
+        });
+      }
     }
 
     const draw = () => {
-      ctx.clearRect(0, 0, width, height);
-      particles.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = 'rgba(249, 115, 22, 0.05)';
+      ctx.lineWidth = 1;
 
-        if (p.x < 0 || p.x > width) p.vx *= -1;
-        if (p.y < 0 || p.y > height) p.vy *= -1;
+      const mx = mouseRef.current.x;
+      const my = mouseRef.current.y;
 
+      // Draw grid columns
+      for (let x = 0; x < cols; x++) {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(249, 115, 22, ${p.alpha})`;
-        ctx.fill();
-      });
-      animationFrameId = requestAnimationFrame(draw);
+        for (let y = 0; y < rows; y++) {
+          const p = points[x * rows + y];
+          const dx = mx - p.ox;
+          const dy = my - p.oy;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const force = Math.max(0, (280 - dist) / 280);
+
+          p.x = p.ox - (dx / dist) * force * 15;
+          p.y = p.oy - (dy / dist) * force * 15;
+
+          if (y === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        }
+        ctx.stroke();
+      }
+
+      // Draw grid rows
+      for (let y = 0; y < rows; y++) {
+        ctx.beginPath();
+        for (let x = 0; x < cols; x++) {
+          const p = points[x * rows + y];
+          if (x === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        }
+        ctx.stroke();
+      }
+
+      frameId = requestAnimationFrame(draw);
     };
+
     draw();
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(frameId);
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none opacity-30 z-0" />;
+  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none opacity-40 z-0" />;
 };
 
 export const LandingPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
-  // Staggered letters for hero reveal
   const titleText = "CreativeStudio OS";
   
-  // Menu selection states
+  // Tab states
   const [activeTab, setActiveTab] = useState('generate');
   const [isHoveringList, setIsHoveringList] = useState(false);
-  
-  // Interactive Drawer Dialog State (Shared Layout ID)
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // Hardware-accelerated cursor spring follower (no React re-renders on mousemove!)
+  // Follower spring values
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   
@@ -106,15 +145,14 @@ export const LandingPage = () => {
   const smoothMouseY = useSpring(mouseY, springConfig);
 
   const handleMouseMove = (e) => {
-    // Offset by 64px (half the follower's width) to center on cursor
     mouseX.set(e.clientX - 64);
     mouseY.set(e.clientY - 64);
   };
 
-  // Translation sandbox state
+  // Tone sandbox states
   const [rewriteMode, setRewriteMode] = useState('casual');
-
-  // Logs stream
+  
+  // Terminal logs
   const [logs, setLogs] = useState([
     '[INIT] CreativeOS micro-kernel active.',
     '[SYSTEM] Interactive transitions bound.',
@@ -138,8 +176,9 @@ export const LandingPage = () => {
   const platformFeatures = [
     {
       id: 'generate',
+      index: '01',
       label: 'Generate Page',
-      subtitle: 'Outline and copy builder',
+      subtitle: 'AI copy builder',
       desc: 'Create high-performing blog outlines, copy components, and custom social assets grounded in your brand identity.',
       path: '/generate',
       icon: Sparkles,
@@ -149,6 +188,7 @@ export const LandingPage = () => {
     },
     {
       id: 'blog',
+      index: '02',
       label: 'Blog Studio',
       subtitle: 'SEO indexing engine',
       desc: 'Formulate search engine optimized structures, index topics, and draft comprehensive articles automatically.',
@@ -160,6 +200,7 @@ export const LandingPage = () => {
     },
     {
       id: 'image',
+      index: '03',
       label: 'Image Studio',
       subtitle: 'Graphics generation suite',
       desc: 'Produce breathtaking graphics, marketing banners, and visual layouts tailored to maximize social conversion.',
@@ -171,8 +212,9 @@ export const LandingPage = () => {
     },
     {
       id: 'video',
+      index: '04',
       label: 'Video Studio',
-      subtitle: 'Reels and naration loops',
+      subtitle: 'Reels narration loops',
       desc: 'Design engaging social reels and brand video presentations complete with AI narration audio loops.',
       path: '/video-studio',
       icon: Video,
@@ -182,8 +224,9 @@ export const LandingPage = () => {
     },
     {
       id: 'tracker',
+      index: '05',
       label: 'LinkedIn Ads',
-      subtitle: 'Real-time campaign audits',
+      subtitle: 'Campaign performance cycles',
       desc: 'Track conversions metrics, run analytics audits, and manage corporate campaign ad budgets in real-time.',
       path: '/linkedinads',
       icon: BarChart3,
@@ -198,16 +241,7 @@ export const LandingPage = () => {
       onMouseMove={handleMouseMove}
       className="dark relative min-h-screen bg-[#040406] text-[#f4f4f7] overflow-x-hidden font-display select-none"
     >
-      <ParticlesBg />
-
-      {/* Grid overlay */}
-      <div
-        className="absolute inset-0 bg-[linear-gradient(to_right,#151210_1px,transparent_1px),linear-gradient(to_bottom,#151210_1px,transparent_1px)] bg-[size:4.5rem_4.5rem] opacity-20 pointer-events-none"
-        style={{
-          maskImage: 'radial-gradient(ellipse 65% 55% at 50% 50%, #000 60%, transparent 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at 50% 50%, #000 60%, transparent 100%)'
-        }}
-      />
+      <WarpGridBg />
 
       {/* FLOATING CAPSULE HEADER */}
       <header className="sticky top-4 z-50 max-w-5xl mx-auto px-6">
@@ -283,7 +317,7 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* CURSOR IMAGE REVEAL MASK LAYER (Hardware-Accelerated Follower) */}
+      {/* CURSOR IMAGE REVEAL MASK LAYER */}
       <AnimatePresence>
         {isHoveringList && (
           <motion.div
@@ -314,7 +348,7 @@ export const LandingPage = () => {
         )}
       </AnimatePresence>
 
-      {/* TASTEFUL STUDIO CATALOG MENU (Shared transitions) */}
+      {/* TASTEFUL PLATFORM CATALOG SECTION */}
       <section id="studios" className="max-w-5xl mx-auto px-6 py-12 relative z-10">
         <div className="space-y-2 mb-12 text-center">
           <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
@@ -323,12 +357,12 @@ export const LandingPage = () => {
           <p className="text-[10px] sm:text-xs text-muted-foreground">Hover over items to reveal floating previews; click to launch portal drawer.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 bg-[#09090b]/80 border border-white/[0.05] rounded-3xl p-8 shadow-2xl">
-          {/* Interactive Menu List */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 bg-[#09090b]/80 border border-white/[0.05] rounded-3xl p-8 shadow-2xl">
+          {/* Left Column: Menu Items */}
           <div 
             onMouseEnter={() => setIsHoveringList(true)}
             onMouseLeave={() => setIsHoveringList(false)}
-            className="flex flex-col border-r border-white/[0.03] pr-0 lg:pr-8 text-left space-y-2"
+            className="flex flex-col border-r border-white/[0.03] pr-0 lg:pr-8 text-left justify-center space-y-4"
           >
             {platformFeatures.map((feat) => {
               const isActive = activeTab === feat.id;
@@ -340,9 +374,8 @@ export const LandingPage = () => {
                     setLogs((prev) => [...prev.slice(-6), `[HOVER] Focused module: ${feat.label}`]);
                   }}
                   onClick={() => setSelectedItem(feat)}
-                  className="relative px-5 py-4 rounded-2xl flex items-center justify-between cursor-pointer group transition-all"
+                  className="relative px-6 py-5 rounded-2xl flex items-center justify-between cursor-pointer group transition-all"
                 >
-                  {/* Sliding capsule background indicator */}
                   {isActive && (
                     <motion.div
                       layoutId="activeCatalogCap"
@@ -351,20 +384,20 @@ export const LandingPage = () => {
                     />
                   )}
 
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
-                      isActive ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' : 'bg-white/[0.02] border-white/[0.05] text-muted-foreground'
-                    }`}>
-                      <feat.icon size={18} />
-                    </div>
+                  <div className="flex items-center gap-6">
+                    <span className={`text-xs font-mono font-bold tracking-widest ${isActive ? 'text-orange-400' : 'text-neutral-600'}`}>
+                      {feat.index}
+                    </span>
                     <div className="space-y-0.5">
-                      <h3 className={`text-base font-bold transition ${isActive ? 'text-white' : 'text-muted-foreground'}`}>{feat.label}</h3>
-                      <span className="text-[10px] text-muted-foreground block">{feat.subtitle}</span>
+                      <h3 className={`text-xl font-black tracking-tight transition ${isActive ? 'text-white' : 'text-neutral-500'}`}>
+                        {feat.label}
+                      </h3>
+                      <span className="text-[10px] text-neutral-500 block uppercase tracking-wider font-semibold">{feat.subtitle}</span>
                     </div>
                   </div>
 
                   <span className="text-[10px] text-orange-400 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-                    <span>View Node</span>
+                    <span>Explore</span>
                     <ArrowRight size={11} />
                   </span>
                 </div>
@@ -372,51 +405,183 @@ export const LandingPage = () => {
             })}
           </div>
 
-          {/* Interactive Mock Workspace Preview */}
-          <div className="rounded-2xl p-6 bg-[#0c0c0f] border border-white/[0.03] flex flex-col justify-between text-left h-[360px] lg:h-auto">
-            <AnimatePresence mode="wait">
-              {platformFeatures.map((feat) => {
-                if (feat.id !== activeTab) return null;
-                return (
+          {/* Right Column: Premium High-Fidelity Active Preview (Replacive) */}
+          <div className="rounded-2xl border border-white/[0.04] bg-[#0c0c0f] overflow-hidden flex flex-col justify-between h-[390px]">
+            {/* Window bar */}
+            <div className="bg-neutral-900/40 border-b border-white/[0.03] px-4 py-3 flex items-center justify-between">
+              <div className="flex gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-red-500/30" />
+                <span className="w-2 h-2 rounded-full bg-yellow-500/30" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500/30" />
+              </div>
+              <span className="text-[8px] text-neutral-600 font-mono">active_studio_view.jsx</span>
+              <div className="w-3 h-3 rounded bg-white/5" />
+            </div>
+
+            {/* Dynamic Dashboard content */}
+            <div className="p-6 flex-1 flex flex-col justify-between overflow-y-auto">
+              <AnimatePresence mode="wait">
+                {activeTab === 'generate' && (
                   <motion.div
-                    key={feat.id}
+                    key="generate"
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.28 }}
-                    className="h-full flex flex-col justify-between"
+                    exit={{ opacity: 0 }}
+                    className="space-y-4 text-left"
                   >
-                    <div className="space-y-4">
-                      <span className={`px-2.5 py-1 text-[9px] font-mono rounded border uppercase font-black tracking-widest ${feat.badgeColor}`}>
-                        {feat.label} module
-                      </span>
-                      <h3 className="text-2xl font-black text-foreground pt-2">{feat.label} Workspace</h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {feat.desc}
-                      </p>
+                    <div className="flex justify-between items-center border-b border-white/[0.03] pb-3">
+                      <span className="text-[9px] font-mono text-orange-400 font-black uppercase">AI Editor Pipeline</span>
+                      <span className="text-[9px] text-neutral-500">Drafting</span>
                     </div>
-
-                    <div className="p-4 bg-black/40 border border-white/[0.03] rounded-xl flex items-center justify-between text-[10px] text-muted-foreground">
-                      <span>VERIFIED FIDELITY STATE</span>
-                      <span className="text-orange-400 font-bold uppercase">Ready</span>
+                    <div className="space-y-2.5 font-mono text-[10px] leading-relaxed text-slate-300">
+                      <p className="border-l border-orange-500/30 pl-2">Applying Stripe_Voice index matrix to content outline drafts...</p>
+                      <div className="p-2.5 bg-orange-550/5 border border-orange-500/15 rounded-lg flex items-center justify-between">
+                        <span className="text-white">✨ AI: Optimize introduction copy</span>
+                        <span className="text-[8px] text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded">Indexed</span>
+                      </div>
+                      <p>Ensuring layout parameters bind natively to local variables at compile runtime.</p>
                     </div>
-
-                    <button
-                      onClick={() => handleLaunch(feat.path)}
-                      className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-600 hover:opacity-95 text-white font-black rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-orange-500/10"
-                    >
-                      <span>Enter Staging Portal</span>
-                      <ArrowRight size={13} />
-                    </button>
                   </motion.div>
-                );
-              })}
-            </AnimatePresence>
+                )}
+
+                {activeTab === 'blog' && (
+                  <motion.div
+                    key="blog"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-4 text-left"
+                  >
+                    <div className="flex justify-between items-center border-b border-white/[0.03] pb-3">
+                      <span className="text-[9px] font-mono text-amber-400 font-black uppercase">SEO OUTLINE BUILDER</span>
+                      <span className="text-[9px] text-emerald-400 font-bold">✓ Connected</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="border border-white/[0.03] p-3 rounded-xl bg-white/[0.01] flex justify-between items-center">
+                        <div>
+                          <span className="text-[10px] font-bold text-white block">1. Tailwind Grid Compilation</span>
+                          <span className="text-[8px] text-neutral-500 block mt-0.5">Keywords: sandbox builder, figma layouts</span>
+                        </div>
+                        <span className="text-[9px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded font-mono font-bold">98% Match</span>
+                      </div>
+                      <div className="border border-white/[0.03] p-3 rounded-xl bg-white/[0.01] flex justify-between items-center">
+                        <div>
+                          <span className="text-[10px] font-bold text-white block">2. Visual Rendering Loops</span>
+                          <span className="text-[8px] text-neutral-500 block mt-0.5">Keywords: react modules, compile sandbox</span>
+                        </div>
+                        <span className="text-[9px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded font-mono font-bold">95% Match</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeTab === 'image' && (
+                  <motion.div
+                    key="image"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-4 text-left h-full flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-center border-b border-white/[0.03] pb-3">
+                      <span className="text-[9px] font-mono text-yellow-400 font-black uppercase">GRAPHICS DESIGN SUITE</span>
+                      <span className="text-[9px] text-neutral-500">Render active</span>
+                    </div>
+                    
+                    <div className="flex-1 flex items-center justify-center border border-dashed border-white/[0.05] rounded-xl relative overflow-hidden bg-white/[0.01] my-2">
+                      <div className="text-center space-y-2">
+                        <ImageIcon size={20} className="text-yellow-400 mx-auto animate-pulse" />
+                        <span className="text-[9px] font-mono text-neutral-500 block">Compiling social banner layouts...</span>
+                      </div>
+                      <div className="absolute bottom-3 left-3 right-3 h-1 bg-white/[0.03] rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-yellow-400 rounded-full" 
+                          animate={{ width: ['0%', '100%'] }} 
+                          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeTab === 'video' && (
+                  <motion.div
+                    key="video"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-4 text-left"
+                  >
+                    <div className="flex justify-between items-center border-b border-white/[0.03] pb-3">
+                      <span className="text-[9px] font-mono text-orange-500 font-black uppercase">VIDEO NARRATION BUILDER</span>
+                      <span className="text-[9px] text-neutral-500">Tracks indexed</span>
+                    </div>
+
+                    <div className="bg-black/30 border border-white/[0.03] p-3.5 rounded-xl space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Volume2 size={13} className="text-orange-500 animate-bounce" />
+                        <span className="text-[10px] text-white font-bold">Narration Voice: Male Confidence</span>
+                      </div>
+                      {/* Audio Waves */}
+                      <div className="h-6 flex items-center gap-1.5 px-1 bg-white/[0.01] border border-white/[0.02] rounded-lg overflow-hidden">
+                        {[40, 70, 45, 90, 60, 80, 50, 75, 40, 85, 50, 70, 30].map((h, i) => (
+                          <motion.div
+                            key={i}
+                            className="w-1.5 bg-orange-500 rounded-t"
+                            animate={{ height: [`${h * 0.4}%`, `${h * 0.9}%`, `${h * 0.4}%`] }}
+                            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', delay: i * 0.05 }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeTab === 'tracker' && (
+                  <motion.div
+                    key="tracker"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-4 text-left"
+                  >
+                    <div className="flex justify-between items-center border-b border-white/[0.03] pb-3">
+                      <span className="text-[9px] font-mono text-red-400 font-black uppercase">LinkedIn ads manager</span>
+                      <span className="text-[9px] text-emerald-400 font-bold">Active</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-black/40 border border-white/[0.03] p-3 rounded-xl">
+                        <span className="text-[8px] text-neutral-500 block uppercase">ROI RATIO</span>
+                        <span className="text-lg font-black text-white mt-1 block">4.8x</span>
+                        <span className="text-[8px] text-emerald-400 block font-bold">+18.2%</span>
+                      </div>
+                      <div className="bg-black/40 border border-white/[0.03] p-3 rounded-xl">
+                        <span className="text-[8px] text-neutral-500 block uppercase">Conversion rate</span>
+                        <span className="text-lg font-black text-white mt-1 block">5.42%</span>
+                        <span className="text-[8px] text-emerald-400 block font-bold">+12%</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Launch button */}
+            <div className="p-4 bg-neutral-900/20 border-t border-white/[0.03]">
+              <button
+                onClick={() => handleLaunch(platformFeatures.find(f => f.id === activeTab).path)}
+                className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:opacity-95 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-orange-500/10"
+              >
+                <span>Enter Portal Node</span>
+                <ArrowRight size={12} />
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* NARRATIVE SECTION */}
+      {/* NARRATIVE PIPELINE CORE SECTION */}
       <section id="narrative" className="max-w-5xl mx-auto px-6 py-20 relative z-10">
         <div className="text-center space-y-4 mb-20">
           <h3 className="font-display text-4xl font-black text-foreground">Engine Architecture</h3>
@@ -492,7 +657,7 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* OPERATIONS DIAGNOSTICS TERMINAL */}
+      {/* DIAGNOSTIC TERMINAL CONSOLE */}
       <section className="max-w-5xl mx-auto px-6 py-12 relative z-10 text-center">
         <div className="bg-[#09090b] border border-white/[0.05] rounded-3xl p-6 sm:p-8 max-w-2xl mx-auto text-left font-mono shadow-2xl space-y-4">
           <div className="flex items-center gap-2 border-b border-white/[0.03] pb-3 text-xs font-bold text-muted-foreground">
@@ -511,10 +676,10 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* SHARED LAYOUT DRAWER (layoutId) */}
+      {/* SHARED LAYOUT DRAWER */}
       <AnimatePresence>
         {selectedItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/85 backdrop-blur-md">
             <motion.div
               layoutId={`activeDrawer_${selectedItem.id}`}
               className="relative w-full max-w-lg bg-[#0d0d10] border border-white/[0.08] rounded-3xl p-8 text-left shadow-2xl space-y-6"
@@ -527,7 +692,7 @@ export const LandingPage = () => {
               </button>
 
               <div className="space-y-3">
-                <span className={`px-2 py-0.5 rounded text-[9px] font-bold border ${selectedItem.badgeColor}`}>
+                <span className={`px-2.5 py-0.5 rounded text-[9px] font-bold border ${selectedItem.badgeColor}`}>
                   {selectedItem.label} Node Details
                 </span>
                 <h3 className="text-2xl font-black text-foreground pt-2">{selectedItem.label}</h3>
