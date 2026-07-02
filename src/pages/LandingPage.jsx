@@ -395,7 +395,7 @@ export const LandingPage = () => {
 
         {/* Coverflow stage: perspective container, cards positioned absolutely and animated by offset */}
         <div
-          className="relative h-[420px] sm:h-[460px] flex items-center justify-center"
+          className="relative h-[450px] sm:h-[500px] flex items-center justify-center"
           style={{ perspective: '1600px' }}
           onMouseEnter={() => setIsCoverflowPaused(true)}
           onMouseLeave={() => setIsCoverflowPaused(false)}
@@ -408,7 +408,7 @@ export const LandingPage = () => {
             // Cards more than 2 positions away are hidden entirely
             if (abs > 2) return null;
 
-            const translateX = offset * 235;
+            const translateX = offset * 280;
             const scale = isActive ? 1 : abs === 1 ? 0.8 : 0.62;
             const rotateY = isActive ? 0 : offset > 0 ? -38 : 38;
             const opacity = isActive ? 1 : abs === 1 ? 0.65 : 0.32;
@@ -421,7 +421,7 @@ export const LandingPage = () => {
                 animate={{ x: translateX, scale, rotateY, opacity }}
                 transition={{ type: 'spring', stiffness: 140, damping: 22 }}
                 style={{ zIndex, transformStyle: 'preserve-3d' }}
-                className="absolute w-[280px] sm:w-[320px] h-[360px] sm:h-[400px] cursor-pointer bg-slate-900/70 border border-white/[0.06] rounded-3xl p-8 flex flex-col justify-between backdrop-blur-sm shadow-2xl"
+                className="absolute w-[330px] sm:w-[370px] h-[380px] sm:h-[420px] cursor-pointer bg-slate-900/70 border border-white/[0.06] rounded-3xl p-8 flex flex-col justify-between backdrop-blur-sm shadow-2xl"
               >
                 <div className="space-y-6">
                   <div className={`w-14 h-14 rounded-2xl ${card.iconBg} border ${card.iconBorder} flex items-center justify-center ${card.iconColor} shadow-sm`}>
