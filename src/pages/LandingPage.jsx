@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 
 // Reusable 3D Tilt Card Wrapper using Framer Motion physics
-const TiltCard = ({ children, className, glowColor }) => {
+const TiltCard = ({ children, className, glowColor, onClick }) => {
   const cardRef = useRef(null);
   
   // Motion values for coordinates
@@ -62,13 +62,14 @@ const TiltCard = ({ children, className, glowColor }) => {
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onClick={onClick}
       style={{
         rotateX: springX,
         rotateY: springY,
         transformStyle: 'preserve-3d',
         perspective: 1000
       }}
-      className={`relative group ${className}`}
+      className={`relative group cursor-pointer ${className}`}
     >
       {/* 3D Perspective container */}
       <div style={{ transform: 'translateZ(30px)' }} className="h-full relative z-10">
@@ -89,6 +90,7 @@ const TiltCard = ({ children, className, glowColor }) => {
 export const LandingPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const carouselRef = useRef(null);
 
   // Pointer position for custom background spotlight
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -135,7 +137,21 @@ export const LandingPage = () => {
     if (isAuthenticated) {
       navigate(targetPath);
     } else {
-      navigate(`/login?redirect=${encodeURIComponent(targetPath)}`);
+      // Redirect to Signup (Register) page, then return to clicked page
+      navigate(`/register?redirect=${encodeURIComponent(targetPath)}`);
+    }
+  };
+
+  // Scroll functions for horizontal carousel
+  const scrollLeft = () => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: 320, behavior: 'smooth' });
     }
   };
 
@@ -159,6 +175,60 @@ export const LandingPage = () => {
       transition: { type: 'spring', stiffness: 90, damping: 14 }
     }
   };
+
+  // sliding cards data representing features
+  const featuresData = [
+    {
+      title: 'Generate Page',
+      desc: 'Create high-performing blog outlines, copy components, and custom social assets grounded in your brand identity.',
+      path: '/generate',
+      icon: Sparkles,
+      iconBg: 'bg-violet-500/10',
+      iconBorder: 'border-violet-500/25',
+      iconColor: 'text-violet-400',
+      glowColor: 'rgba(139,92,246,0.18)'
+    },
+    {
+      title: 'Blog Studio',
+      desc: 'Formulate search engine optimized structures, index topics, and draft comprehensive articles automatically.',
+      path: '/blog-studio',
+      icon: Layout,
+      iconBg: 'bg-fuchsia-500/10',
+      iconBorder: 'border-fuchsia-500/25',
+      iconColor: 'text-fuchsia-400',
+      glowColor: 'rgba(217,70,239,0.18)'
+    },
+    {
+      title: 'Image Studio',
+      desc: 'Produce breathtaking graphics, marketing banners, and visual layouts tailored to maximize social conversion.',
+      path: '/image-studio',
+      icon: ImageIcon,
+      iconBg: 'bg-cyan-500/10',
+      iconBorder: 'border-cyan-500/25',
+      iconColor: 'text-cyan-400',
+      glowColor: 'rgba(6,182,212,0.18)'
+    },
+    {
+      title: 'Video Studio',
+      desc: 'Design engaging social reels and brand video presentations complete with AI narration audio loops.',
+      path: '/video-studio',
+      icon: Video,
+      iconBg: 'bg-emerald-500/10',
+      iconBorder: 'border-emerald-500/25',
+      iconColor: 'text-emerald-400',
+      glowColor: 'rgba(16,185,129,0.18)'
+    },
+    {
+      title: 'LinkedIn Tracker',
+      desc: 'Track conversions metrics, run analytics audits, and manage corporate campaign ad budgets in real-time.',
+      path: '/linkedinads',
+      icon: BarChart3,
+      iconBg: 'bg-blue-500/10',
+      iconBorder: 'border-blue-500/25',
+      iconColor: 'text-blue-400',
+      glowColor: 'rgba(59,130,246,0.18)'
+    }
+  ];
 
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-100 overflow-hidden font-display select-none">
@@ -282,12 +352,10 @@ export const LandingPage = () => {
         </motion.div>
       </div>
 
-      {/* 6. DUAL SWIRLING PORTAL ORB (IMAGE DRIVEN) */}
+      {/* 6. DUAL SWIRLING PORTAL ORB */}
       <div className="relative w-64 h-64 mx-auto my-10 z-10 flex items-center justify-center">
-        {/* Background glowing blob */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-cyan-400 blur-3xl opacity-35" />
         
-        {/* Orbit ring 1 */}
         <motion.div
           animate={{ rotate: -360 }}
           transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
@@ -297,7 +365,6 @@ export const LandingPage = () => {
           <span className="w-2 h-2 rounded-full bg-cyan-400 absolute bottom-0" />
         </motion.div>
 
-        {/* Orbit ring 2 */}
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
@@ -306,7 +373,6 @@ export const LandingPage = () => {
           <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400 absolute left-0" />
         </motion.div>
 
-        {/* 3D Generated Orb Asset */}
         <motion.img
           src="/web3_portal_orb.png"
           alt="Web3 Portal Orb"
@@ -316,7 +382,72 @@ export const LandingPage = () => {
         />
       </div>
 
-      {/* 7. BROWSER FRAME COMPARISON SLIDER */}
+      {/* 7. SLIDING CARDS SHOWCASE (DRIBBBLE CAROUSEL FEATURE COMPONENT) */}
+      <div className="max-w-5xl mx-auto px-6 pb-24 relative z-10 text-center">
+        <div className="space-y-2 mb-8">
+          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+            <Zap size={14} className="text-violet-400" /> Transform Your Workflow
+          </h2>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Select a feature category below to launch the respective studio portal workspace.</p>
+        </div>
+
+        {/* Carousel flex viewport container */}
+        <div className="relative">
+          <div 
+            ref={carouselRef}
+            className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-6 px-3"
+            style={{ scrollBehavior: 'smooth' }}
+          >
+            {featuresData.map((card, idx) => (
+              <TiltCard
+                key={idx}
+                glowColor={card.glowColor}
+                onClick={() => handleLaunch(card.path)}
+                className="w-[280px] sm:w-[320px] shrink-0 snap-start bg-slate-900/40 border border-white/[0.04] rounded-3xl p-8 flex flex-col justify-between space-y-8 overflow-hidden hover:border-violet-500/45 hover:shadow-[0_0_40px_rgba(139,92,246,0.1)] transition-all duration-300"
+              >
+                <div className="space-y-6">
+                  {/* Feature Icon box */}
+                  <div className={`w-12 h-12 rounded-2xl ${card.iconBg} border ${card.iconBorder} flex items-center justify-center ${card.iconColor} shadow-sm group-hover:scale-105 duration-300`}>
+                    <card.icon size={20} />
+                  </div>
+
+                  {/* Title & Description */}
+                  <div className="space-y-2 text-left">
+                    <h3 className="font-display text-xl font-black text-white group-hover:text-violet-400 transition-colors">{card.title}</h3>
+                    <p className="text-xs text-slate-400 leading-relaxed font-normal">
+                      {card.desc}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Explore Badge */}
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-violet-400 text-left">
+                  <span>Explore workspace</span>
+                  <ArrowRight size={12} className="group-hover:translate-x-1 duration-200" />
+                </div>
+              </TiltCard>
+            ))}
+          </div>
+
+          {/* Carousel arrow navigations */}
+          <div className="flex justify-center gap-4 mt-6">
+            <button 
+              onClick={scrollLeft}
+              className="w-10 h-10 rounded-full border border-white/10 hover:border-violet-500/35 hover:bg-violet-500/5 flex items-center justify-center text-slate-400 hover:text-white transition duration-200 cursor-pointer text-sm font-bold"
+            >
+              &larr;
+            </button>
+            <button 
+              onClick={scrollRight}
+              className="w-10 h-10 rounded-full border border-white/10 hover:border-violet-500/35 hover:bg-violet-500/5 flex items-center justify-center text-slate-400 hover:text-white transition duration-200 cursor-pointer text-sm font-bold"
+            >
+              &rarr;
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 8. BROWSER FRAME COMPARISON SLIDER */}
       <div className="max-w-4xl mx-auto px-6 pb-24 relative z-10">
         <div className="text-center space-y-2 mb-8">
           <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
@@ -520,112 +651,6 @@ export const LandingPage = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* 8. DUAL OS SELECTOR PORTALS */}
-      <div className="max-w-5xl mx-auto px-6 pb-24 relative z-10">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 gap-8"
-        >
-          {/* PORTAL A: CREATIVE OS CARD (VIOLET/FUCHSIA GLOW & TILT) */}
-          <TiltCard
-            glowColor="rgba(139,92,246,0.18)"
-            className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-8 flex flex-col justify-between space-y-8 overflow-hidden hover:border-violet-500/40 hover:shadow-[0_0_50px_rgba(139,92,246,0.12)] transition-all duration-300"
-          >
-            <div className="space-y-6">
-              {/* Header details */}
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/25 flex items-center justify-center text-violet-400 shadow-sm group-hover:scale-105 duration-300">
-                  <Workflow size={20} />
-                </div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-violet-400/65 bg-violet-500/5 px-2.5 py-1 rounded-md border border-violet-500/10">Suite Alpha</span>
-              </div>
-
-              {/* Title & Description */}
-              <div className="space-y-2 text-left">
-                <h3 className="font-display text-2xl font-black text-white group-hover:text-violet-400 transition-colors">Creative OS</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  The automated content production core. Author articles, design social art styles, and compile assets grounded in your brand voice.
-                </p>
-              </div>
-
-              {/* Features check list */}
-              <div className="space-y-2.5 pt-2 border-t border-slate-800/40 text-left">
-                {[
-                  'Creative Studio outline builder',
-                  'AI Image generation layout module',
-                  'Adaptive video templates creator',
-                  'Interactive copy refining toolkit'
-                ].map((feat, idx) => (
-                  <div key={idx} className="flex items-center gap-2.5 text-xs font-semibold text-slate-300">
-                    <Check size={12} className="text-violet-400 shrink-0" />
-                    <span>{feat}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* LAUNCH BUTTON (REDIRECTS TO /generate) */}
-            <button
-              onClick={() => handleLaunch('/generate')}
-              className="w-full py-4.5 bg-gradient-to-r from-violet-500 to-fuchsia-600 hover:opacity-95 text-white font-extrabold rounded-xl shadow-[0_4px_20px_rgba(139,92,246,0.25)] hover:shadow-[0_4px_30px_rgba(139,92,246,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2 group-hover:scale-[1.01] active:scale-[0.99] z-10"
-            >
-              <span>Launch Creative OS</span>
-              <ArrowRight size={14} className="group-hover:translate-x-1 duration-200" />
-            </button>
-          </TiltCard>
-
-          {/* PORTAL B: GROWTH OS CARD (CYAN/EMERALD GLOW & TILT) */}
-          <TiltCard
-            glowColor="rgba(6,182,212,0.18)"
-            className="bg-slate-900/40 border border-white/[0.04] rounded-3xl p-8 flex flex-col justify-between space-y-8 overflow-hidden hover:border-cyan-500/40 hover:shadow-[0_0_50px_rgba(6,182,212,0.12)] transition-all duration-300"
-          >
-            <div className="space-y-6">
-              {/* Header details */}
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 shadow-sm group-hover:scale-105 duration-300">
-                  <TrendingUp size={20} />
-                </div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-400/65 bg-cyan-500/5 px-2.5 py-1 rounded-md border border-cyan-500/10">Suite Beta</span>
-              </div>
-
-              {/* Title & Description */}
-              <div className="space-y-2 text-left">
-                <h3 className="font-display text-2xl font-black text-white group-hover:text-cyan-400 transition-colors">Growth OS</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  The automated distribution and optimization system. Manage high-converting LinkedIn campaigns, track ROI, and run data audits.
-                </p>
-              </div>
-
-              {/* Features check list */}
-              <div className="space-y-2.5 pt-2 border-t border-slate-800/40 text-left">
-                {[
-                  'LinkedIn campaign builder wizard',
-                  'Audience persona profiles generator',
-                  'Multi-channel performance trackers',
-                  'Stripe-powered ad wallet manager'
-                ].map((feat, idx) => (
-                  <div key={idx} className="flex items-center gap-2.5 text-xs font-semibold text-slate-300">
-                    <Check size={12} className="text-cyan-400 shrink-0" />
-                    <span>{feat}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* LAUNCH BUTTON (REDIRECTS TO /blog-studio) */}
-            <button
-              onClick={() => handleLaunch('/blog-studio')}
-              className="w-full py-4.5 bg-gradient-to-r from-cyan-500 to-teal-500 hover:opacity-95 text-white font-extrabold rounded-xl shadow-[0_4px_20px_rgba(6,182,212,0.25)] hover:shadow-[0_4px_30px_rgba(6,182,212,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2 group-hover:scale-[1.01] active:scale-[0.99] z-10"
-            >
-              <span>Launch Growth OS</span>
-              <ArrowRight size={14} className="group-hover:translate-x-1 duration-200" />
-            </button>
-          </TiltCard>
-        </motion.div>
       </div>
 
       {/* 9. DRIBBBLE-STYLE BENTO GRID FEATURE SHOWCASE */}
