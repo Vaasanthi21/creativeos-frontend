@@ -15,22 +15,29 @@ import {
   Compass,
   Users,
   Send,
-  FileText
+  FileText,
+  Check,
+  Plus,
+  Play,
+  TrendingUp,
+  Cpu,
+  Monitor,
+  Settings,
+  Bell,
+  ArrowUpRight,
+  ShieldCheck,
+  FolderOpen
 } from 'lucide-react';
 
 // Reusable 3D Tilt Card Wrapper using Framer Motion physics
 const TiltCard = ({ children, className, glowColor, onClick }) => {
   const cardRef = useRef(null);
-  
-  // Motion values for coordinates
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  // Rotation ranges
   const rotateX = useTransform(mouseY, [-200, 200], [10, -10]);
   const rotateY = useTransform(mouseX, [-200, 200], [-10, 10]);
 
-  // Spring physics for buttery-smooth interpolation
   const springConfig = { damping: 25, stiffness: 150, mass: 0.5 };
   const springX = useSpring(rotateX, springConfig);
   const springY = useSpring(rotateY, springConfig);
@@ -63,12 +70,11 @@ const TiltCard = ({ children, className, glowColor, onClick }) => {
       }}
       className={`relative group cursor-pointer ${className}`}
     >
-      {/* 3D Perspective container */}
-      <div style={{ transform: 'translateZ(30px)' }} className="h-full relative z-10">
+      <div style={{ transform: 'translateZ(25px)' }} className="h-full relative z-10">
         {children}
       </div>
 
-      {/* Behind-card ambient glow */}
+      {/* Behind-card glow */}
       <div 
         className="absolute -inset-px rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl pointer-events-none z-0"
         style={{
@@ -93,52 +99,33 @@ export const LandingPage = () => {
     return () => window.removeEventListener('mousemove', handleMove);
   }, []);
 
-  // Coverflow carousel state — auto-advances through cards, pauses on hover
+  // Coverflow carousel state
   const [activeIndex, setActiveIndex] = useState(0);
   const [isCoverflowPaused, setIsCoverflowPaused] = useState(false);
 
-  // Workflow timeline state — auto-advances through steps, pauses on hover
+  // Workflow timeline state
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [isTimelinePaused, setIsTimelinePaused] = useState(false);
+
+  // Active brand mockup selection state for hero dashboard
+  const [heroActiveTab, setHeroActiveTab] = useState('editor');
 
   const handleLaunch = (targetPath) => {
     if (isAuthenticated) {
       navigate(targetPath);
     } else {
-      // Redirect to Signup (Register) page, then return to clicked page
       navigate(`/register?redirect=${encodeURIComponent(targetPath)}`);
     }
   };
 
-  // Stagger reveal animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.1
-      }
-    }
-  };
-
-  const fadeInUp = {
-    hidden: { y: 40, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: 'spring', stiffness: 90, damping: 14 }
-    }
-  };
-
-  // sliding cards data representing features — brand orange palette
+  // sliding cards data representing features
   const featuresData = [
     {
       title: 'Generate Page',
       desc: 'Create high-performing blog outlines, copy components, and custom social assets grounded in your brand identity.',
       path: '/generate',
       icon: Sparkles,
-      iconBg: 'bg-orange-500/10',
+      iconBg: 'bg-orange-550/10',
       iconBorder: 'border-orange-500/25',
       iconColor: 'text-orange-400',
       glowColor: 'rgba(249,115,22,0.18)'
@@ -187,16 +174,14 @@ export const LandingPage = () => {
 
   const cardCount = featuresData.length;
 
-  // Auto-advance the coverflow carousel every 2.6s — pauses on hover
   useEffect(() => {
     if (isCoverflowPaused) return;
     const timer = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % cardCount);
-    }, 2600);
+    }, 2800);
     return () => clearInterval(timer);
   }, [isCoverflowPaused, cardCount]);
 
-  // Shortest signed distance from a card's index to the active card
   const getOffset = (idx) => {
     let diff = idx - activeIndex;
     if (diff > cardCount / 2) diff -= cardCount;
@@ -204,7 +189,6 @@ export const LandingPage = () => {
     return diff;
   };
 
-  // Workflow timeline steps — Brand Orange Theme colors
   const workflowSteps = [
     {
       title: 'Brief',
@@ -244,7 +228,6 @@ export const LandingPage = () => {
     }
   ];
 
-  // Auto-advance the workflow timeline every 3.2s — pauses on hover
   useEffect(() => {
     if (isTimelinePaused) return;
     const timer = setInterval(() => {
@@ -254,20 +237,20 @@ export const LandingPage = () => {
   }, [isTimelinePaused]);
 
   return (
-    <div className="dark relative min-h-screen bg-background text-foreground overflow-hidden font-display select-none">
+    <div className="dark relative min-h-screen bg-[#070708] text-[#f4f4f5] overflow-x-hidden font-display select-none">
 
       {/* 1. STAR LIGHT STARS BACKDROP */}
-      <div className="absolute inset-0 bg-[radial-gradient(white_1px,transparent_1px)] bg-[size:32px_32px] opacity-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(white_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.04] pointer-events-none" />
 
-      {/* 2. INTERACTIVE MOUSE SPOTLIGHT (Brand Orange Spotlight) */}
+      {/* 2. INTERACTIVE SPOTLIGHT GLOW */}
       <div
-        className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300 opacity-70 hidden md:block"
+        className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300 opacity-60 hidden md:block"
         style={{
           background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(249,115,22,0.06) 0%, rgba(245,158,11,0.04) 50%, transparent 100%)`
         }}
       />
 
-      {/* 3. DYNAMIC NEBULA BLOBS (Orange / Amber Theme) */}
+      {/* 3. DYNAMIC NEBULA BLOBS */}
       <motion.div
         animate={{
           x: [0, 80, -40, 0],
@@ -275,11 +258,7 @@ export const LandingPage = () => {
           scale: [1, 1.25, 0.8, 1],
           rotate: [0, 60, -60, 0]
         }}
-        transition={{
-          duration: 22,
-          repeat: Infinity,
-          ease: 'easeInOut'
-        }}
+        transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
         className="absolute top-[-25%] left-[-15%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tr from-orange-600/10 to-amber-600/5 blur-[140px] pointer-events-none"
       />
 
@@ -290,159 +269,282 @@ export const LandingPage = () => {
           scale: [1, 0.85, 1.2, 1],
           rotate: [0, -50, 50, 0]
         }}
-        transition={{
-          duration: 26,
-          repeat: Infinity,
-          ease: 'easeInOut'
-        }}
+        transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
         className="absolute bottom-[-20%] right-[-15%] w-[65vw] h-[65vw] rounded-full bg-gradient-to-br from-yellow-500/10 to-orange-500/5 blur-[160px] pointer-events-none"
       />
 
-      {/* Cybernetic grid overlay */}
+      {/* Cybernetic Grid */}
       <div
-        className="absolute inset-0 bg-[linear-gradient(to_right,#2a1808_1px,transparent_1px),linear-gradient(to_bottom,#2a1808_1px,transparent_1px)] bg-[size:4.5rem_4.5rem] opacity-25 animate-pulse"
+        className="absolute inset-0 bg-[linear-gradient(to_right,#191512_1px,transparent_1px),linear-gradient(to_bottom,#191512_1px,transparent_1px)] bg-[size:4.5rem_4.5rem] opacity-35"
         style={{
           maskImage: 'radial-gradient(ellipse 65% 55% at 50% 50%, #000 60%, transparent 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at 50% 50%, #000 60%, transparent 100%)',
-          animationDuration: '8s'
+          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at 50% 50%, #000 60%, transparent 100%)'
         }}
       />
 
-      {/* 4. PREMIUM GLASS NAVIGATION HEADER */}
-      <nav className="sticky top-0 z-50 w-full bg-background/65 backdrop-blur-lg border-b border-white/[0.04] px-8 py-4.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl blur opacity-70 group-hover:opacity-100 transition duration-300" />
-            <div className="relative w-9 h-9 rounded-xl bg-background flex items-center justify-center font-extrabold text-foreground text-base">
-              C
+      {/* 4. FLOATING CAPSULE NAVIGATION HEADER */}
+      <header className="sticky top-4 z-50 max-w-5xl mx-auto px-6">
+        <nav className="w-full bg-[#0d0d0f]/70 backdrop-blur-xl border border-white/[0.05] rounded-full px-6 py-3 flex items-center justify-between shadow-2xl">
+          <div className="flex items-center gap-3">
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-350" />
+              <div className="relative w-8 h-8 rounded-lg bg-background flex items-center justify-center font-black text-foreground text-sm">
+                C
+              </div>
             </div>
+            <span className="font-display font-black tracking-tight text-foreground text-sm">
+              CreativeStudio <span className="bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">OS</span>
+            </span>
           </div>
-          <span className="font-display font-black tracking-tight text-foreground text-base">
-            CreativeStudio <span className="bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">OS</span>
-          </span>
-        </div>
 
-        <div>
-          <button
-            onClick={() => handleLaunch('/generate')}
-            className="px-5 py-2.5 bg-white/5 border border-white/10 hover:border-orange-500/40 hover:bg-orange-500/5 text-muted-foreground hover:text-foreground font-extrabold rounded-xl text-xs shadow-sm transition-all duration-300 cursor-pointer flex items-center gap-2"
-          >
-            <span>Launch Portal</span>
-            <ArrowRight size={13} className="text-orange-400" />
-          </button>
-        </div>
-      </nav>
+          <div className="hidden md:flex items-center gap-6 text-xs font-semibold text-muted-foreground">
+            <a href="#features" className="hover:text-foreground transition">Features</a>
+            <a href="#workflow" className="hover:text-foreground transition">Workflow</a>
+            <a href="#engine" className="hover:text-foreground transition">Engine</a>
+          </div>
+
+          <div>
+            <button
+              onClick={() => handleLaunch('/generate')}
+              className="px-4 py-2 bg-white/5 border border-white/10 hover:border-orange-500/40 hover:bg-orange-500/5 text-muted-foreground hover:text-foreground font-extrabold rounded-full text-xs transition-all duration-300 flex items-center gap-2 cursor-pointer"
+            >
+              <span>Launch Portal</span>
+              <ArrowRight size={12} className="text-orange-400" />
+            </button>
+          </div>
+        </nav>
+      </header>
 
       {/* 5. HERO SECTION */}
-      <div className="max-w-5xl mx-auto px-6 pt-16 pb-2 text-center relative z-10">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-8"
-        >
-          {/* Glowing badge */}
-          <motion.div
-            variants={fadeInUp}
-            className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-orange-500/10 border border-orange-500/25 rounded-full text-[10px] font-extrabold uppercase tracking-widest text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:border-orange-500/40 transition-all duration-300"
-          >
-            <Sparkles size={11} className="text-amber-400 animate-spin" style={{ animationDuration: '4s' }} />
-            <span>Figma Blueprint to Production-Ready Code</span>
-          </motion.div>
+      <section className="max-w-5xl mx-auto px-6 pt-16 pb-4 text-center relative z-10">
+        <div className="space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.2 bg-orange-500/10 border border-orange-500/25 rounded-full text-[10px] font-extrabold uppercase tracking-widest text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)]">
+            <Sparkles size={11} className="text-amber-400 animate-pulse" />
+            <span>Interactive Production-Grade Release</span>
+          </div>
 
-          {/* Heading */}
-          <motion.h1
-            variants={fadeInUp}
-            className="text-5xl sm:text-8xl font-display font-black tracking-tight text-foreground max-w-5xl mx-auto leading-[0.98] capitalize animate-fade-in"
-          >
-            The Ultimate{' '}
+          <h1 className="text-5xl sm:text-8xl font-display font-black tracking-tight text-foreground max-w-5xl mx-auto leading-[0.96] capitalize">
+            The Intelligent Content Workspace For{' '}
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-500 bg-clip-text text-transparent">AI Platform</span>
-            </span>{' '}
-            For{' '}
-            <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">Content & Growth</span>
+              <span className="bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-500 bg-clip-text text-transparent">Fast Creators</span>
             </span>
-          </motion.h1>
+          </h1>
 
-          {/* Subheading */}
-          <motion.p
-            variants={fadeInUp}
-            className="text-xs sm:text-base text-muted-foreground max-w-3xl mx-auto leading-relaxed font-normal"
-          >
-            Unify your creative engines and distribution metrics. Build personas, crawl sources, generate blogs, and optimize campaigns inside a single dynamic environment.
-          </motion.p>
-        </motion.div>
-      </div>
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Write brand-grounded documents, generate campaign visuals, and audit LinkedIn conversion performance under one highly responsive dark workspace.
+          </p>
 
-      {/* 6. DUAL SWIRLING PORTAL ORB (Brand Orange / Amber Core) */}
-      <div className="relative w-64 h-64 mx-auto my-10 z-10 flex items-center justify-center">
-        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-orange-600 via-amber-500 to-yellow-400 blur-3xl opacity-35" />
+          <div className="flex flex-wrap justify-center gap-4 pt-4">
+            <button
+              onClick={() => handleLaunch('/register')}
+              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-600 hover:opacity-95 text-white font-black rounded-full text-xs shadow-lg shadow-orange-500/20 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition cursor-pointer"
+            >
+              <span>Start Free Trial</span>
+              <ArrowRight size={13} />
+            </button>
+            <button
+              onClick={() => handleLaunch('/generate')}
+              className="px-6 py-3 bg-white/5 hover:bg-white/[0.08] border border-white/10 text-foreground font-black rounded-full text-xs flex items-center gap-2 transition cursor-pointer"
+            >
+              <span>Explore Features</span>
+            </button>
+          </div>
+        </div>
+      </section>
 
-        <motion.div
-          animate={{ rotate: -360 }}
-          transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-          className="absolute w-80 h-80 rounded-full border border-dashed border-orange-500/20 flex items-center justify-center pointer-events-none"
-        >
-          <span className="w-2 h-2 rounded-full bg-orange-400 absolute top-0" />
-          <span className="w-2 h-2 rounded-full bg-amber-400 absolute bottom-0" />
-        </motion.div>
+      {/* 6. HERO INTERACTIVE DASHBOARD PREVIEW */}
+      <section className="max-w-5xl mx-auto px-6 py-12 relative z-10">
+        <div className="rounded-3xl border border-white/[0.06] overflow-hidden shadow-2xl bg-[#09090b] shadow-orange-500/5">
+          {/* Browser header */}
+          <div className="bg-neutral-900/60 border-b border-white/[0.03] px-5 py-3.5 flex items-center justify-between">
+            <div className="flex gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/40" />
+            </div>
+            <div className="text-[10px] text-muted-foreground bg-black/60 px-6 py-1 rounded-full border border-white/[0.02] select-none font-mono">
+              creativestudio.os/portal
+            </div>
+            <div className="flex items-center gap-3">
+              <Bell size={13} className="text-muted-foreground" />
+              <div className="w-5 h-5 rounded-full bg-neutral-800" />
+            </div>
+          </div>
 
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-          className="absolute w-[340px] h-[340px] rounded-full border border-dashed border-white/5 flex items-center justify-center pointer-events-none"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 absolute left-0" />
-        </motion.div>
+          {/* Editor/Studio Inner layout mockup */}
+          <div className="grid grid-cols-1 md:grid-cols-[200px_1fr_240px] h-[400px] bg-[#0c0c0e]">
+            {/* Sidebar Mockup */}
+            <div className="border-r border-white/[0.03] p-4 flex flex-col justify-between hidden md:flex text-left">
+              <div className="space-y-4">
+                <span className="text-[8px] font-bold text-muted-foreground tracking-wider uppercase">STUDIO PIPELINES</span>
+                <div className="space-y-1.5">
+                  <div
+                    onClick={() => setHeroActiveTab('editor')}
+                    className={`px-3 py-1.8 rounded-lg text-xs font-bold flex items-center gap-2 cursor-pointer transition ${
+                      heroActiveTab === 'editor' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'text-muted-foreground hover:bg-white/[0.02]'
+                    }`}
+                  >
+                    <Sparkles size={13} />
+                    <span>Generate Page</span>
+                  </div>
+                  <div
+                    onClick={() => setHeroActiveTab('blog')}
+                    className={`px-3 py-1.8 rounded-lg text-xs font-bold flex items-center gap-2 cursor-pointer transition ${
+                      heroActiveTab === 'blog' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'text-muted-foreground hover:bg-white/[0.02]'
+                    }`}
+                  >
+                    <Layout size={13} />
+                    <span>Blog Studio</span>
+                  </div>
+                  <div
+                    onClick={() => setHeroActiveTab('metrics')}
+                    className={`px-3 py-1.8 rounded-lg text-xs font-bold flex items-center gap-2 cursor-pointer transition ${
+                      heroActiveTab === 'metrics' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'text-muted-foreground hover:bg-white/[0.02]'
+                    }`}
+                  >
+                    <BarChart3 size={13} />
+                    <span>LinkedIn Tracker</span>
+                  </div>
+                </div>
+              </div>
+              <div className="p-3 bg-white/[0.01] rounded-xl border border-white/[0.03] text-left">
+                <span className="text-[9px] font-mono text-muted-foreground block">ACTIVE BRAND</span>
+                <span className="text-[10px] font-bold text-foreground flex items-center gap-1.5 mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400" /> Stripe Brand
+                </span>
+              </div>
+            </div>
 
-        {/* Code-drawn core — Orange Base, bound to HSL variables */}
-        <motion.div
-          className="relative w-56 h-56 rounded-full z-10 pointer-events-none"
-          animate={{ y: [0, -15, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{
-              background:
-                'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.95) 0%, rgba(253,230,138,0.9) 10%, rgba(249,115,22,0.85) 28%, rgba(194,65,12,0.9) 52%, hsl(var(--background)) 78%)',
-              boxShadow: '0 0 70px rgba(249,115,22,0.45), inset -18px -18px 50px rgba(0,0,0,0.55)'
-            }}
-          />
+            {/* Central Editor Mockup */}
+            <div className="p-6 flex flex-col justify-between text-left overflow-y-auto">
+              <AnimatePresence mode="wait">
+                {heroActiveTab === 'editor' && (
+                  <motion.div
+                    key="editor"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center justify-between border-b border-white/[0.03] pb-3">
+                      <div className="space-y-0.5">
+                        <span className="text-[9px] font-mono text-orange-400 uppercase tracking-widest font-black">AI Editor Workspace</span>
+                        <h3 className="text-sm font-bold text-foreground">How AI is reshaping product engineering</h3>
+                      </div>
+                      <span className="text-[9px] text-muted-foreground">Draft 03</span>
+                    </div>
 
-          <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full opacity-70">
-            <ellipse cx="100" cy="100" rx="96" ry="34" fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1" />
-            <ellipse cx="100" cy="100" rx="96" ry="64" fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
-            <ellipse cx="100" cy="100" rx="58" ry="96" fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
-            <ellipse cx="100" cy="100" rx="30" ry="96" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-          </svg>
+                    <div className="space-y-2.5 font-mono text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                      <p>Over the last decade, UI workflows have evolved rapidly. Modern teams are transitioning from static wireframe handoffs directly into interactive, code-grounded sandbox environments...</p>
+                      <p className="bg-orange-550/5 border border-orange-500/15 p-2 rounded-lg text-foreground flex items-center justify-between">
+                        <span>✨ AI Assist: Refine tone to "Confident & Thought Leadership"</span>
+                        <span className="text-[9px] text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded">Applying</span>
+                      </p>
+                      <p>This paradigm shift ensures styling fidelity remains 100% accurate, eliminating design compromises during final production compile runs...</p>
+                    </div>
+                  </motion.div>
+                )}
 
-          {/* Slow rotating dashed ring */}
-          <motion.svg
-            viewBox="0 0 200 200"
-            className="absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)]"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
-          >
-            <circle cx="100" cy="100" r="98" fill="none" stroke="url(#coreRingGradient)" strokeWidth="2" strokeDasharray="3 11" strokeLinecap="round" />
-            <defs>
-              <linearGradient id="coreRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#fde047" />
-                <stop offset="100%" stopColor="#f97316" />
-              </linearGradient>
-            </defs>
-          </motion.svg>
+                {heroActiveTab === 'blog' && (
+                  <motion.div
+                    key="blog"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center justify-between border-b border-white/[0.03] pb-3">
+                      <div className="space-y-0.5">
+                        <span className="text-[9px] font-mono text-amber-400 uppercase tracking-widest font-black">Blog outline generator</span>
+                        <h3 className="text-sm font-bold text-foreground">SEO Keyword Strategy Brief</h3>
+                      </div>
+                      <span className="text-[9px] text-emerald-400 font-bold">Grounded</span>
+                    </div>
 
-          <div
-            className="absolute top-[14%] left-[24%] w-10 h-6 rounded-full opacity-70"
-            style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.85) 0%, transparent 70%)', filter: 'blur(2px)' }}
-          />
-        </motion.div>
-      </div>
+                    <div className="space-y-2">
+                      <div className="border border-white/[0.03] p-3 rounded-xl bg-white/[0.01]">
+                        <span className="text-[10px] font-bold text-foreground block">1. Introduction to Web3 Sandboxes</span>
+                        <span className="text-[9px] text-muted-foreground block mt-1">Target keywords: figma wireframe, react code blocks, sandbox engine</span>
+                      </div>
+                      <div className="border border-white/[0.03] p-3 rounded-xl bg-white/[0.01]">
+                        <span className="text-[10px] font-bold text-foreground block">2. Measuring Code Fidelity Performance</span>
+                        <span className="text-[9px] text-muted-foreground block mt-1">Target keywords: production compile, css variables, design handoff</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
-      {/* 7. AUTO-ROTATING 3D COVERFLOW FEATURE CARDS (Medium Cards) */}
-      <div className="max-w-6xl mx-auto px-6 pb-24 relative z-10 text-center">
+                {heroActiveTab === 'metrics' && (
+                  <motion.div
+                    key="metrics"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-5"
+                  >
+                    <div className="flex items-center justify-between border-b border-white/[0.03] pb-3">
+                      <div className="space-y-0.5">
+                        <span className="text-[9px] font-mono text-red-400 uppercase tracking-widest font-black">Live performance monitoring</span>
+                        <h3 className="text-sm font-bold text-foreground">LinkedIn Campaign Conversion Loops</h3>
+                      </div>
+                      <span className="text-[9px] text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded">Active</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-white/[0.01] border border-white/[0.03] p-3 rounded-xl">
+                        <span className="text-[9px] text-muted-foreground block">TOTAL REACH</span>
+                        <span className="text-lg font-bold text-foreground mt-1 block">142,840</span>
+                        <span className="text-[9px] text-emerald-400 font-bold">+24% this week</span>
+                      </div>
+                      <div className="bg-white/[0.01] border border-white/[0.03] p-3 rounded-xl">
+                        <span className="text-[9px] text-muted-foreground block">CONVERSIONS</span>
+                        <span className="text-lg font-bold text-foreground mt-1 block">3,490</span>
+                        <span className="text-[9px] text-emerald-400 font-bold">+18.5% this week</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Right sidebar mockup */}
+            <div className="border-l border-white/[0.03] p-4 flex flex-col justify-between hidden md:flex text-left">
+              <div className="space-y-5">
+                <span className="text-[8px] font-bold text-muted-foreground tracking-wider uppercase">BRAND COMPLIANCE</span>
+                
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-foreground font-bold flex justify-between">
+                      <span>Factual Match</span>
+                      <span className="text-orange-400">98%</span>
+                    </span>
+                    <div className="h-1 w-full bg-white/[0.03] rounded-full overflow-hidden">
+                      <div className="h-full w-[98%] bg-orange-500 rounded-full" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-foreground font-bold flex justify-between">
+                      <span>Tone Match</span>
+                      <span className="text-amber-400">95%</span>
+                    </span>
+                    <div className="h-1 w-full bg-white/[0.03] rounded-full overflow-hidden">
+                      <div className="h-full w-[95%] bg-amber-500 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-orange-500/5 rounded-xl border border-orange-500/10 text-left">
+                <span className="text-[9px] text-orange-400 font-bold block uppercase tracking-wider">Engine Status</span>
+                <span className="text-[10px] font-bold text-foreground mt-1 block">Fidelity Verified</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. AUTO-ROTATING 3D COVERFLOW FEATURE CARDS */}
+      <section id="features" className="max-w-6xl mx-auto px-6 pb-24 relative z-10 text-center">
         <div className="space-y-2 mb-10">
           <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
             <Zap size={14} className="text-orange-400" /> Transform Your Workflow
@@ -450,7 +552,7 @@ export const LandingPage = () => {
           <p className="text-[10px] sm:text-xs text-muted-foreground">Cycles automatically — hover to pause, click a card to jump to it.</p>
         </div>
 
-        {/* Coverflow stage: perspective container, cards positioned absolutely and animated by offset */}
+        {/* Coverflow stage: perspective container */}
         <div
           className="relative h-[450px] sm:h-[500px] flex items-center justify-center"
           style={{ perspective: '1600px' }}
@@ -462,7 +564,6 @@ export const LandingPage = () => {
             const abs = Math.abs(offset);
             const isActive = offset === 0;
 
-            // Cards more than 2 positions away are hidden entirely
             if (abs > 2) return null;
 
             const translateX = offset * 280;
@@ -480,11 +581,11 @@ export const LandingPage = () => {
                 style={{ zIndex, transformStyle: 'preserve-3d' }}
                 className="absolute w-[330px] sm:w-[370px] h-[380px] sm:h-[420px] cursor-pointer bg-card/75 border border-white/[0.06] rounded-3xl p-8 flex flex-col justify-between backdrop-blur-sm shadow-2xl"
               >
-                <div className="space-y-6">
+                <div className="space-y-6 text-left">
                   <div className={`w-14 h-14 rounded-2xl ${card.iconBg} border ${card.iconBorder} flex items-center justify-center ${card.iconColor} shadow-sm`}>
                     <card.icon size={24} />
                   </div>
-                  <div className="space-y-3 text-left">
+                  <div className="space-y-3">
                     <h3 className="font-display text-xl font-black text-foreground">{card.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed font-normal">
                       {card.desc}
@@ -497,7 +598,6 @@ export const LandingPage = () => {
                   <ArrowRight size={13} />
                 </div>
 
-                {/* Ambient glow only on the active, front-facing card */}
                 {isActive && (
                   <div
                     className="absolute -inset-px rounded-3xl -z-10 blur-2xl pointer-events-none"
@@ -522,10 +622,10 @@ export const LandingPage = () => {
             />
           ))}
         </div>
-      </div>
+      </section>
 
       {/* 8. AUTO-PLAYING WORKFLOW TIMELINE */}
-      <div className="max-w-5xl mx-auto px-6 pb-24 relative z-10">
+      <section id="workflow" className="max-w-5xl mx-auto px-6 pb-24 relative z-10">
         <div className="text-center space-y-2 mb-14">
           <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
             <Workflow size={14} className="text-orange-400" /> How It Flows
@@ -537,7 +637,7 @@ export const LandingPage = () => {
           onMouseEnter={() => setIsTimelinePaused(true)}
           onMouseLeave={() => setIsTimelinePaused(false)}
         >
-          {/* Step rail: connecting line + numbered nodes */}
+          {/* Step rail */}
           <div className="relative flex items-center justify-between mb-12 px-2 sm:px-6">
             <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-white/[0.06] mx-2 sm:mx-6" />
             <motion.div
@@ -558,14 +658,14 @@ export const LandingPage = () => {
                   <motion.div
                     animate={{
                       scale: isActive ? 1.15 : 1,
-                      backgroundColor: isActive || isPast ? step.solidColor : 'rgba(15,17,33,1)',
+                      backgroundColor: isActive || isPast ? step.solidColor : '#0d0d0f',
                       borderColor: isActive || isPast ? step.solidColor : 'rgba(255,255,255,0.12)'
                     }}
                     transition={{ type: 'spring', stiffness: 200, damping: 18 }}
                     className="w-11 h-11 sm:w-14 sm:h-14 rounded-full border-2 flex items-center justify-center shadow-lg"
                     style={isActive ? { boxShadow: `0 0 24px ${step.glow}` } : undefined}
                   >
-                    <step.icon size={20} className={isActive || isPast ? 'text-slate-950' : 'text-slate-500'} />
+                    <step.icon size={20} className={isActive || isPast ? 'text-slate-950' : 'text-slate-550'} />
                   </motion.div>
                   <span className={`text-[11px] sm:text-xs font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
                     {step.title}
@@ -596,7 +696,6 @@ export const LandingPage = () => {
                       <p className="text-sm text-muted-foreground leading-relaxed max-w-md">{step.desc}</p>
                     </div>
 
-                    {/* Small per-step visual mockup */}
                     <div className="flex gap-2 sm:flex-col shrink-0">
                       {step.chips.map((chip) => (
                         <span
@@ -614,11 +713,10 @@ export const LandingPage = () => {
             </AnimatePresence>
           </div>
         </div>
-      </div>
-
+      </section>
 
       {/* 9. DRIBBBLE-STYLE BENTO GRID FEATURE SHOWCASE */}
-      <div className="border-t border-white/[0.02] bg-background/60 py-28 relative z-10">
+      <section id="engine" className="border-t border-white/[0.02] bg-background/60 py-28 relative z-10">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center space-y-4 mb-20">
             <h3 className="font-display text-4xl font-black text-foreground">Consolidated OS Engine</h3>
@@ -644,7 +742,7 @@ export const LandingPage = () => {
                 </div>
                 <h4 className="font-display font-black text-foreground text-xl">Core AI Grounding Engine</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed font-normal mt-2">
-                  AI references uploaded corporate wikis, pitch decks, and audience guidelines to ensure every article draft maintains strict factual consistency.
+                  AI references uploaded corporate wikis, pitch decks, and guidelines to ensure drafts maintain strict brand consistency.
                 </p>
               </div>
 
@@ -657,11 +755,11 @@ export const LandingPage = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs p-2 bg-white/[0.01] border border-white/[0.03] rounded-lg">
                     <span className="text-slate-350 flex items-center gap-2"><FileText size={12} className="text-orange-400" /> pitch_deck_v3.pdf</span>
-                    <span className="text-[10px] text-orange-400 font-bold bg-orange-550/10 px-2 py-0.5 rounded border border-orange-500/20">Indexed</span>
+                    <span className="text-[10px] text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">Indexed</span>
                   </div>
                   <div className="flex items-center justify-between text-xs p-2 bg-white/[0.01] border border-white/[0.03] rounded-lg">
                     <span className="text-slate-350 flex items-center gap-2"><FileText size={12} className="text-orange-400" /> brand_voice_guide.docx</span>
-                    <span className="text-[10px] text-orange-400 font-bold bg-orange-550/10 px-2 py-0.5 rounded border border-orange-500/20">Indexed</span>
+                    <span className="text-[10px] text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">Indexed</span>
                   </div>
                 </div>
               </div>
@@ -715,11 +813,11 @@ export const LandingPage = () => {
                 </p>
               </div>
 
-              {/* Connected Icons visual mockup */}
+              {/* Connected Icons mockup */}
               <div className="bg-background/70 border border-white/[0.03] p-4 rounded-2xl flex justify-between items-center relative overflow-hidden">
-                <div className="w-7 h-7 rounded-lg bg-orange-550/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">LI</div>
-                <div className="w-7 h-7 rounded-lg bg-orange-550/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">MD</div>
-                <div className="w-7 h-7 rounded-lg bg-orange-550/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">SU</div>
+                <div className="w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">LI</div>
+                <div className="w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">MD</div>
+                <div className="w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">SU</div>
               </div>
             </motion.div>
 
@@ -747,7 +845,7 @@ export const LandingPage = () => {
                   <span>CTR ANALYTICS</span>
                   <span className="text-orange-400 font-mono font-black">+14.2%</span>
                 </div>
-                <div className="h-10 bg-orange-500/10 border border-orange-555/5 rounded-lg overflow-hidden flex items-end px-2 gap-1.5">
+                <div className="h-10 bg-orange-550/10 border border-orange-500/10 rounded-lg overflow-hidden flex items-end px-2 gap-1.5">
                   <div className="w-full h-[30%] bg-orange-400/40 rounded-t" />
                   <div className="w-full h-[60%] bg-orange-400/60 rounded-t" />
                   <div className="w-full h-[45%] bg-orange-400/40 rounded-t" />
@@ -758,7 +856,7 @@ export const LandingPage = () => {
 
           </div>
         </div>
-      </div>
+      </section>
 
       {/* 10. FOOTER */}
       <footer className="border-t border-white/[0.02] py-8 text-center text-xs text-muted-foreground relative z-10 bg-background">
