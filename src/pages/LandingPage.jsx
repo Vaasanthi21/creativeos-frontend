@@ -33,6 +33,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../lib/AuthContext"
+import { useToast } from "../components/ui/use-toast"
 import {
   Sparkles,
   ArrowUpRight,
@@ -433,6 +434,7 @@ function Hero() {
 function StudioCoverflow() {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { toast } = useToast()
   const cards = [
     {
       title: "Image Studio",
@@ -538,7 +540,15 @@ function StudioCoverflow() {
               key={card.title}
               onClick={() => {
                 if (isActive) {
-                  navigate(isAuthenticated ? card.path : `/login?redirect=${card.path}`)
+                  if (isAuthenticated) {
+                    navigate(card.path)
+                  } else {
+                    toast({
+                      title: "Authentication Required",
+                      description: "Please login or create an account to access the studios.",
+                    })
+                    navigate(`/login?redirect=${card.path}`)
+                  }
                 } else {
                   setActiveIndex(idx)
                 }
@@ -635,6 +645,7 @@ function FeatureRow({ icon: Icon, title, status }) {
 function ImageStudio() {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { toast } = useToast()
   const [prompt, setPrompt] = useState("A futuristic cyberpunk city at sunset.")
   const images = ["/cyberpunk-1.png", "/cyberpunk-2.png", "/cyberpunk-3.png", "/cyberpunk-4.png"]
   const [gridRef, gridVisible] = useReveal(0.2)
@@ -664,6 +675,10 @@ function ImageStudio() {
               if (isAuthenticated) {
                 navigate("/image-studio", { state: { prompt } })
               } else {
+                toast({
+                  title: "Authentication Required",
+                  description: "Please login or create an account to access the studios.",
+                })
                 navigate(`/login?redirect=/image-studio`, { state: { prompt } })
               }
             }}
@@ -729,6 +744,7 @@ function ImageStudio() {
 function VideoStudio() {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { toast } = useToast()
   const ratios = ["16:9", "9:16", "1:1", "4:5"]
   const [barRef, barVisible] = useReveal(0.3)
 
@@ -756,6 +772,10 @@ function VideoStudio() {
                     if (isAuthenticated) {
                       navigate("/video-studio", { state: { prompt: "A drone flying through snowy mountains during sunrise." } })
                     } else {
+                      toast({
+                        title: "Authentication Required",
+                        description: "Please login or create an account to access the studios.",
+                      })
                       navigate("/login?redirect=/video-studio")
                     }
                   }}
@@ -822,7 +842,17 @@ function VideoStudio() {
             <FeatureRow icon={Zap} title="Fast Rendering" status="Active" />
           </div>
           <button
-            onClick={() => navigate(isAuthenticated ? "/video-studio" : "/login?redirect=/video-studio")}
+            onClick={() => {
+              if (isAuthenticated) {
+                navigate("/video-studio")
+              } else {
+                toast({
+                  title: "Authentication Required",
+                  description: "Please login or create an account to access the studios.",
+                })
+                navigate("/login?redirect=/video-studio")
+              }
+            }}
             className="mt-6 inline-flex items-center gap-2 rounded-lg bg-orange-500/10 border border-orange-500/30 px-4 py-2.5 text-sm font-semibold text-orange-500 transition-all hover:bg-orange-500/20 hover:scale-[1.02] active:scale-95"
           >
             <span>Open Video Studio</span>
@@ -839,6 +869,7 @@ function VideoStudio() {
 function BlogStudio() {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { toast } = useToast()
   const insights = [
     "Title includes focus keyword",
     "Meta description within 155 chars",
@@ -885,7 +916,15 @@ function BlogStudio() {
           <button
             onClick={() => {
               const path = "/blog-studio?view=generate&suggestedTopicName=AI in Digital Marketing: The 2026 Playbook"
-              navigate(isAuthenticated ? path : `/login?redirect=${encodeURIComponent(path)}`)
+              if (isAuthenticated) {
+                navigate(path)
+              } else {
+                toast({
+                  title: "Authentication Required",
+                  description: "Please login or create an account to access the studios.",
+                })
+                navigate(`/login?redirect=${encodeURIComponent(path)}`)
+              }
             }}
             className="mt-6 inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:scale-[1.02] active:scale-95"
           >
