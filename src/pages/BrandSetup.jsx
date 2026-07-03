@@ -46,6 +46,7 @@ export const BrandSetup = () => {
   // ────────────────────────────────────────────────────────────────────────
   const [viewMode, setViewMode] = useState(null);
   const [initializedCompanyId, setInitializedCompanyId] = useState(null);
+  const [hasInitializedViewMode, setHasInitializedViewMode] = useState(false);
 
   // Collapsible sections in Workspace
   const [isCompanyExpanded, setIsCompanyExpanded] = useState(true);
@@ -160,12 +161,24 @@ export const BrandSetup = () => {
       return;
     }
 
+    if (companyData && initializedCompanyId !== companyData._id) {
+      setInitializedCompanyId(companyData._id);
+      setHasInitializedViewMode(false);
+      return;
+    }
+
+    if (hasInitializedViewMode) {
+      return;
+    }
+
     if (['manual_setup', 'ai_setup', 'processing'].includes(viewMode)) {
+      setHasInitializedViewMode(true);
       return;
     }
 
     if (companyError || !companyData) {
       setViewMode('choose');
+      setHasInitializedViewMode(true);
       return;
     }
 
@@ -174,11 +187,8 @@ export const BrandSetup = () => {
       companyData.website;
 
     setViewMode(hasCompanyDetails ? 'workspace' : 'choose');
-
-    if (initializedCompanyId !== companyData._id) {
-      setInitializedCompanyId(companyData._id);
-    }
-  }, [companyData, companyLoading, personasLoading, companyError, initializedCompanyId, viewMode]);
+    setHasInitializedViewMode(true);
+  }, [companyData, companyLoading, personasLoading, companyError, initializedCompanyId, viewMode, hasInitializedViewMode]);
 
   useEffect(() => {
     return () => {
