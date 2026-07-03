@@ -32,6 +32,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../lib/AuthContext"
 import {
   Sparkles,
   ArrowUpRight,
@@ -318,6 +319,7 @@ function Nav() {
 
 function Hero() {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const stats = [
     { v: "12M+", l: "Assets Generated" },
     { v: "48K", l: "Creators Onboarded" },
@@ -375,7 +377,7 @@ function Hero() {
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Magnetic strength={0.25}>
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate(isAuthenticated ? "/generate" : "/login?redirect=/generate")}
               className="group inline-flex items-center gap-2 rounded-full bg-orange-500 px-7 py-3.5 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:shadow-lg hover:shadow-orange-500/30 active:scale-95"
             >
               <Sparkles className="h-4 w-4" />
@@ -430,6 +432,7 @@ function Hero() {
 
 function StudioCoverflow() {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const cards = [
     {
       title: "Image Studio",
@@ -533,7 +536,13 @@ function StudioCoverflow() {
           return (
             <div
               key={card.title}
-              onClick={() => (isActive ? navigate(card.path) : setActiveIndex(idx))}
+              onClick={() => {
+                if (isActive) {
+                  navigate(isAuthenticated ? card.path : `/login?redirect=${card.path}`)
+                } else {
+                  setActiveIndex(idx)
+                }
+              }}
               style={{
                 transform: `translateX(${translateX}px) scale(${scale}) rotateY(${rotateY}deg)`,
                 opacity,
@@ -625,6 +634,7 @@ function FeatureRow({ icon: Icon, title, status }) {
 
 function ImageStudio() {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const [prompt, setPrompt] = useState("A futuristic cyberpunk city at sunset.")
   const images = ["/cyberpunk-1.png", "/cyberpunk-2.png", "/cyberpunk-3.png", "/cyberpunk-4.png"]
   const [gridRef, gridVisible] = useReveal(0.2)
@@ -651,7 +661,11 @@ function ImageStudio() {
           <form
             onSubmit={(e) => {
               e.preventDefault()
-              navigate("/image-studio", { state: { prompt } })
+              if (isAuthenticated) {
+                navigate("/image-studio", { state: { prompt } })
+              } else {
+                navigate(`/login?redirect=/image-studio`, { state: { prompt } })
+              }
             }}
             className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 p-2 pl-4 transition-colors duration-300 focus-within:border-orange-500/40"
           >
@@ -714,6 +728,7 @@ function ImageStudio() {
 
 function VideoStudio() {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const ratios = ["16:9", "9:16", "1:1", "4:5"]
   const [barRef, barVisible] = useReveal(0.3)
 
@@ -737,7 +752,13 @@ function VideoStudio() {
                 />
                 <button
                   aria-label="Play preview"
-                  onClick={() => navigate("/video-studio", { state: { prompt: "A drone flying through snowy mountains during sunrise." } })}
+                  onClick={() => {
+                    if (isAuthenticated) {
+                      navigate("/video-studio", { state: { prompt: "A drone flying through snowy mountains during sunrise." } })
+                    } else {
+                      navigate("/login?redirect=/video-studio")
+                    }
+                  }}
                   className="absolute inset-0 m-auto grid h-14 w-14 place-items-center rounded-full bg-white/90 text-black backdrop-blur transition-transform duration-300 hover:scale-110 active:scale-95"
                 >
                   <Play className="h-6 w-6 translate-x-0.5 fill-black" />
@@ -801,7 +822,7 @@ function VideoStudio() {
             <FeatureRow icon={Zap} title="Fast Rendering" status="Active" />
           </div>
           <button
-            onClick={() => navigate("/video-studio")}
+            onClick={() => navigate(isAuthenticated ? "/video-studio" : "/login?redirect=/video-studio")}
             className="mt-6 inline-flex items-center gap-2 rounded-lg bg-orange-500/10 border border-orange-500/30 px-4 py-2.5 text-sm font-semibold text-orange-500 transition-all hover:bg-orange-500/20 hover:scale-[1.02] active:scale-95"
           >
             <span>Open Video Studio</span>
@@ -817,6 +838,7 @@ function VideoStudio() {
 
 function BlogStudio() {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const insights = [
     "Title includes focus keyword",
     "Meta description within 155 chars",
@@ -861,7 +883,10 @@ function BlogStudio() {
             <BlogHeading level="H2" text="3. Measuring Real ROI" />
           </div>
           <button
-            onClick={() => navigate("/blog-studio?view=generate&suggestedTopicName=AI in Digital Marketing: The 2026 Playbook")}
+            onClick={() => {
+              const path = "/blog-studio?view=generate&suggestedTopicName=AI in Digital Marketing: The 2026 Playbook"
+              navigate(isAuthenticated ? path : `/login?redirect=${encodeURIComponent(path)}`)
+            }}
             className="mt-6 inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:scale-[1.02] active:scale-95"
           >
             <span>Open Blog Studio</span>
