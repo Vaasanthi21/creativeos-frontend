@@ -4,7 +4,6 @@ import {
   X,
   Clock,
   RotateCcw,
-  CheckCircle2,
   AlertCircle,
   Loader2,
   Calendar,
@@ -36,11 +35,9 @@ export const VersionHistoryDrawer = ({
     setError(null);
     try {
       const response = await api.get(`/blogs/${blogId}/versions`);
-      // Sort versions in reverse chronological order (newest first)
       const sorted = (response.data.data || []).sort((a, b) => b.version - a.version);
       setVersions(sorted);
       
-      // Auto-select the previous version (index 1 if available, otherwise index 0)
       if (sorted.length > 0) {
         setSelectedVersion(sorted[0]);
       } else {
@@ -75,7 +72,6 @@ export const VersionHistoryDrawer = ({
 
   if (!isOpen) return null;
 
-  // Formatting helpers
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     return d.toLocaleString(undefined, {
@@ -88,34 +84,34 @@ export const VersionHistoryDrawer = ({
   };
 
   const getScoreColor = (score) => {
-    if (score >= 80) return 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20';
-    if (score >= 50) return 'text-amber-600 bg-amber-500/10 border-amber-500/20';
-    return 'text-rose-600 bg-rose-500/10 border-rose-500/20';
+    if (score >= 80) return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+    if (score >= 50) return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
+    return 'text-rose-500 bg-rose-500/10 border-rose-500/20';
   };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
       />
 
       {/* Drawer Container */}
-      <div className="relative w-full max-w-6xl h-full bg-background border-l border-slate-200 shadow-2xl flex flex-col z-10 animate-slide-in">
+      <div className="relative w-full max-w-6xl h-full bg-background border-l border-border dark:border-white/5 shadow-2xl flex flex-col z-10 animate-slide-in">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20">
           <div className="flex items-center gap-2">
             <Clock className="text-primary" size={20} />
             <div>
-              <h3 className="text-base font-bold text-slate-800">Version History</h3>
-              <p className="text-[10px] text-slate-500 mt-0.5">Compare modifications and restore to previous snapshots</p>
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Version History</h3>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Compare modifications and restore to previous snapshots</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors"
+            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 transition-colors"
           >
             <X size={18} />
           </button>
@@ -125,24 +121,24 @@ export const VersionHistoryDrawer = ({
         <div className="flex-1 flex overflow-hidden min-h-0">
           
           {/* Timeline / Versions List Column */}
-          <div className="w-80 border-r border-slate-200 flex flex-col bg-slate-50/30">
-            <div className="p-4 border-b border-slate-100">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">Select Snapshot</span>
+          <div className="w-80 border-r border-border dark:border-white/5 flex flex-col bg-slate-50/30 dark:bg-slate-950/10">
+            <div className="p-4 border-b border-border dark:border-white/5">
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest block">Select Snapshot</span>
             </div>
             
             <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-2">
                   <Loader2 className="animate-spin text-primary" size={24} />
-                  <span className="text-xs text-slate-400">Loading history...</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500">Loading history...</span>
                 </div>
               ) : error ? (
-                <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-start gap-2">
+                <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs rounded-xl flex items-start gap-2">
                   <AlertCircle size={14} className="shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>
               ) : versions.length === 0 ? (
-                <p className="text-center text-xs text-slate-400 py-12">No version logs found for this blog.</p>
+                <p className="text-center text-xs text-slate-400 dark:text-slate-500 py-12">No version logs found for this blog.</p>
               ) : (
                 versions.map((ver, idx) => {
                   const isSelected = selectedVersion?.version === ver.version;
@@ -154,25 +150,25 @@ export const VersionHistoryDrawer = ({
                       className={`w-full text-left p-3.5 rounded-xl border transition-all flex flex-col gap-2 relative ${
                         isSelected 
                           ? 'bg-primary/5 border-primary shadow-sm text-primary' 
-                          : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                          : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 text-slate-700 dark:text-slate-305'
                       }`}
                     >
                       <div className="flex justify-between items-center w-full">
-                        <span className={`text-xs font-bold font-mono ${isSelected ? 'text-primary' : 'text-slate-800'}`}>Version {ver.version}</span>
+                        <span className={`text-xs font-bold font-mono ${isSelected ? 'text-primary' : 'text-slate-800 dark:text-slate-200'}`}>Version {ver.version}</span>
                         {isLatest && (
-                          <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[8px] font-bold uppercase font-mono tracking-wider">
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[8px] font-bold uppercase font-mono tracking-wider">
                             Latest
                           </span>
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
                         <Calendar size={10} />
                         <span>{formatDate(ver.createdAt)}</span>
                       </div>
 
                       <div className="flex items-center justify-between mt-1 text-[10px]">
-                        <span className="text-slate-400 font-mono">
+                        <span className="text-slate-450 dark:text-slate-550 font-mono">
                           Words: ~{ver.content ? ver.content.split(/\s+/).filter(Boolean).length : 0}
                         </span>
                         
@@ -188,16 +184,16 @@ export const VersionHistoryDrawer = ({
           </div>
 
           {/* Comparison Panels Column */}
-          <div className="flex-1 flex flex-col min-w-0 bg-slate-50/10">
+          <div className="flex-1 flex flex-col min-w-0 bg-slate-50/10 dark:bg-slate-950/5">
             {selectedVersion ? (
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Comparison Header controls */}
-                <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/30 flex items-center justify-between shrink-0">
+                <div className="px-6 py-4 border-b border-border dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/10 flex items-center justify-between shrink-0">
                   <div>
-                    <h4 className="text-sm font-bold text-slate-800">
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
                       Comparing Version {selectedVersion.version} with Current State
                     </h4>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                       Created on {formatDate(selectedVersion.createdAt)}
                     </p>
                   </div>
@@ -222,9 +218,9 @@ export const VersionHistoryDrawer = ({
                   {/* Title Comparison */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">SEO Title</span>
+                      <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">SEO Title</span>
                       {currentTitle !== selectedVersion.title && (
-                        <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-700 text-[8px] font-bold font-mono uppercase">
+                        <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[8px] font-bold font-mono uppercase">
                           Changed
                         </span>
                       )}
@@ -232,17 +228,19 @@ export const VersionHistoryDrawer = ({
                     
                     <div className="grid grid-cols-2 gap-4">
                       {/* Selected Version */}
-                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-                        <span className="text-[9px] text-slate-400 font-bold block mb-1">Version {selectedVersion.version}</span>
-                        <div className="text-slate-700 font-semibold">{selectedVersion.title}</div>
+                      <div className="p-3 bg-slate-50 dark:bg-slate-900/40 border border-border dark:border-white/5 rounded-xl text-xs">
+                        <span className="text-[9px] text-slate-450 dark:text-slate-500 font-bold block mb-1">Version {selectedVersion.version}</span>
+                        <div className="text-slate-700 dark:text-slate-350 font-semibold">{selectedVersion.title}</div>
                       </div>
                       
                       {/* Current Version */}
                       <div className={`p-3 border rounded-xl text-xs ${
-                        currentTitle !== selectedVersion.title ? 'bg-amber-50 border-amber-200 text-slate-800' : 'bg-slate-50 border-slate-200'
+                        currentTitle !== selectedVersion.title 
+                          ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-slate-800 dark:text-slate-200 font-semibold' 
+                          : 'bg-slate-50 dark:bg-slate-900/40 border-border dark:border-white/5 text-slate-700 dark:text-slate-300 font-semibold'
                       }`}>
-                        <span className="text-[9px] text-slate-400 font-bold block mb-1">Current (Live Editor)</span>
-                        <div className="text-slate-800 font-semibold">{currentTitle}</div>
+                        <span className="text-[9px] text-slate-450 dark:text-slate-500 font-bold block mb-1">Current (Live Editor)</span>
+                        <div className="text-slate-800 dark:text-slate-250 font-semibold">{currentTitle}</div>
                       </div>
                     </div>
                   </div>
@@ -250,9 +248,9 @@ export const VersionHistoryDrawer = ({
                   {/* Meta Description Comparison */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Meta Description</span>
+                      <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Meta Description</span>
                       {currentMeta !== selectedVersion.metaDescription && (
-                        <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-700 text-[8px] font-bold font-mono uppercase">
+                        <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[8px] font-bold font-mono uppercase">
                           Changed
                         </span>
                       )}
@@ -260,17 +258,19 @@ export const VersionHistoryDrawer = ({
 
                     <div className="grid grid-cols-2 gap-4">
                       {/* Selected Version */}
-                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs leading-relaxed text-slate-700">
-                        <span className="text-[9px] text-slate-400 font-bold block mb-1">Version {selectedVersion.version}</span>
-                        {selectedVersion.metaDescription || <span className="text-slate-400 italic">None</span>}
+                      <div className="p-3 bg-slate-50 dark:bg-slate-900/40 border border-border dark:border-white/5 rounded-xl text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                        <span className="text-[9px] text-slate-450 dark:text-slate-500 font-bold block mb-1">Version {selectedVersion.version}</span>
+                        {selectedVersion.metaDescription || <span className="text-slate-450 dark:text-slate-500 italic">None</span>}
                       </div>
 
                       {/* Current Version */}
                       <div className={`p-3 border rounded-xl text-xs leading-relaxed text-slate-700 ${
-                        currentMeta !== selectedVersion.metaDescription ? 'bg-amber-50 border-amber-200 text-slate-850' : 'bg-slate-50 border-slate-200'
+                        currentMeta !== selectedVersion.metaDescription 
+                          ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-slate-800 dark:text-slate-200' 
+                          : 'bg-slate-50 dark:bg-slate-900/40 border-border dark:border-white/5 text-slate-700 dark:text-slate-300'
                       }`}>
-                        <span className="text-[9px] text-slate-400 font-bold block mb-1">Current (Live Editor)</span>
-                        {currentMeta || <span className="text-slate-400 italic">None</span>}
+                        <span className="text-[9px] text-slate-450 dark:text-slate-500 font-bold block mb-1">Current (Live Editor)</span>
+                        {currentMeta || <span className="text-slate-450 dark:text-slate-500 italic">None</span>}
                       </div>
                     </div>
                   </div>
@@ -278,9 +278,9 @@ export const VersionHistoryDrawer = ({
                   {/* Content (Body Markdown) Comparison */}
                   <div className="space-y-2 flex-1 flex flex-col min-h-[300px]">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Article Content</span>
+                      <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Article Content</span>
                       {currentContent !== selectedVersion.content && (
-                        <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-700 text-[8px] font-bold font-mono uppercase">
+                        <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[8px] font-bold font-mono uppercase">
                           Changed
                         </span>
                       )}
@@ -288,23 +288,25 @@ export const VersionHistoryDrawer = ({
 
                     <div className="grid grid-cols-2 gap-4 flex-1 min-h-[250px]">
                       {/* Selected Version */}
-                      <div className="flex flex-col h-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-                        <div className="px-3 py-1.5 border-b border-slate-200 bg-slate-100 text-[9px] text-slate-500 font-bold shrink-0">
+                      <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900/40 border border-border dark:border-white/5 rounded-xl overflow-hidden">
+                        <div className="px-3 py-1.5 border-b border-border dark:border-white/5 bg-slate-100 dark:bg-slate-800 text-[9px] text-slate-500 dark:text-slate-400 font-bold shrink-0">
                           Version {selectedVersion.version} Content
                         </div>
-                        <div className="flex-1 p-3 overflow-y-auto font-mono text-[10px] text-slate-600 bg-white leading-normal whitespace-pre-wrap select-text selection:bg-primary/20">
+                        <div className="flex-1 p-3 overflow-y-auto font-mono text-[10px] text-slate-650 dark:text-slate-300 bg-white dark:bg-slate-950/40 leading-normal whitespace-pre-wrap select-text selection:bg-primary/20">
                           {selectedVersion.content}
                         </div>
                       </div>
 
                       {/* Current Version */}
                       <div className={`flex flex-col h-full border rounded-xl overflow-hidden ${
-                        currentContent !== selectedVersion.content ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'
+                        currentContent !== selectedVersion.content 
+                          ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' 
+                          : 'bg-slate-50 dark:bg-slate-900/40 border-border dark:border-white/5'
                       }`}>
-                        <div className="px-3 py-1.5 border-b border-slate-200 bg-slate-100 text-[9px] text-slate-500 font-bold shrink-0">
+                        <div className="px-3 py-1.5 border-b border-border dark:border-white/5 bg-slate-100 dark:bg-slate-800 text-[9px] text-slate-500 dark:text-slate-400 font-bold shrink-0">
                           Current Content (Live Editor)
                         </div>
-                        <div className="flex-1 p-3 overflow-y-auto font-mono text-[10px] text-slate-700 bg-white leading-normal whitespace-pre-wrap select-text selection:bg-primary/20">
+                        <div className="flex-1 p-3 overflow-y-auto font-mono text-[10px] text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-950/40 leading-normal whitespace-pre-wrap select-text selection:bg-primary/20">
                           {currentContent}
                         </div>
                       </div>
@@ -315,12 +317,12 @@ export const VersionHistoryDrawer = ({
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-4">
-                <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500">
+                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-900/40 border border-border dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400">
                   <Clock size={20} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-800">No Snapshot Selected</h4>
-                  <p className="text-xs text-slate-500 max-w-xs mx-auto mt-1">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">No Snapshot Selected</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-450 max-w-xs mx-auto mt-1">
                     Select a version history snapshot from the left timeline panel to compare changes side-by-side.
                   </p>
                 </div>

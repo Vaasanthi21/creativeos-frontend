@@ -2882,7 +2882,7 @@ export const BrandSetup = () => {
               className="px-4 py-2.5 bg-gradient-to-r from-primary to-accent text-primary-foreground font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
             >
               <Sparkles size={12} />
-              <span>Generate Blog Studio</span>
+              <span>Generate Blog</span>
             </button>
 
             <button
@@ -2922,7 +2922,7 @@ export const BrandSetup = () => {
               className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
             >
               <Sparkles size={12} />
-              <span>Generate Content Studio</span>
+              <span>Generate Content</span>
             </button>
           </div>
         </div>
