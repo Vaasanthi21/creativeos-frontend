@@ -217,7 +217,10 @@ export const BrandSetup = () => {
   // Mutations
   const updateCompanyMutation = useMutation({
     mutationFn: async (updatedPayload) => {
-      const response = await api.put(`/company/${companyData._id}`, updatedPayload);
+      const companyId = companyData?._id;
+      const response = companyId
+        ? await api.put(`/company/${companyId}`, updatedPayload)
+        : await api.post('/company', updatedPayload);
       return response.data.data;
     },
     onSuccess: (updatedData) => {
