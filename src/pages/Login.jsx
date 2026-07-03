@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { apiClient, tokenStorage } from "@/api/apiClient";
@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signIn } = useAuth();
+  const { signIn, isAuthenticated } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,6 +17,18 @@ export default function Login() {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const superAdminAuth = window.localStorage.getItem("superadmin_auth") === "true";
+      if (superAdminAuth) {
+        navigate("/superadmin/dashboard");
+      } else {
+        const redirectPath = searchParams.get("redirect") || "/generate";
+        navigate(redirectPath);
+      }
+    }
+  }, [isAuthenticated, navigate, searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,7 +44,6 @@ export default function Login() {
           title: "Super admin login successful!",
           duration: 2000,
         });
-        navigate("/superadmin/dashboard");
         return;
       }
 
@@ -42,8 +53,6 @@ export default function Login() {
         title: "Login successful!",
         duration: 2000,
       });
-      const redirectPath = searchParams.get("redirect") || "/";
-      navigate(redirectPath);
     } catch (error) {
       toast({
         title: "Login failed",
