@@ -160,31 +160,27 @@ export const BrandSetup = () => {
       return;
     }
 
-    if (companyData && personasData) {
-      if (['manual_setup', 'ai_setup', 'processing'].includes(viewMode)) {
-        return;
-      }
-
-      if (initializedCompanyId !== companyData._id) {
-        const hasCompanyDetails = 
-          companyData.companyName && 
-          companyData.website && 
-          companyData.productDescription && 
-          companyData.targetAudience;
-        
-        if (hasCompanyDetails) {
-          setViewMode('workspace');
-        } else {
-          setViewMode('choose');
-        }
-        setInitializedCompanyId(companyData._id);
-      }
-    } else {
-      if (!['manual_setup', 'ai_setup', 'processing'].includes(viewMode)) {
-        setViewMode('choose');
-      }
+    if (['manual_setup', 'ai_setup', 'processing'].includes(viewMode)) {
+      return;
     }
-  }, [companyData, personasData, companyLoading, personasLoading, companyError, initializedCompanyId, viewMode]);
+
+    if (companyError || !companyData) {
+      setViewMode('choose');
+      return;
+    }
+
+    const hasCompanyDetails =
+      companyData.companyName &&
+      companyData.website &&
+      companyData.productDescription &&
+      companyData.targetAudience;
+
+    setViewMode(hasCompanyDetails ? 'workspace' : 'choose');
+
+    if (initializedCompanyId !== companyData._id) {
+      setInitializedCompanyId(companyData._id);
+    }
+  }, [companyData, companyLoading, personasLoading, companyError, initializedCompanyId, viewMode]);
 
   useEffect(() => {
     return () => {
