@@ -168,9 +168,7 @@ export const BrandSetup = () => {
       if (initializedCompanyId !== companyData._id) {
         const hasCompanyDetails = 
           companyData.companyName && 
-          companyData.website && 
-          companyData.productDescription && 
-          companyData.targetAudience;
+          companyData.website;
         
         if (hasCompanyDetails) {
           setViewMode('workspace');
