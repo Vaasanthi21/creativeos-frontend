@@ -331,7 +331,7 @@ export default function Login() {
               <p className="text-sm text-muted-foreground">
                 Need an account?{" "}
                 <Link
-                  to="/register"
+                  to={`/register${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
                   className="font-medium text-primary hover:underline transition-colors"
                 >
                   Sign up

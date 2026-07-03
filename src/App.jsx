@@ -86,7 +86,7 @@ const AuthenticatedApp = () => {
       <Route element={<AdminRoute />}>
         <Route path="/admin" element={<AdminDashboard />} />
       </Route>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<Navigate to="/generate" replace />} />
       <Route element={<MainLayout />}>
         <Route path="/generate" element={<Generate />} />
         <Route path="/history" element={<History />} />
