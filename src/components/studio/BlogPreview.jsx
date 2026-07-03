@@ -534,7 +534,8 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
     if (!resolvedCoverImageUrl) return;
     try {
       const token = window.localStorage.getItem('creative_studio_token');
-      const response = await fetch(`/api/images/download?url=${encodeURIComponent(resolvedCoverImageUrl)}`, {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+      const response = await fetch(`${apiBaseUrl}/images/download?url=${encodeURIComponent(resolvedCoverImageUrl)}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       if (!response.ok) throw new Error(`Download request failed: ${response.status}`);
