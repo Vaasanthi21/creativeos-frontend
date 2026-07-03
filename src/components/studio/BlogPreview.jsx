@@ -1357,7 +1357,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
               )}
               
               <div 
-                className="prose prose-invert max-w-none text-muted-foreground text-sm leading-relaxed max-h-[420px] overflow-y-auto pr-2 scrollbar-glass"
+                className="prose prose-invert max-w-none text-slate-800 dark:text-slate-200 text-sm leading-relaxed max-h-[420px] overflow-y-auto pr-2 scrollbar-glass"
                 dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(stripLeadingTitle(blogRecord.content, blogRecord.title)) }}
               />
             </div>
