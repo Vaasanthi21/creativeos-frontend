@@ -21,12 +21,13 @@ export default function Login() {
   useEffect(() => {
     if (isAuthenticated) {
       const superAdminAuth = window.localStorage.getItem("superadmin_auth") === "true";
-      if (superAdminAuth) {
-        navigate("/superadmin/dashboard");
-      } else {
-        const redirectPath = searchParams.get("redirect") || "/generate";
-        navigate(redirectPath);
-      }
+      const redirectPath = searchParams.get("redirect") || "/generate";
+      const target = superAdminAuth ? "/superadmin/dashboard" : redirectPath;
+
+      const timer = setTimeout(() => {
+        navigate(target);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isAuthenticated, navigate, searchParams]);
 

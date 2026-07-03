@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "@/components/ui/use-toast";
@@ -6,7 +6,7 @@ import { toast } from "@/components/ui/use-toast";
 export default function Register() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signUp } = useAuth();
+  const { signUp, isAuthenticated } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     full_name: "",
@@ -17,6 +17,16 @@ export default function Register() {
     confirm_password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const redirectPath = searchParams.get("redirect") || "/generate";
+      const timer = setTimeout(() => {
+        navigate(redirectPath);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, navigate, searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,8 +73,6 @@ export default function Register() {
         description: "Your account is ready and visible in super admin",
         duration: 2000,
       });
-      const redirectPath = searchParams.get("redirect") || "/";
-      navigate(redirectPath);
     } catch (error) {
       toast({
         title: "Registration failed",
