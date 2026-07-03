@@ -156,6 +156,10 @@ export const BrandSetup = () => {
 
   // Determine initial view mode
   useEffect(() => {
+    if (companyLoading || personasLoading) {
+      return;
+    }
+
     if (companyData && personasData) {
       if (['manual_setup', 'ai_setup', 'processing'].includes(viewMode)) {
         return;
@@ -175,12 +179,12 @@ export const BrandSetup = () => {
         }
         setInitializedCompanyId(companyData._id);
       }
-    } else if (companyError) {
+    } else {
       if (!['manual_setup', 'ai_setup', 'processing'].includes(viewMode)) {
         setViewMode('choose');
       }
     }
-  }, [companyData, personasData, companyError, initializedCompanyId, viewMode]);
+  }, [companyData, personasData, companyLoading, personasLoading, companyError, initializedCompanyId, viewMode]);
 
   useEffect(() => {
     return () => {
@@ -768,7 +772,15 @@ export const BrandSetup = () => {
   // ────────────────────────────────────────────────────────────────────────
   if (viewMode === 'choose') {
     return (
-      <div className="max-w-3xl mx-auto space-y-8 py-10 px-4">
+      <div className="max-w-3xl mx-auto space-y-8 py-10 px-4 relative">
+        {showToast && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-card border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
+            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <Check size={14} />
+            </div>
+            <span className="font-semibold text-foreground">{toastMessage}</span>
+          </div>
+        )}
         <div className="text-center space-y-3">
           <div className="inline-flex p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
             <Building2 size={32} />
@@ -874,7 +886,15 @@ export const BrandSetup = () => {
   if (viewMode === 'ai_setup') {
     const hasUploadedFiles = documentsData && documentsData.length > 0;
     return (
-      <div className="max-w-4xl mx-auto space-y-6 py-6 px-4">
+      <div className="max-w-4xl mx-auto space-y-6 py-6 px-4 relative">
+        {showToast && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-card border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
+            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <Check size={14} />
+            </div>
+            <span className="font-semibold text-foreground">{toastMessage}</span>
+          </div>
+        )}
         <button
           onClick={() => setViewMode('choose')}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
@@ -1135,7 +1155,15 @@ export const BrandSetup = () => {
   // ────────────────────────────────────────────────────────────────────────
   if (viewMode === 'manual_setup') {
     return (
-      <div id="manual-setup-root" className="max-w-4xl mx-auto space-y-6 py-6 px-4">
+      <div id="manual-setup-root" className="max-w-4xl mx-auto space-y-6 py-6 px-4 relative">
+        {showToast && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-card border border-primary/20 text-foreground text-sm px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap animate-slide-down-center">
+            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <Check size={14} />
+            </div>
+            <span className="font-semibold text-foreground">{toastMessage}</span>
+          </div>
+        )}
         <button
           onClick={() => setViewMode('choose')}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"

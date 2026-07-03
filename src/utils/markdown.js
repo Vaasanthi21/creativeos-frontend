@@ -106,8 +106,11 @@ const parseMarkdownTables = (html) => {
 export const renderMarkdownToHTML = (markdown) => {
   if (!markdown) return '';
   
+  // Highlight all links by wrapping non-bolded links in bold markdown syntax
+  let processed = markdown.replace(/(?<!\*\*|\!|\[)\[([^\]]+)\]\(([^)]+)\)(?!\*\*)/g, '**[$1]($2)**');
+  
   // Escape HTML first to prevent XSS
-  let html = markdown
+  let html = processed
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
@@ -129,7 +132,7 @@ export const renderMarkdownToHTML = (markdown) => {
   html = html.replace(/^# (.*?)$/gm, '<h2 class="text-lg md:text-xl font-bold text-foreground mt-7 mb-4">$1</h2>');
 
   // 4. Bold: **text**
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-foreground">$1</strong>');
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold">$1</strong>');
 
   // 5. Italic: *text* or _text_
   html = html.replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>');
@@ -139,7 +142,7 @@ export const renderMarkdownToHTML = (markdown) => {
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rounded-xl border border-border dark:border-white/10 my-4 max-w-full h-auto block" style="max-width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin: 16px 0; display: block;" />');
 
   // 5.3. Links: [text](url)
-  html = html.replace(/(?<!\!)\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary hover:underline" style="color: #f25b18; text-decoration: underline;" target="_blank" rel="noopener noreferrer">$1</a>');
+  html = html.replace(/(?<!\!)\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary hover:underline" style="color: #e76a1d; font-weight: bold; text-decoration: underline;" target="_blank" rel="noopener noreferrer">$1</a>');
 
   // 6. Tables: parse markdown tables
   html = parseMarkdownTables(html);

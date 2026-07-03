@@ -204,11 +204,9 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
         <style>{`
           @keyframes glowingBreathe {
             0%, 100% {
-              transform: scale(1);
               box-shadow: 0 0 10px rgba(242, 91, 24, 0.4), 0 0 4px rgba(242, 91, 24, 0.2);
             }
             50% {
-              transform: scale(1.035);
               box-shadow: 0 0 22px rgba(242, 91, 24, 0.8), 0 0 8px rgba(242, 91, 24, 0.4);
             }
           }
@@ -431,11 +429,9 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
       <style>{`
         @keyframes glowingBreathe {
           0%, 100% {
-            transform: scale(1);
             box-shadow: 0 0 10px rgba(242, 91, 24, 0.4), 0 0 4px rgba(242, 91, 24, 0.2);
           }
           50% {
-            transform: scale(1.035);
             box-shadow: 0 0 22px rgba(242, 91, 24, 0.8), 0 0 8px rgba(242, 91, 24, 0.4);
           }
         }
