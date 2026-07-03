@@ -18,15 +18,18 @@ export default function Login() {
   const [newPassword, setNewPassword] = useState("");
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
 
+  console.log('[Login] Render - isAuthenticated:', isAuthenticated, 'redirect:', searchParams.get("redirect"));
+
   useEffect(() => {
     if (isAuthenticated) {
       const superAdminAuth = window.localStorage.getItem("superadmin_auth") === "true";
-      if (superAdminAuth) {
-        navigate("/superadmin/dashboard");
-      } else {
-        const redirectPath = searchParams.get("redirect") || "/generate";
-        navigate(redirectPath);
-      }
+      const redirectPath = searchParams.get("redirect") || "/generate";
+      const target = superAdminAuth ? "/superadmin/dashboard" : redirectPath;
+
+      const timer = setTimeout(() => {
+        navigate(target);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isAuthenticated, navigate, searchParams]);
 
@@ -330,7 +333,7 @@ export default function Login() {
               <p className="text-sm text-muted-foreground">
                 Need an account?{" "}
                 <Link
-                  to="/register"
+                  to={`/register${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
                   className="font-medium text-primary hover:underline transition-colors"
                 >
                   Sign up

@@ -39,6 +39,8 @@ import SuperAdminPlans from './pages/superadmin/SuperAdminPlans';
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated, authError, navigateToLogin } = useAuth();
 
+  console.log('[App] Render - isLoadingAuth:', isLoadingAuth, 'isAuthenticated:', isAuthenticated);
+
   // Loading
   if (isLoadingAuth) {
     return (
@@ -86,7 +88,7 @@ const AuthenticatedApp = () => {
       <Route element={<AdminRoute />}>
         <Route path="/admin" element={<AdminDashboard />} />
       </Route>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<Navigate to="/generate" replace />} />
       <Route element={<MainLayout />}>
         <Route path="/generate" element={<Generate />} />
         <Route path="/history" element={<History />} />
