@@ -304,7 +304,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
                     type="text"
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
-                    className="w-full px-4 py-2 bg-cardackground/60 border border-border rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
+                    className="w-full px-4 py-2 bg-background/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
 
@@ -314,7 +314,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
                     type="text"
                     value={keywordCategory}
                     onChange={(e) => setKeywordCategory(e.target.value)}
-                    className="w-full px-4 py-2 bg-cardackground/60 border border-border rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
+                    className="w-full px-4 py-2 bg-background/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
 
@@ -324,7 +324,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
                     type="text"
                     value={author}
                     onChange={(e) => setAuthor(e.target.value)}
-                    className="w-full px-4 py-2 bg-cardackground/60 border border-border rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
+                    className="w-full px-4 py-2 bg-background/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
 
@@ -333,7 +333,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full px-4 py-2 bg-cardackground/60 border border-border rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                    className="w-full px-4 py-2 bg-background/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors cursor-pointer"
                   >
                     <option value="draft">Draft</option>
                     <option value="archived">Archived</option>
@@ -531,7 +531,6 @@ export const BlogEditor = ({ blogId, onBack }) => {
                   <FileText size={16} className="text-accent" />
                   <span>AI Structural Outline</span>
                 </h3>
-
                 <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-glass">
                   {blogRecord.outline && blogRecord.outline.length > 0 ? (
                     blogRecord.outline.map((sec, idx) => (
@@ -540,9 +539,9 @@ export const BlogEditor = ({ blogId, onBack }) => {
                           <span className="w-4 h-4 rounded bg-primary/20 text-primary flex items-center justify-center font-mono text-[9px]">
                             {idx + 1}
                           </span>
-                          <span className="truncate">{sec.sectionTitle}</span>
+                          <span className="truncate">{typeof sec === 'string' ? sec : (sec.sectionTitle || sec.title || '')}</span>
                         </p>
-                        {sec.talkingPoints && sec.talkingPoints.length > 0 && (
+                        {sec.talkingPoints && Array.isArray(sec.talkingPoints) && sec.talkingPoints.length > 0 && (
                           <ul className="list-disc ml-6 text-[10px] text-muted-foreground space-y-1">
                             {sec.talkingPoints.map((tp, i) => (
                               <li key={i}>{tp}</li>

@@ -204,11 +204,9 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
         <style>{`
           @keyframes glowingBreathe {
             0%, 100% {
-              transform: scale(1);
               box-shadow: 0 0 10px rgba(242, 91, 24, 0.4), 0 0 4px rgba(242, 91, 24, 0.2);
             }
             50% {
-              transform: scale(1.035);
               box-shadow: 0 0 22px rgba(242, 91, 24, 0.8), 0 0 8px rgba(242, 91, 24, 0.4);
             }
           }
@@ -261,7 +259,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
               </button>
             ) : (
               <button
-                onClick={() => navigate('/brand')}
+                onClick={() => navigate('/personas')}
                 className="w-full md:w-auto px-6 py-3.5 bg-amber-500 hover:bg-amber-600 font-bold text-background rounded-xl transition-all active:scale-[0.98] text-xs flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Complete Brand Setup</span>
@@ -289,7 +287,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 {/* Company details status */}
                 <div 
-                  onClick={() => navigate('/brand')}
+                  onClick={() => navigate('/personas')}
                   className={`p-4 border rounded-2xl text-left cursor-pointer transition-all ${
                     isProfileComplete 
                       ? 'bg-emerald-500/[0.02] border-emerald-500/20 hover:border-emerald-500/30' 
@@ -314,7 +312,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
 
                 {/* Persona status */}
                 <div 
-                  onClick={() => navigate('/brand')}
+                  onClick={() => navigate('/personas')}
                   className={`p-4 border rounded-2xl text-left cursor-pointer transition-all ${
                     hasPersonas 
                       ? 'bg-emerald-500/[0.02] border-emerald-500/20 hover:border-emerald-500/30' 
@@ -339,7 +337,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
 
                 {/* Knowledge Documents status */}
                 <div 
-                  onClick={() => navigate('/brand?tab=knowledge')}
+                  onClick={() => navigate('/personas')}
                   className={`p-4 border rounded-2xl text-left cursor-pointer transition-all ${
                     hasDocuments 
                       ? 'bg-emerald-500/[0.02] border-emerald-500/20 hover:border-emerald-500/30' 
@@ -375,7 +373,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <button
-                    onClick={() => navigate('/brand?tab=knowledge')}
+                    onClick={() => navigate('/personas')}
                     className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 hover:border-amber-500/40 rounded-xl text-[10px] font-bold transition-all cursor-pointer"
                   >
                     Upload Documents
@@ -431,11 +429,9 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
       <style>{`
         @keyframes glowingBreathe {
           0%, 100% {
-            transform: scale(1);
             box-shadow: 0 0 10px rgba(242, 91, 24, 0.4), 0 0 4px rgba(242, 91, 24, 0.2);
           }
           50% {
-            transform: scale(1.035);
             box-shadow: 0 0 22px rgba(242, 91, 24, 0.8), 0 0 8px rgba(242, 91, 24, 0.4);
           }
         }

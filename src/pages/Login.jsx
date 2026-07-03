@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { apiClient, tokenStorage } from "@/api/apiClient";
 import { useAuth } from "@/lib/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -41,7 +42,8 @@ export default function Login() {
         title: "Login successful!",
         duration: 2000,
       });
-      navigate("/");
+      const redirectPath = searchParams.get("redirect") || "/";
+      navigate(redirectPath);
     } catch (error) {
       toast({
         title: "Login failed",

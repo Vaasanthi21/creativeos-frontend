@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 
 export default function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
@@ -62,7 +63,8 @@ export default function Register() {
         description: "Your account is ready and visible in super admin",
         duration: 2000,
       });
-      navigate("/");
+      const redirectPath = searchParams.get("redirect") || "/";
+      navigate(redirectPath);
     } catch (error) {
       toast({
         title: "Registration failed",
