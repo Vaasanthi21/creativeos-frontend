@@ -18,6 +18,8 @@ export default function Login() {
   const [newPassword, setNewPassword] = useState("");
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
 
+  console.log('[Login] Render - isAuthenticated:', isAuthenticated, 'redirect:', searchParams.get("redirect"));
+
   useEffect(() => {
     if (isAuthenticated) {
       const superAdminAuth = window.localStorage.getItem("superadmin_auth") === "true";

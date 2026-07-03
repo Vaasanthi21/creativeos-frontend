@@ -39,6 +39,8 @@ import SuperAdminPlans from './pages/superadmin/SuperAdminPlans';
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated, authError, navigateToLogin } = useAuth();
 
+  console.log('[App] Render - isLoadingAuth:', isLoadingAuth, 'isAuthenticated:', isAuthenticated);
+
   // Loading
   if (isLoadingAuth) {
     return (

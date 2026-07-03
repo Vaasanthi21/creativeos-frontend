@@ -18,6 +18,8 @@ export default function Register() {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  console.log('[Register] Render - isAuthenticated:', isAuthenticated, 'redirect:', searchParams.get("redirect"));
+
   useEffect(() => {
     if (isAuthenticated) {
       const redirectPath = searchParams.get("redirect") || "/generate";
