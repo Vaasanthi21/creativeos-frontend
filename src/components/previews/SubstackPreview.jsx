@@ -66,8 +66,8 @@ export const SubstackPreview = ({ title, subtitle, copy, imageUrl, companyLogo }
         <div className="my-4 rounded-xl overflow-hidden border border-border bg-slate-950 select-none relative group/image">
           <img src={imageUrl} alt="Substack cover" className="w-full h-auto object-contain block" />
           {companyLogo && (
-            <div className="absolute bottom-3 right-3 bg-white/95 dark:bg-black/85 backdrop-blur-md px-2 py-1 rounded-lg border border-white/20 dark:border-white/10 shadow-lg flex items-center justify-center h-7 max-w-[80px] animate-fade-in select-none pointer-events-none">
-              <img src={companyLogo} alt="Logo" className="max-h-5 w-auto object-contain" />
+            <div className="absolute bottom-4 right-4 flex items-center justify-center h-9 w-auto animate-fade-in select-none pointer-events-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
+              <img src={companyLogo} alt="Logo" className="max-h-9 w-auto object-contain rounded-md" />
             </div>
           )}
         </div>
