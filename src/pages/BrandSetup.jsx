@@ -724,11 +724,19 @@ export const BrandSetup = () => {
       const response = await api.post('/company/upload-logo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const updatedCompany = response.data.data;
-      setLogo(updatedCompany.logo || '');
-      setBrandColors(updatedCompany.brandColors || []);
-      setBrandColorsDescription(updatedCompany.brandColorsDescription || '');
-      queryClient.setQueryData(['company'], updatedCompany);
+      const logoUrl = response.data.logoUrl || response.data.data?.logo || '';
+
+      if (!logoUrl) {
+        throw new Error('Logo URL missing from upload response');
+      }
+
+      setLogo(logoUrl);
+
+      queryClient.setQueryData(['company'], (oldCompany) => ({
+        ...(oldCompany || {}),
+        logo: logoUrl,
+      }));
+
       triggerToast('Company logo uploaded successfully!');
     } catch (err) {
       console.error(err);
