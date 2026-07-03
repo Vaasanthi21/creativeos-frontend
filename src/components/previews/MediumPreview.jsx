@@ -54,7 +54,7 @@ export const MediumPreview = ({ title, subtitle, copy, imageUrl, companyLogo }) 
         {imageUrl && (
           <div className="my-4 rounded-xl overflow-hidden border border-border bg-slate-950 select-none relative group/image">
             <img src={imageUrl} alt="Cover" className="w-full h-auto object-contain block" />
-            {companyLogo && (
+            {companyLogo && !(imageUrl && (imageUrl.includes('creative-os-assets') || imageUrl.includes('dalle') || imageUrl.includes('amazonaws.com') || imageUrl.startsWith('data:image'))) && (
               <div className="absolute bottom-4 right-4 flex items-center justify-center h-9 w-auto animate-fade-in select-none pointer-events-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
                 <img src={companyLogo} alt="Logo" className="max-h-9 w-auto object-contain rounded-md" />
               </div>
