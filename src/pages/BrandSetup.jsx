@@ -476,7 +476,10 @@ export const BrandSetup = () => {
       audienceType: audienceType.trim(),
       audience: audienceType.trim(),
       description: description.trim(),
-      notes: description.trim()
+      notes: description.trim(),
+      logo_url: logo.trim(),
+      logo_placement: 'none',
+      preserve_original_logo: true
     };
 
     if (editPersonaId) {
