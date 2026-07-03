@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ThumbsUp, MessageSquare, Share2, Heart, Bookmark } from 'lucide-react';
 import { renderMarkdownToHTML } from '../../utils/markdown';
 
-export const LinkedInPreview = ({ title, copy, hashtags = [], imageUrl }) => {
+export const LinkedInPreview = ({ title, copy, hashtags = [], imageUrl, companyLogo }) => {
   const [likes, setLikes] = useState(148);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
@@ -18,28 +18,28 @@ export const LinkedInPreview = ({ title, copy, hashtags = [], imageUrl }) => {
   };
 
   return (
-    <div className="glass-card rounded-3xl border border-white/5 max-w-2xl mx-auto p-6 md:p-8 bg-[#0B0F1C]/90 text-left shadow-2xl relative">
+    <div className="glass-card rounded-3xl border border-border max-w-2xl mx-auto p-6 md:p-8 bg-card text-left shadow-2xl relative">
       {/* Sourced Author bar */}
-      <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
+      <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center font-bold text-white text-xs shadow-glow-sm">
+          <div className="w-10 h-10 rounded-full bg-muted border border-border flex items-center justify-center font-bold text-foreground text-xs shadow-glow-sm">
             VE
           </div>
           <div>
-            <h4 className="text-xs font-bold text-white hover:underline cursor-pointer">Veloce Enterprise</h4>
-            <p className="text-[10px] text-slate-400 mt-0.5">Published as a LinkedIn Article • 6 min read • 🗓️ June 2026</p>
+            <h4 className="text-xs font-bold text-foreground hover:underline cursor-pointer">Veloce Enterprise</h4>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Published as a LinkedIn Article • 6 min read • 🗓️ June 2026</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-2 text-slate-400">
+        <div className="flex items-center gap-2 text-muted-foreground">
           <button 
             onClick={() => setBookmarked(!bookmarked)}
-            className={`p-1.5 hover:bg-white/5 rounded-lg transition-colors ${bookmarked ? 'text-primary' : 'hover:text-white'}`}
+            className={`p-1.5 hover:bg-muted rounded-lg transition-colors ${bookmarked ? 'text-primary' : 'hover:text-foreground'}`}
             title="Save Article"
           >
             <Bookmark size={15} className={bookmarked ? 'fill-primary' : ''} />
           </button>
-          <button className="p-1.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+          <button className="p-1.5 hover:bg-muted hover:text-foreground rounded-lg transition-colors">
             <Share2 size={15} />
           </button>
         </div>
@@ -48,21 +48,26 @@ export const LinkedInPreview = ({ title, copy, hashtags = [], imageUrl }) => {
       {/* Main story content */}
       <div className="space-y-5 leading-relaxed font-sans max-h-[380px] overflow-y-auto pr-2 scrollbar-glass">
         {title && (
-          <h3 className="text-xl md:text-2xl font-extrabold text-white leading-tight font-serif tracking-tight">
+          <h3 className="text-xl md:text-2xl font-extrabold text-foreground leading-tight font-serif tracking-tight">
             {title}
           </h3>
         )}
         
         {imageUrl && (
-          <div className="my-4 rounded-xl overflow-hidden border border-white/5 bg-slate-950 select-none flex items-center justify-center">
+          <div className="my-4 rounded-xl overflow-hidden border border-border bg-slate-950 select-none flex items-center justify-center relative group/image">
             <img src={imageUrl} alt="LinkedIn Article Banner" className="w-full h-auto object-contain block" />
+            {companyLogo && (
+              <div className="absolute bottom-3 right-3 bg-white/95 dark:bg-black/85 backdrop-blur-md px-2 py-1 rounded-lg border border-white/20 dark:border-white/10 shadow-lg flex items-center justify-center h-7 max-w-[80px] animate-fade-in select-none pointer-events-none">
+                <img src={companyLogo} alt="Logo" className="max-h-5 w-auto object-contain" />
+              </div>
+            )}
           </div>
         )}
         
-        <div className="text-[13px] md:text-[14px] text-slate-300 space-y-4 leading-relaxed font-serif">
+        <div className="text-[13px] md:text-[14px] text-foreground space-y-4 leading-relaxed font-serif">
           {copy ? (
             <div 
-              className="text-slate-300 font-serif leading-loose"
+              className="text-foreground font-serif leading-loose"
               dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(copy) }}
             />
           ) : (
@@ -86,23 +91,23 @@ export const LinkedInPreview = ({ title, copy, hashtags = [], imageUrl }) => {
       </div>
 
       {/* Likes and Actions */}
-      <div className="pt-5 border-t border-white/5 mt-6 flex items-center justify-between text-xs text-slate-400 font-mono">
+      <div className="pt-5 border-t border-border mt-6 flex items-center justify-between text-xs text-muted-foreground font-mono">
         <div className="flex items-center gap-4">
           <button 
             onClick={handleLike}
-            className={`flex items-center gap-1.5 hover:text-white transition-all duration-200 ${liked ? 'text-primary' : ''}`}
+            className={`flex items-center gap-1.5 hover:text-foreground transition-all duration-200 ${liked ? 'text-primary' : ''}`}
           >
             <ThumbsUp size={14} className={liked ? 'fill-primary text-primary' : ''} />
-            <span className="font-semibold text-slate-300">{likes} Likes</span>
+            <span className="font-semibold text-foreground">{likes} Likes</span>
           </button>
           
-          <button className="flex items-center gap-1.5 hover:text-white transition-colors">
+          <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">
             <MessageSquare size={13} />
             <span>24 comments</span>
           </button>
         </div>
         
-        <button className="px-3.5 py-1.5 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary hover:text-white text-[10px] font-bold rounded-full font-mono uppercase tracking-wide transition-all">
+        <button className="px-3.5 py-1.5 bg-primary/10 border border-primary/20 hover:bg-primary text-primary hover:text-white text-[10px] font-bold rounded-full font-mono uppercase tracking-wide transition-all">
           Follow Veloce Enterprise
         </button>
       </div>

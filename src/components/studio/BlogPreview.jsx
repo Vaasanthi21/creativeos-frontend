@@ -33,6 +33,11 @@ const resolvedPlatformNames = {
   substack: 'Substack',
 };
 
+const highlightMarkdownLinks = (text) => {
+  if (!text) return '';
+  return text.replace(/(?<!\*\*|\!|\[)\[([^\]]+)\]\(([^)]+)\)(?!\*\*)/g, '**[$1]($2)**');
+};
+
 const cleanCopyWithoutTrailingHashtags = (text) => {
   if (!text) return '';
   let lines = text.split(/\r?\n/);
@@ -284,7 +289,7 @@ const convertTablesToCodeBlocks = (markdown) => {
   return result.join('\n');
 };
 
-export const BlogPreview = ({ blogId, onBack }) => {
+export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
   const queryClient = useQueryClient();
   const { tasks, startTask, clearTask } = useTasks();
   
@@ -528,10 +533,12 @@ export const BlogPreview = ({ blogId, onBack }) => {
   const handleDownloadCoverImage = async () => {
     if (!resolvedCoverImageUrl) return;
     try {
-      const response = await api.get(`/images/download?url=${encodeURIComponent(resolvedCoverImageUrl)}`, {
-        responseType: 'blob'
+      const token = window.localStorage.getItem('creative_studio_token');
+      const response = await fetch(`/api/images/download?url=${encodeURIComponent(resolvedCoverImageUrl)}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
-      const blob = response.data;
+      if (!response.ok) throw new Error(`Download request failed: ${response.status}`);
+      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -644,13 +651,14 @@ export const BlogPreview = ({ blogId, onBack }) => {
       if (!blogRecord) return;
       const strippedContent = stripLeadingTitle(blogRecord.content, blogRecord.title);
       let plainText = `# ${blogRecord.title}\n\n`;
-      let htmlText = `<h1 className="font-display">${blogRecord.title}</h1>\n`;
+      let htmlText = `<h1 class="font-display">${blogRecord.title}</h1>\n`;
       if (resolvedCoverImageUrl) {
         plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
         htmlText += `<img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
       }
       plainText += strippedContent;
       htmlText += renderMarkdownToHTML(strippedContent);
+      plainText = highlightMarkdownLinks(plainText);
       await copyToClipboard(plainText, htmlText);
     } else {
       if (!renderedRecord) return;
@@ -666,7 +674,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
 
         if (renderedRecord.title) {
           plainPart += `${renderedRecord.title}\n\n`;
-          htmlPart += `<h1 className="font-display">${renderedRecord.title}</h1>\n`;
+          htmlPart += `<h1 class="font-display">${renderedRecord.title}</h1>\n`;
         }
         if (resolvedCoverImageUrl) {
           plainPart += `[Image Attachment: ${resolvedCoverImageUrl}]\n\n`;
@@ -691,10 +699,10 @@ export const BlogPreview = ({ blogId, onBack }) => {
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         const copyWithCodeBlockTables = convertTablesToCodeBlocks(strippedCopy);
         plainText = `# ${titleText}\n\n`;
-        htmlText = `<h1 className="font-display">${titleText}</h1>\n`;
+        htmlText = `<h1 class="font-display">${titleText}</h1>\n`;
         if (subtitle) {
           plainText += `${subtitle}\n\n`;
-          htmlText += `<h2 className="font-display">${subtitle}</h2>\n`;
+          htmlText += `<h2 class="font-display">${subtitle}</h2>\n`;
         }
         if (resolvedCoverImageUrl) {
           plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
@@ -708,10 +716,10 @@ export const BlogPreview = ({ blogId, onBack }) => {
         const displaySubtitle = renderedRecord.metaDescription || extractedSub;
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         plainText = `# ${titleText}\n\n`;
-        htmlText = `<h1 className="font-display">${titleText}</h1>\n`;
+        htmlText = `<h1 class="font-display">${titleText}</h1>\n`;
         if (displaySubtitle) {
           plainText += `${displaySubtitle}\n\n`;
-          htmlText += `<h2 className="font-display">${displaySubtitle}</h2>\n`;
+          htmlText += `<h2 class="font-display">${displaySubtitle}</h2>\n`;
         }
         if (resolvedCoverImageUrl) {
           plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
@@ -724,10 +732,10 @@ export const BlogPreview = ({ blogId, onBack }) => {
         const { subtitle, cleanCopy } = extractSubtitle(renderedRecord.copy);
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         plainText = `# ${titleText}\n\n`;
-        htmlText = `<h1 className="font-display">${titleText}</h1>\n`;
+        htmlText = `<h1 class="font-display">${titleText}</h1>\n`;
         if (subtitle) {
           plainText += `${subtitle}\n\n`;
-          htmlText += `<h2 className="font-display">${subtitle}</h2>\n`;
+          htmlText += `<h2 class="font-display">${subtitle}</h2>\n`;
         }
         if (resolvedCoverImageUrl) {
           plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
@@ -742,6 +750,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
         plainText = cleanCopy;
         htmlText = renderMarkdownToHTML(cleanCopy);
       }
+      plainText = highlightMarkdownLinks(plainText);
       await copyToClipboard(plainText, htmlText);
     }
   };
@@ -764,7 +773,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
         plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
       }
       plainText += strippedContent;
-      filename = `${blogRecord.slug || 'canonical'}.md.txt`;
+      filename = `${blogRecord.slug || 'canonical'}.md`;
     } else {
       if (!renderedRecord) return;
       const slugName = blogRecord?.slug || 'post';
@@ -793,7 +802,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
           plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
         }
         plainText += copyWithCodeBlockTables;
-        filename = `medium_${slugName}.md.txt`;
+        filename = `medium_${slugName}.md`;
       } else if (activeTab === 'substack') {
         const titleText = renderedRecord.title || blogRecord.title;
         const { subtitle: extractedSub, cleanCopy } = extractSubtitle(renderedRecord.copy);
@@ -807,7 +816,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
           plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
         }
         plainText += strippedCopy;
-        filename = `substack_${slugName}.md.txt`;
+        filename = `substack_${slugName}.md`;
       } else if (activeTab === 'blog') {
         const titleText = renderedRecord.title || blogRecord.title;
         const { subtitle, cleanCopy } = extractSubtitle(renderedRecord.copy);
@@ -820,19 +829,20 @@ export const BlogPreview = ({ blogId, onBack }) => {
           plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
         }
         plainText += strippedCopy;
-        filename = `blog_${slugName}.md.txt`;
+        filename = `blog_${slugName}.md`;
       } else if (activeTab === 'devto') {
         const titleText = renderedRecord.title || blogRecord.title;
         const strippedCopy = cleanPlatformCopy(renderedRecord.copy, titleText);
         plainText = cleanCopyWithoutTrailingHashtags(strippedCopy);
-        filename = `devto_${slugName}.md.txt`;
+        filename = `devto_${slugName}.md`;
       }
     }
 
     if (!plainText) return;
 
     try {
-      const blob = new Blob([plainText], { type: 'text/plain;charset=utf-8;' });
+      const highlightedText = highlightMarkdownLinks(plainText);
+      const blob = new Blob([highlightedText], { type: 'text/markdown;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -863,7 +873,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
       const strippedContent = stripLeadingTitle(blogRecord.content, blogRecord.title);
       titleText = blogRecord.title;
       bodyHtml = renderMarkdownToHTML(strippedContent);
-      filename = `${blogRecord.slug || 'canonical'}.html.txt`;
+      filename = `${blogRecord.slug || 'canonical'}.html`;
     } else {
       if (!renderedRecord) return;
       const slugName = blogRecord?.slug || 'post';
@@ -877,31 +887,31 @@ export const BlogPreview = ({ blogId, onBack }) => {
           htmlPart += `<p>${renderedRecord.hashtags.map(t => `#${t}`).join(' ')}</p>`;
         }
         bodyHtml = htmlPart;
-        filename = `linkedin_${slugName}.html.txt`;
+        filename = `linkedin_${slugName}.html`;
       } else if (activeTab === 'medium') {
         const { subtitle, cleanCopy } = extractSubtitle(renderedRecord.copy);
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         const copyWithCodeBlockTables = convertTablesToCodeBlocks(strippedCopy);
         subtitleText = subtitle;
         bodyHtml = renderMarkdownToHTML(copyWithCodeBlockTables);
-        filename = `medium_${slugName}.html.txt`;
+        filename = `medium_${slugName}.html`;
       } else if (activeTab === 'substack') {
         const { subtitle: extractedSub, cleanCopy } = extractSubtitle(renderedRecord.copy);
         const displaySubtitle = renderedRecord.metaDescription || extractedSub;
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         subtitleText = displaySubtitle;
         bodyHtml = renderMarkdownToHTML(strippedCopy);
-        filename = `substack_${slugName}.html.txt`;
+        filename = `substack_${slugName}.html`;
       } else if (activeTab === 'blog') {
         const { subtitle, cleanCopy } = extractSubtitle(renderedRecord.copy);
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         subtitleText = subtitle;
         bodyHtml = renderMarkdownToHTML(strippedCopy);
-        filename = `blog_${slugName}.html.txt`;
+        filename = `blog_${slugName}.html`;
       } else if (activeTab === 'devto') {
         const strippedCopy = cleanPlatformCopy(renderedRecord.copy, titleText);
         bodyHtml = renderMarkdownToHTML(cleanCopyWithoutTrailingHashtags(strippedCopy));
-        filename = `devto_${slugName}.html.txt`;
+        filename = `devto_${slugName}.html`;
       }
     }
 
@@ -1016,7 +1026,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
     </div>
   </div>
   
-  <h1 className="font-display">${titleText}</h1>
+  <h1 class="font-display">${titleText}</h1>
   
   <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; margin-bottom: 24px;">
     ${hashtagsList.map(tag => `<span style="font-size: 0.7rem; color: #94a3b8; padding: 2px 8px; background-color: rgba(255, 255, 255, 0.05); border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05); font-family: monospace;">#${tag}</span>`).join('')}
@@ -1113,8 +1123,8 @@ export const BlogPreview = ({ blogId, onBack }) => {
   </style>
 </head>
 <body>
-  <h1 className="font-display">${titleText}</h1>
-  ${subtitleText ? `<h2 style="font-size: 1.4rem; font-weight: 400; color: #6b7280; margin-top: 4px; margin-bottom: 20px; font-family: Georgia, Cambria, 'Times New Roman', Times, serif; line-height: 1.4;" className="font-display">${subtitleText}</h2>` : ''}
+  <h1 class="font-display">${titleText}</h1>
+  ${subtitleText ? `<h2 style="font-size: 1.4rem; font-weight: 400; color: #6b7280; margin-top: 4px; margin-bottom: 20px; font-family: Georgia, Cambria, 'Times New Roman', Times, serif; line-height: 1.4;" class="font-display">${subtitleText}</h2>` : ''}
   ${resolvedCoverImageUrl ? `<img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-top:16px; margin-bottom:24px; display:block;" />` : ''}
   ${bodyHtml}
 </body>
@@ -1122,7 +1132,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
     }
 
     try {
-      const blob = new Blob([htmlContent], { type: 'text/plain;charset=utf-8;' });
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -1183,7 +1193,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
 
       <div className="space-y-6">
         {/* Platform Tab Selector */}
-        <div className="flex overflow-x-auto scrollbar-none border border-border rounded-2xl bg-cardackground/50 p-1.5 shrink-0 w-full max-w-4xl gap-1 mx-auto whitespace-nowrap">
+        <div className="flex overflow-x-auto scrollbar-none border border-border rounded-2xl bg-background/50 p-1.5 shrink-0 w-full max-w-4xl gap-1 mx-auto whitespace-nowrap">
           {['canonical', 'linkedin', 'medium', 'blog', 'devto', 'substack'].map((tab) => {
             const label =
               tab === 'canonical'
@@ -1208,7 +1218,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                 className={`flex-1 py-3 text-center text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                   activeTab === tab
                     ? 'bg-gradient-to-r from-primary/10 to-primary/20 text-primary border border-primary/20 shadow-glow-sm'
-                    : 'text-muted-foreground hover:text-white hover:bg-white/5 border border-transparent'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/10 border border-transparent'
                 }`}
               >
                 {label}
@@ -1565,14 +1575,13 @@ export const BlogPreview = ({ blogId, onBack }) => {
                           <X size={14} />
                         </button>
                       </div>
-
-                      <div className="space-y-1">
+                       <div className="space-y-1">
                         <label className="text-[10px] uppercase font-bold text-muted-foreground">Title / Headline Hook</label>
                         <input
                           type="text"
                           value={editTitle}
                           onChange={(e) => setEditTitle(e.target.value)}
-                          className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-foreground text-xs font-semibold focus:outline-none focus:border-primary transition-colors"
+                          className="w-full px-4 py-2.5 bg-background/60 border border-border rounded-xl text-foreground text-xs font-semibold focus:outline-none focus:border-primary transition-colors"
                         />
                       </div>
 
@@ -1582,7 +1591,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                           rows={12}
                           value={editCopy}
                           onChange={(e) => setEditCopy(e.target.value)}
-                          className="w-full p-4 bg-cardackground/60 border border-border rounded-xl text-white text-xs font-mono leading-relaxed focus:outline-none focus:border-primary transition-colors resize-none"
+                          className="w-full p-4 bg-background/60 border border-border rounded-xl text-foreground text-xs font-mono leading-relaxed focus:outline-none focus:border-primary transition-colors resize-none"
                         />
                       </div>
 
@@ -1593,7 +1602,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                             type="text"
                             value={editHashtags.join(', ')}
                             onChange={(e) => setEditHashtags(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-                            className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-white text-xs focus:outline-none focus:border-primary transition-colors"
+                            className="w-full px-4 py-2.5 bg-background/60 border border-border rounded-xl text-foreground text-xs focus:outline-none focus:border-primary transition-colors"
                           />
                         </div>
                       )}
@@ -1604,7 +1613,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                           rows={2}
                           value={editMetaDescription}
                           onChange={(e) => setEditMetaDescription(e.target.value)}
-                          className="w-full px-4 py-2.5 bg-cardackground/60 border border-border rounded-xl text-white text-xs font-semibold focus:outline-none focus:border-primary transition-colors resize-none"
+                          className="w-full px-4 py-2.5 bg-background/60 border border-border rounded-xl text-foreground text-xs font-semibold focus:outline-none focus:border-primary transition-colors resize-none"
                         />
                       </div>
 
@@ -1649,6 +1658,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                           copy={cleanCopyWithoutTrailingHashtags(cleanPlatformCopy(renderedRecord.copy, renderedRecord.title || blogRecord.title))}
                           hashtags={renderedRecord.hashtags}
                           imageUrl={resolvedCoverImageUrl}
+                          companyLogo={companyLogo}
                         />
                       )}
 
@@ -1662,6 +1672,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                             subtitle={subtitle}
                             copy={copyWithCodeBlockTables}
                             imageUrl={resolvedCoverImageUrl}
+                            companyLogo={companyLogo}
                           />
                         );
                       })()}
@@ -1674,6 +1685,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                             subtitle={subtitle}
                             copy={cleanPlatformCopy(cleanCopy, renderedRecord.title || blogRecord.title)}
                             imageUrl={resolvedCoverImageUrl}
+                            companyLogo={companyLogo}
                           />
                         );
                       })()}
@@ -1684,6 +1696,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                           copy={cleanCopyWithoutTrailingHashtags(cleanPlatformCopy(renderedRecord.copy, renderedRecord.title || blogRecord.title))}
                           hashtags={renderedRecord.hashtags}
                           imageUrl={resolvedCoverImageUrl}
+                          companyLogo={companyLogo}
                         />
                       )}
 
@@ -1696,6 +1709,7 @@ export const BlogPreview = ({ blogId, onBack }) => {
                             subtitle={displaySubtitle}
                             copy={cleanPlatformCopy(cleanCopy, renderedRecord.title || blogRecord.title)}
                             imageUrl={resolvedCoverImageUrl}
+                            companyLogo={companyLogo}
                           />
                         );
                       })()}

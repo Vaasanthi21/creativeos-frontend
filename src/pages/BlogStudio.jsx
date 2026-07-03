@@ -97,7 +97,7 @@ export const BlogStudio = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative max-w-6xl mx-auto py-6 px-4">
       {/* Page Header */}
       {view === 'list' && (
         <div className="space-y-1 text-left mb-6">
@@ -116,7 +116,7 @@ export const BlogStudio = () => {
                 className={`group px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 border flex items-center gap-2 cursor-pointer ${
                   showWorkflowHelper
                     ? 'bg-primary/20 border-primary/45 text-primary shadow-[0_0_12px_rgba(242,91,24,0.12)]'
-                    : 'bg-white/5 border-border text-muted-foreground hover:border-primary/40 hover:text-white shadow-[0_0_15px_rgba(255,255,255,0.02)] animate-pulse-glow'
+                    : 'bg-white/5 border-border text-muted-foreground hover:border-primary/40 hover:text-primary shadow-[0_0_15px_rgba(255,255,255,0.02)] animate-pulse-glow'
                 }`}
               >
                 <Sparkles size={14} className="text-primary group-hover:rotate-12 duration-300" />
@@ -227,7 +227,7 @@ export const BlogStudio = () => {
                 </h3>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4">
                 {(() => {
                   const activeStepIndex = workflowSteps.findIndex(step => !step.done);
                   return workflowSteps.map((step, index) => {
@@ -333,6 +333,7 @@ export const BlogStudio = () => {
           <BlogPreview
             blogId={id}
             onBack={handleBack}
+            companyLogo={companyData?.logo}
           />
         )}
       </div>    </div>
