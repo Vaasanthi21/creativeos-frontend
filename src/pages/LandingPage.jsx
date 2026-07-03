@@ -1,869 +1,1278 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
-import { useAuth } from '../lib/AuthContext';
+"use client"
+
+/**
+ * CreativeOS — single-file landing page (plain JSX)
+ * -------------------------------------------------
+ * Drop this file anywhere in a React project (Next.js, Vite, CRA…).
+ *
+ * Requirements:
+ *   1. Tailwind CSS enabled in the host project.
+ *   2. `lucide-react` installed:  npm i lucide-react
+ *   3. These images available in your /public folder (same names):
+ *        cyberpunk-1.png, cyberpunk-2.png, cyberpunk-3.png, cyberpunk-4.png,
+ *        snowy-mountains.png
+ *
+ * Usage (either import style works):
+ *         import { LandingPage } from "./pages/LandingPage"
+ *         import LandingPage from "./pages/LandingPage"
+ *
+ * What's new in this version:
+ *   - Scroll-triggered reveal animations (fade + rise) on every section,
+ *     staggered per grid item, powered by a lightweight IntersectionObserver hook.
+ *   - Parallax glow blobs that drift as you scroll.
+ *   - 3D tilt-on-hover for image thumbnails, the video preview and platform nodes.
+ *   - Magnetic buttons that nudge toward the cursor.
+ *   - Count-up numbers for every stat once it scrolls into view.
+ *   - Animated bar chart + line chart draw-in.
+ *   - A thin scroll progress bar and a nav that condenses on scroll.
+ *   - An auto-rotating 3D coverflow carousel (right after the hero) that gives
+ *     visitors a fast, tactile map of all five studios before they scroll
+ *     into the deep-dive sections.
+ */
+
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   Sparkles,
-  Zap,
-  ArrowRight,
-  Brain,
-  Workflow,
-  Layout,
-  BarChart3,
-  Video,
-  Image as ImageIcon,
-  Compass,
-  Users,
-  Send,
-  FileText,
-  Check,
-  Plus,
-  Play,
-  TrendingUp,
-  Cpu,
-  Monitor,
-  Settings,
-  Bell,
   ArrowUpRight,
-  ShieldCheck,
-  FolderOpen
-} from 'lucide-react';
+  ArrowRight,
+  ImageIcon,
+  Video,
+  FileText,
+  BarChart3,
+  Wand2,
+  Check,
+  Play,
+  Hash,
+  TrendingUp,
+  Download,
+  Zap,
+} from "lucide-react"
 
-// Reusable 3D Tilt Card Wrapper using Framer Motion physics
-const TiltCard = ({ children, className, glowColor, onClick }) => {
-  const cardRef = useRef(null);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+/* ================================================================== */
+/*  Root                                                              */
+/* ================================================================== */
 
-  const rotateX = useTransform(mouseY, [-200, 200], [10, -10]);
-  const rotateY = useTransform(mouseX, [-200, 200], [-10, 10]);
+export function LandingPage() {
+  return (
+    <div className="min-h-screen bg-[#0a0705] font-sans text-neutral-200 antialiased selection:bg-orange-500/30">
+      <GlobalMotionStyles />
+      <ScrollProgress />
+      <Starfield />
+      <Nav />
+      <main className="relative z-10">
+        <Hero />
+        <StudioCoverflow />
+        <ImageStudio />
+        <VideoStudio />
+        <BlogStudio />
+        <TrackerStudio />
+        <PlatformStudio />
+        <Waitlist />
+      </main>
+      <Footer />
+    </div>
+  )
+}
 
-  const springConfig = { damping: 25, stiffness: 150, mass: 0.5 };
-  const springX = useSpring(rotateX, springConfig);
-  const springY = useSpring(rotateY, springConfig);
+/* ============================== Motion kit ========================= */
+/* Small, dependency-free primitives used across every section.        */
 
-  const handleMouseMove = (e) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    mouseX.set(e.clientX - centerX);
-    mouseY.set(e.clientY - centerY);
-  };
+/** Fires once, true after the element crosses the viewport threshold. */
+function useReveal(threshold = 0.15) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true)
+          io.unobserve(el)
+        }
+      },
+      { threshold },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [threshold])
+  return [ref, visible]
+}
 
-  const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-  };
+/** Generic fade + rise wrapper for scroll-in animation. */
+function Reveal({ children, className = "", delay = 0, y = 24, as: Tag = "div" }) {
+  const [ref, visible] = useReveal()
+  return (
+    <Tag
+      ref={ref}
+      style={{
+        transitionDelay: `${delay}ms`,
+        transform: visible ? "translateY(0)" : `translateY(${y}px)`,
+      }}
+      className={`transition-all duration-700 ease-out ${visible ? "opacity-100" : "opacity-0"} ${className}`}
+    >
+      {children}
+    </Tag>
+  )
+}
+
+/** 3D tilt that follows the cursor, resets smoothly on leave. */
+function TiltCard({ children, className = "", max = 8, style = {} }) {
+  const ref = useRef(null)
+  const onMove = (e) => {
+    const el = ref.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const px = (e.clientX - r.left) / r.width
+    const py = (e.clientY - r.top) / r.height
+    const rx = (py - 0.5) * -max
+    const ry = (px - 0.5) * max
+    el.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px) scale(1.015)`
+  }
+  const reset = () => {
+    if (ref.current) ref.current.style.transform = ""
+  }
+  return (
+    <div
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseLeave={reset}
+      style={style}
+      className={`transition-transform duration-200 ease-out will-change-transform ${className}`}
+    >
+      {children}
+    </div>
+  )
+}
+
+/** Nudges its contents toward the cursor — used on primary buttons. */
+function Magnetic({ children, strength = 0.25, className = "" }) {
+  const ref = useRef(null)
+  const onMove = (e) => {
+    const el = ref.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const x = e.clientX - r.left - r.width / 2
+    const y = e.clientY - r.top - r.height / 2
+    el.style.transform = `translate(${x * strength}px, ${y * strength}px)`
+  }
+  const reset = () => {
+    if (ref.current) ref.current.style.transform = ""
+  }
+  return (
+    <span
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseLeave={reset}
+      className={`inline-block transition-transform duration-200 ease-out ${className}`}
+    >
+      {children}
+    </span>
+  )
+}
+
+/** Splits "12M+" -> {num:12, suffix:"M+"}, "99.9%" -> {num:99.9, suffix:"%", decimals:1} */
+function splitStat(value) {
+  const m = String(value).match(/^([\d.,]+)(.*)$/)
+  if (!m) return { num: 0, suffix: String(value), decimals: 0 }
+  const numStr = m[1].replace(/,/g, "")
+  const decimals = numStr.includes(".") ? numStr.split(".")[1].length : 0
+  return { num: parseFloat(numStr), suffix: m[2], decimals }
+}
+
+/** Animated count-up number, starts once `visible` flips true. */
+function StatValue({ value, visible, duration = 1200 }) {
+  const { num, suffix, decimals } = useMemo(() => splitStat(value), [value])
+  const [display, setDisplay] = useState(0)
+  useEffect(() => {
+    if (!visible) return
+    let raf
+    let start = null
+    const step = (ts) => {
+      if (start === null) start = ts
+      const p = Math.min((ts - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setDisplay(num * eased)
+      if (p < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [visible, num, duration])
+  return (
+    <>
+      {display.toFixed(decimals)}
+      {suffix}
+    </>
+  )
+}
+
+/** Thin gradient bar pinned to the top, fills with scroll progress. */
+function ScrollProgress() {
+  const [pct, setPct] = useState(0)
+  useEffect(() => {
+    let raf = null
+    const onScroll = () => {
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        const h = document.documentElement
+        const scrolled = h.scrollTop
+        const max = h.scrollHeight - h.clientHeight
+        setPct(max > 0 ? (scrolled / max) * 100 : 0)
+        raf = null
+      })
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+  return (
+    <div className="fixed inset-x-0 top-0 z-[60] h-[2px] bg-transparent">
+      <div
+        className="h-full bg-gradient-to-r from-orange-600 via-orange-400 to-orange-600 transition-[width] duration-150 ease-out"
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  )
+}
+
+/** Keyframes that Tailwind's core utilities don't cover, scoped globally once. */
+function GlobalMotionStyles() {
+  return (
+    <style>{`
+      @keyframes cos-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+      @keyframes cos-pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(249,115,22,0.35); } 70% { box-shadow: 0 0 0 14px rgba(249,115,22,0); } 100% { box-shadow: 0 0 0 0 rgba(249,115,22,0); } }
+      @keyframes cos-shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+      .cos-logo-icon { animation: cos-float 3.2s ease-in-out infinite; }
+      .cos-core-ring { animation: cos-pulse-ring 2.4s ease-out infinite; }
+      .cos-shimmer-text {
+        background-image: linear-gradient(100deg, #fb923c, #f97316 45%, #fdba74 55%, #fb923c);
+        background-size: 220% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: cos-shimmer 5s linear infinite;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .cos-logo-icon, .cos-core-ring, .cos-shimmer-text { animation: none !important; }
+        * { transition-duration: 0.001ms !important; }
+      }
+    `}</style>
+  )
+}
+
+/* ------------------------------- Nav ------------------------------- */
+
+function Logo({ className = "" }) {
+  return (
+    <a href="#" className={`flex items-center gap-2.5 ${className}`}>
+      <span className="cos-logo-icon grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-600/30">
+        <Sparkles className="h-5 w-5 text-black" />
+      </span>
+      <span className="text-lg font-bold tracking-tight text-white">
+        Creative<span className="text-orange-500">OS</span>
+      </span>
+    </a>
+  )
+}
+
+function Nav() {
+  const links = ["Image", "Video", "Blog", "Tracker", "Platform"]
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+  return (
+    <header
+      className={`fixed inset-x-0 z-50 mx-auto flex max-w-6xl items-center justify-between rounded-full border border-white/10 backdrop-blur-xl transition-all duration-500 ease-out md:px-6 ${
+        scrolled ? "top-2 bg-black/80 px-4 py-2 shadow-xl shadow-black/40" : "top-4 bg-black/60 px-4 py-2.5"
+      }`}
+    >
+      <Logo />
+      <nav className="hidden items-center gap-7 md:flex">
+        {links.map((l) => (
+          <a
+            key={l}
+            href={`#${l.toLowerCase()}`}
+            className="relative text-sm text-neutral-400 transition-colors duration-300 hover:text-white after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-orange-500 after:transition-all after:duration-300 hover:after:w-full"
+          >
+            {l}
+          </a>
+        ))}
+      </nav>
+      <Magnetic strength={0.3}>
+        <a
+          href="#waitlist"
+          className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition-transform hover:scale-[1.03] active:scale-95"
+        >
+          Join waitlist
+        </a>
+      </Magnetic>
+    </header>
+  )
+}
+
+/* ------------------------------ Hero ------------------------------- */
+
+function Hero() {
+  const stats = [
+    { v: "12M+", l: "Assets Generated" },
+    { v: "48K", l: "Creators Onboarded" },
+    { v: "4", l: "Integrated Studios" },
+    { v: "99.9%", l: "Uptime SLA" },
+  ]
+  const [statsRef, statsVisible] = useReveal(0.3)
+  const blobRef = useRef(null)
+
+  // Gentle parallax on the hero glow as the page scrolls.
+  useEffect(() => {
+    let raf = null
+    const onScroll = () => {
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        if (blobRef.current) {
+          const y = Math.min(window.scrollY, 800)
+          blobRef.current.style.transform = `translate(-50%, ${y * 0.18}px) scale(${1 + y * 0.0002})`
+        }
+        raf = null
+      })
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   return (
-    <motion.div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onClick={onClick}
+    <section className="relative mx-auto max-w-6xl px-5 pt-40 pb-24 text-center md:pt-48">
+      <div
+        ref={blobRef}
+        className="pointer-events-none absolute left-1/2 top-24 -z-10 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-orange-600/20 blur-[140px]"
+      />
+      <Reveal y={16}>
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 font-mono text-xs text-neutral-300">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />
+          v1.0 — Now in beta
+        </span>
+      </Reveal>
+
+      <Reveal delay={80} y={26}>
+        <h1 className="mx-auto mt-8 max-w-4xl text-balance text-5xl font-extrabold leading-[0.98] tracking-tight text-white md:text-7xl lg:text-8xl">
+          Create Stunning
+          <br />
+          Content with <span className="cos-shimmer-text italic">AI</span>
+        </h1>
+      </Reveal>
+
+      <Reveal delay={160} y={22}>
+        <p className="mx-auto mt-6 max-w-xl text-pretty text-base leading-relaxed text-neutral-400 md:text-lg">
+          Generate images, videos, blogs, and professional LinkedIn content — all from one intelligent workspace.
+        </p>
+      </Reveal>
+
+      <Reveal delay={240} y={18}>
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <Magnetic strength={0.25}>
+            <a
+              href="#waitlist"
+              className="group inline-flex items-center gap-2 rounded-full bg-orange-500 px-7 py-3.5 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:shadow-lg hover:shadow-orange-500/30 active:scale-95"
+            >
+              <Sparkles className="h-4 w-4" />
+              Start Creating
+              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </a>
+          </Magnetic>
+          <Magnetic strength={0.25}>
+            <a
+              href="#image"
+              className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/10 hover:-translate-y-0.5 active:scale-95"
+            >
+              Explore the platform
+            </a>
+          </Magnetic>
+        </div>
+      </Reveal>
+
+      <div
+        ref={statsRef}
+        className="mx-auto mt-20 grid max-w-4xl grid-cols-2 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] md:grid-cols-4"
+      >
+        {stats.map((s, i) => (
+          <div
+            key={s.l}
+            style={{
+              transitionDelay: `${i * 90}ms`,
+              transform: statsVisible ? "translateY(0)" : "translateY(16px)",
+            }}
+            className={`px-6 py-7 transition-all duration-700 ease-out hover:-translate-y-0.5 hover:bg-white/[0.05] ${
+              statsVisible ? "opacity-100" : "opacity-0"
+            } ${i !== 0 ? "md:border-l md:border-white/10" : ""} ${
+              i % 2 !== 0 ? "border-l border-white/10 md:border-l" : ""
+            } ${i >= 2 ? "border-t border-white/10 md:border-t-0" : ""}`}
+          >
+            <div className="text-3xl font-bold text-white">
+              <StatValue value={s.v} visible={statsVisible} />
+            </div>
+            <div className="mt-1 font-mono text-[11px] uppercase tracking-wider text-neutral-500">{s.l}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/* ------------------------- Studio Coverflow ------------------------- */
+/* Auto-rotating 3D coverflow carousel — ported from the earlier violet   */
+/* build and re-themed for the orange/charcoal CreativeOS system. Gives   */
+/* visitors a fast, tactile map of every studio before they scroll into   */
+/* the dedicated deep-dive section for each one.                         */
+
+function StudioCoverflow() {
+  const cards = [
+    {
+      title: "Image Studio",
+      desc: "Turn a sentence into a full visual world — four HD styles in seconds.",
+      anchor: "#image",
+      icon: ImageIcon,
+    },
+    {
+      title: "Video Studio",
+      desc: "Describe a scene, get cinematic footage with timeline and export ready.",
+      anchor: "#video",
+      icon: Video,
+    },
+    {
+      title: "Blog Studio",
+      desc: "SEO-tuned, source-cited long-form articles in a Notion-style editor.",
+      anchor: "#blog",
+      icon: FileText,
+    },
+    {
+      title: "LinkedIn Tracker",
+      desc: "A living dashboard for impressions, engagement, CTR and follower growth.",
+      anchor: "#tracker",
+      icon: BarChart3,
+    },
+    {
+      title: "Platform Core",
+      desc: "One universal prompt bar routes every request to the right studio.",
+      anchor: "#platform",
+      icon: Sparkles,
+    },
+  ]
+  const cardCount = cards.length
+
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const [sectionRef, sectionVisible] = useReveal(0.2)
+
+  // Auto-advance every 2.6s — pauses on hover, and never runs before the
+  // section has actually scrolled into view.
+  useEffect(() => {
+    if (isPaused || !sectionVisible) return
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % cardCount)
+    }, 2600)
+    return () => clearInterval(timer)
+  }, [isPaused, sectionVisible, cardCount])
+
+  // Shortest signed distance from a card's index to the active card (handles wraparound).
+  const getOffset = (idx) => {
+    let diff = idx - activeIndex
+    if (diff > cardCount / 2) diff -= cardCount
+    if (diff < -cardCount / 2) diff += cardCount
+    return diff
+  }
+
+  const goTo = (anchor) => {
+    const el = document.querySelector(anchor)
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
+  return (
+    <section
+      ref={sectionRef}
+      className="mx-auto max-w-6xl px-5 pb-24"
       style={{
-        rotateX: springX,
-        rotateY: springY,
-        transformStyle: 'preserve-3d',
-        perspective: 1000
+        transitionDelay: "80ms",
+        transform: sectionVisible ? "translateY(0)" : "translateY(24px)",
       }}
-      className={`relative group cursor-pointer ${className}`}
     >
-      <div style={{ transform: 'translateZ(25px)' }} className="h-full relative z-10">
-        {children}
+      <div className={`text-center transition-all duration-700 ease-out ${sectionVisible ? "opacity-100" : "opacity-0"}`}>
+        <div className="flex justify-center">
+          <SectionLabel>Studio Index</SectionLabel>
+        </div>
+        <h2 className="mx-auto mt-5 max-w-xl text-balance text-3xl font-bold tracking-tight text-white md:text-4xl">
+          Five studios, one prompt bar away.
+        </h2>
+        <p className="mx-auto mt-3 max-w-md text-pretty text-sm text-neutral-500">
+          Cycles automatically — hover to pause, click any card to jump straight to it.
+        </p>
       </div>
 
-      {/* Behind-card glow */}
-      <div 
-        className="absolute -inset-px rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl pointer-events-none z-0"
-        style={{
-          background: `radial-gradient(220px circle, ${glowColor} 0%, transparent 80%)`,
-        }}
-      />
-    </motion.div>
-  );
-};
+      <div
+        className="relative mt-14 flex h-[440px] items-center justify-center sm:h-[480px]"
+        style={{ perspective: "1600px" }}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        {cards.map((card, idx) => {
+          const offset = getOffset(idx)
+          const abs = Math.abs(offset)
+          const isActive = offset === 0
+          if (abs > 2) return null
 
-export const LandingPage = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+          const translateX = offset * 260
+          const scale = isActive ? 1 : abs === 1 ? 0.82 : 0.64
+          const rotateY = isActive ? 0 : offset > 0 ? -36 : 36
+          const opacity = isActive ? 1 : abs === 1 ? 0.55 : 0.22
+          const zIndex = 20 - abs
 
-  // Pointer position for custom background spotlight (Brand Orange Glow)
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  useEffect(() => {
-    const handleMove = (e) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', handleMove);
-    return () => window.removeEventListener('mousemove', handleMove);
-  }, []);
+          return (
+            <div
+              key={card.title}
+              onClick={() => (isActive ? goTo(card.anchor) : setActiveIndex(idx))}
+              style={{
+                transform: `translateX(${translateX}px) scale(${scale}) rotateY(${rotateY}deg)`,
+                opacity,
+                zIndex,
+                transformStyle: "preserve-3d",
+                transition: "transform 550ms cubic-bezier(0.22, 1, 0.36, 1), opacity 550ms ease-out",
+              }}
+              className="absolute h-[380px] w-[300px] cursor-pointer rounded-2xl border border-white/10 bg-white/[0.03] p-7 backdrop-blur-sm sm:h-[420px] sm:w-[330px] sm:p-8"
+            >
+              <div className="flex h-full flex-col justify-between gap-8">
+                <div>
+                  <span className="grid h-12 w-12 place-items-center rounded-xl bg-orange-500/10 text-orange-500">
+                    <card.icon className="h-6 w-6" />
+                  </span>
+                  <h3 className="mt-6 text-2xl font-bold text-white">{card.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-neutral-500">{card.desc}</p>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest text-orange-500">
+                  <span>Open studio</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+              </div>
 
-  // Coverflow carousel state
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isCoverflowPaused, setIsCoverflowPaused] = useState(false);
+              {isActive && (
+                <div
+                  className="pointer-events-none absolute -inset-px -z-10 rounded-2xl blur-2xl"
+                  style={{ background: "radial-gradient(200px circle, rgba(249,115,22,0.16) 0%, transparent 80%)" }}
+                />
+              )}
+            </div>
+          )
+        })}
+      </div>
 
-  // Workflow timeline state
-  const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [isTimelinePaused, setIsTimelinePaused] = useState(false);
+      <div className="mt-6 flex items-center justify-center gap-2">
+        {cards.map((card, idx) => (
+          <button
+            key={card.title}
+            onClick={() => setActiveIndex(idx)}
+            aria-label={`Show ${card.title}`}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              idx === activeIndex ? "w-6 bg-orange-500" : "w-1.5 bg-white/15"
+            }`}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}
 
-  // Active brand mockup selection state for hero dashboard
-  const [heroActiveTab, setHeroActiveTab] = useState('editor');
+/* --------------------------- Shared bits --------------------------- */
 
-  const handleLaunch = (targetPath) => {
-    if (isAuthenticated) {
-      navigate(targetPath);
-    } else {
-      navigate(`/register?redirect=${encodeURIComponent(targetPath)}`);
-    }
-  };
+function SectionLabel({ children }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="h-px w-8 bg-orange-500" />
+      <span className="font-mono text-xs uppercase tracking-widest text-orange-500">{children}</span>
+    </div>
+  )
+}
 
-  // sliding cards data representing features
-  const featuresData = [
-    {
-      title: 'Generate Page',
-      desc: 'Create high-performing blog outlines, copy components, and custom social assets grounded in your brand identity.',
-      path: '/generate',
-      icon: Sparkles,
-      iconBg: 'bg-orange-550/10',
-      iconBorder: 'border-orange-500/25',
-      iconColor: 'text-orange-400',
-      glowColor: 'rgba(249,115,22,0.18)'
-    },
-    {
-      title: 'Blog Studio',
-      desc: 'Formulate search engine optimized structures, index topics, and draft comprehensive articles automatically.',
-      path: '/blog-studio',
-      icon: Layout,
-      iconBg: 'bg-amber-500/10',
-      iconBorder: 'border-amber-500/25',
-      iconColor: 'text-amber-400',
-      glowColor: 'rgba(245,158,11,0.18)'
-    },
-    {
-      title: 'Image Studio',
-      desc: 'Produce breathtaking graphics, marketing banners, and visual layouts tailored to maximize social conversion.',
-      path: '/image-studio',
-      icon: ImageIcon,
-      iconBg: 'bg-yellow-500/10',
-      iconBorder: 'border-yellow-500/25',
-      iconColor: 'text-yellow-400',
-      glowColor: 'rgba(234,179,8,0.18)'
-    },
-    {
-      title: 'Video Studio',
-      desc: 'Design engaging social reels and brand video presentations complete with AI narration audio loops.',
-      path: '/video-studio',
-      icon: Video,
-      iconBg: 'bg-orange-600/10',
-      iconBorder: 'border-orange-600/25',
-      iconColor: 'text-orange-500',
-      glowColor: 'rgba(234,88,12,0.18)'
-    },
-    {
-      title: 'LinkedIn Tracker',
-      desc: 'Track conversions metrics, run analytics audits, and manage corporate campaign ad budgets in real-time.',
-      path: '/linkedinads',
-      icon: BarChart3,
-      iconBg: 'bg-red-500/10',
-      iconBorder: 'border-red-500/25',
-      iconColor: 'text-red-400',
-      glowColor: 'rgba(239,68,68,0.18)'
-    }
-  ];
+function StudioHeading({ label, title, desc }) {
+  return (
+    <div className="max-w-2xl">
+      <SectionLabel>{label}</SectionLabel>
+      <h2 className="mt-5 text-balance text-4xl font-bold leading-[1.05] tracking-tight text-white md:text-5xl">
+        {title}
+      </h2>
+      <p className="mt-5 text-pretty text-lg leading-relaxed text-neutral-400">{desc}</p>
+    </div>
+  )
+}
 
-  const cardCount = featuresData.length;
+function FeatureRow({ icon: Icon, title, status }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-500/30 hover:bg-white/[0.05]">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-orange-500/10 text-orange-500 transition-transform duration-300 group-hover:scale-110">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0">
+        <div className="truncate text-sm font-medium text-white">{title}</div>
+        <div className="text-xs text-neutral-500">{status}</div>
+      </div>
+    </div>
+  )
+}
 
-  useEffect(() => {
-    if (isCoverflowPaused) return;
-    const timer = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % cardCount);
-    }, 2800);
-    return () => clearInterval(timer);
-  }, [isCoverflowPaused, cardCount]);
+/* -------------------------- Image Studio --------------------------- */
 
-  const getOffset = (idx) => {
-    let diff = idx - activeIndex;
-    if (diff > cardCount / 2) diff -= cardCount;
-    if (diff < -cardCount / 2) diff += cardCount;
-    return diff;
-  };
-
-  const workflowSteps = [
-    {
-      title: 'Brief',
-      icon: FileText,
-      desc: 'Drop in your goals, references, and brand voice. CreativeStudio OS builds working context from it automatically — no separate setup step.',
-      chips: ['Goal: Product launch', 'Voice: Confident'],
-      solidColor: '#f59e0b',
-      lineColor: '#f59e0b',
-      glow: 'rgba(245,158,11,0.45)'
-    },
-    {
-      title: 'Draft',
-      icon: Sparkles,
-      desc: 'AI drafts blog posts, captions, and visuals grounded in the brief — fully formed first passes, ready for you to shape.',
-      chips: ['Blog outline ready', '3 caption variants'],
-      solidColor: '#f97316',
-      lineColor: '#f97316',
-      glow: 'rgba(249,115,22,0.45)'
-    },
-    {
-      title: 'Personas',
-      icon: Users,
-      desc: 'Tune tone and vocabulary per audience before anything ships, so the same idea lands right for every reader.',
-      chips: ['Tech Exec: Analytical', 'Creator: Casual'],
-      solidColor: '#ea580c',
-      lineColor: '#ea580c',
-      glow: 'rgba(234,88,12,0.45)'
-    },
-    {
-      title: 'Publish',
-      icon: Send,
-      desc: 'Push the finished piece to LinkedIn, your blog, and every channel it belongs on — in one click, already formatted.',
-      chips: ['LinkedIn ✓', 'Blog ✓', 'Newsletter ✓'],
-      solidColor: '#e11d48',
-      lineColor: '#e11d48',
-      glow: 'rgba(225,29,72,0.45)'
-    }
-  ];
-
-  useEffect(() => {
-    if (isTimelinePaused) return;
-    const timer = setInterval(() => {
-      setActiveStepIndex((prev) => (prev + 1) % workflowSteps.length);
-    }, 3200);
-    return () => clearInterval(timer);
-  }, [isTimelinePaused]);
+function ImageStudio() {
+  const [prompt, setPrompt] = useState("A futuristic cyberpunk city at sunset.")
+  const images = ["/cyberpunk-1.png", "/cyberpunk-2.png", "/cyberpunk-3.png", "/cyberpunk-4.png"]
+  const [gridRef, gridVisible] = useReveal(0.2)
 
   return (
-    <div className="dark relative min-h-screen bg-[#070708] text-[#f4f4f5] overflow-x-hidden font-display select-none">
+    <section id="image" className="mx-auto max-w-6xl px-5 py-24">
+      <Reveal>
+        <StudioHeading
+          label="01 — Image Studio"
+          title="Turn a sentence into a whole visual world."
+          desc="Describe anything. Get four production-ready images in seconds — each in a different style, all at HD quality."
+        />
+      </Reveal>
 
-      {/* 1. STAR LIGHT STARS BACKDROP */}
-      <div className="absolute inset-0 bg-[radial-gradient(white_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.04] pointer-events-none" />
+      <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,320px)_1fr]">
+        <Reveal delay={100} className="grid grid-cols-2 gap-3 lg:grid-cols-1">
+          <FeatureRow icon={Wand2} title="Text-to-Image" status="Enabled" />
+          <FeatureRow icon={ImageIcon} title="Multiple Styles" status="Enabled" />
+          <FeatureRow icon={Sparkles} title="HD Quality" status="Enabled" />
+          <FeatureRow icon={Zap} title="Instant Generation" status="Enabled" />
+        </Reveal>
 
-      {/* 2. INTERACTIVE SPOTLIGHT GLOW */}
-      <div
-        className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300 opacity-60 hidden md:block"
-        style={{
-          background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(249,115,22,0.06) 0%, rgba(245,158,11,0.04) 50%, transparent 100%)`
-        }}
-      />
-
-      {/* 3. DYNAMIC NEBULA BLOBS */}
-      <motion.div
-        animate={{
-          x: [0, 80, -40, 0],
-          y: [0, -90, 50, 0],
-          scale: [1, 1.25, 0.8, 1],
-          rotate: [0, 60, -60, 0]
-        }}
-        transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-[-25%] left-[-15%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tr from-orange-600/10 to-amber-600/5 blur-[140px] pointer-events-none"
-      />
-
-      <motion.div
-        animate={{
-          x: [0, -60, 80, 0],
-          y: [0, 90, -60, 0],
-          scale: [1, 0.85, 1.2, 1],
-          rotate: [0, -50, 50, 0]
-        }}
-        transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute bottom-[-20%] right-[-15%] w-[65vw] h-[65vw] rounded-full bg-gradient-to-br from-yellow-500/10 to-orange-500/5 blur-[160px] pointer-events-none"
-      />
-
-      {/* Cybernetic Grid */}
-      <div
-        className="absolute inset-0 bg-[linear-gradient(to_right,#191512_1px,transparent_1px),linear-gradient(to_bottom,#191512_1px,transparent_1px)] bg-[size:4.5rem_4.5rem] opacity-35"
-        style={{
-          maskImage: 'radial-gradient(ellipse 65% 55% at 50% 50%, #000 60%, transparent 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at 50% 50%, #000 60%, transparent 100%)'
-        }}
-      />
-
-      {/* 4. FLOATING CAPSULE NAVIGATION HEADER */}
-      <header className="sticky top-4 z-50 max-w-5xl mx-auto px-6">
-        <nav className="w-full bg-[#0d0d0f]/70 backdrop-blur-xl border border-white/[0.05] rounded-full px-6 py-3 flex items-center justify-between shadow-2xl">
-          <div className="flex items-center gap-3">
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-350" />
-              <div className="relative w-8 h-8 rounded-lg bg-background flex items-center justify-center font-black text-foreground text-sm">
-                C
-              </div>
-            </div>
-            <span className="font-display font-black tracking-tight text-foreground text-sm">
-              CreativeStudio <span className="bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">OS</span>
-            </span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-6 text-xs font-semibold text-muted-foreground">
-            <a href="#features" className="hover:text-foreground transition">Features</a>
-            <a href="#workflow" className="hover:text-foreground transition">Workflow</a>
-            <a href="#engine" className="hover:text-foreground transition">Engine</a>
-          </div>
-
-          <div>
-            <button
-              onClick={() => handleLaunch('/generate')}
-              className="px-4 py-2 bg-white/5 border border-white/10 hover:border-orange-500/40 hover:bg-orange-500/5 text-muted-foreground hover:text-foreground font-extrabold rounded-full text-xs transition-all duration-300 flex items-center gap-2 cursor-pointer"
-            >
-              <span>Launch Portal</span>
-              <ArrowRight size={12} className="text-orange-400" />
+        <Reveal delay={180} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 md:p-6">
+          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 p-2 pl-4 transition-colors duration-300 focus-within:border-orange-500/40">
+            <Sparkles className="h-4 w-4 shrink-0 text-orange-500" />
+            <input
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className="min-w-0 flex-1 bg-transparent text-sm text-neutral-200 outline-none placeholder:text-neutral-600"
+              placeholder="Describe your image..."
+              aria-label="Image prompt"
+            />
+            <button className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:scale-[1.03] active:scale-95">
+              Generate
             </button>
           </div>
-        </nav>
-      </header>
 
-      {/* 5. HERO SECTION */}
-      <section className="max-w-5xl mx-auto px-6 pt-16 pb-4 text-center relative z-10">
-        <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.2 bg-orange-500/10 border border-orange-500/25 rounded-full text-[10px] font-extrabold uppercase tracking-widest text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)]">
-            <Sparkles size={11} className="text-amber-400 animate-pulse" />
-            <span>Interactive Production-Grade Release</span>
-          </div>
-
-          <h1 className="text-5xl sm:text-8xl font-display font-black tracking-tight text-foreground max-w-5xl mx-auto leading-[0.96] capitalize">
-            The Intelligent Content Workspace For{' '}
-            <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-500 bg-clip-text text-transparent">Fast Creators</span>
-            </span>
-          </h1>
-
-          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Write brand-grounded documents, generate campaign visuals, and audit LinkedIn conversion performance under one highly responsive dark workspace.
-          </p>
-
-          <div className="flex flex-wrap justify-center gap-4 pt-4">
-            <button
-              onClick={() => handleLaunch('/register')}
-              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-600 hover:opacity-95 text-white font-black rounded-full text-xs shadow-lg shadow-orange-500/20 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition cursor-pointer"
-            >
-              <span>Start Free Trial</span>
-              <ArrowRight size={13} />
-            </button>
-            <button
-              onClick={() => handleLaunch('/generate')}
-              className="px-6 py-3 bg-white/5 hover:bg-white/[0.08] border border-white/10 text-foreground font-black rounded-full text-xs flex items-center gap-2 transition cursor-pointer"
-            >
-              <span>Explore Features</span>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. HERO INTERACTIVE DASHBOARD PREVIEW */}
-      <section className="max-w-5xl mx-auto px-6 py-12 relative z-10">
-        <div className="rounded-3xl border border-white/[0.06] overflow-hidden shadow-2xl bg-[#09090b] shadow-orange-500/5">
-          {/* Browser header */}
-          <div className="bg-neutral-900/60 border-b border-white/[0.03] px-5 py-3.5 flex items-center justify-between">
-            <div className="flex gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
-              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/40" />
-            </div>
-            <div className="text-[10px] text-muted-foreground bg-black/60 px-6 py-1 rounded-full border border-white/[0.02] select-none font-mono">
-              creativestudio.os/portal
-            </div>
-            <div className="flex items-center gap-3">
-              <Bell size={13} className="text-muted-foreground" />
-              <div className="w-5 h-5 rounded-full bg-neutral-800" />
-            </div>
-          </div>
-
-          {/* Editor/Studio Inner layout mockup */}
-          <div className="grid grid-cols-1 md:grid-cols-[200px_1fr_240px] h-[400px] bg-[#0c0c0e]">
-            {/* Sidebar Mockup */}
-            <div className="border-r border-white/[0.03] p-4 flex flex-col justify-between hidden md:flex text-left">
-              <div className="space-y-4">
-                <span className="text-[8px] font-bold text-muted-foreground tracking-wider uppercase">STUDIO PIPELINES</span>
-                <div className="space-y-1.5">
-                  <div
-                    onClick={() => setHeroActiveTab('editor')}
-                    className={`px-3 py-1.8 rounded-lg text-xs font-bold flex items-center gap-2 cursor-pointer transition ${
-                      heroActiveTab === 'editor' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'text-muted-foreground hover:bg-white/[0.02]'
-                    }`}
-                  >
-                    <Sparkles size={13} />
-                    <span>Generate Page</span>
-                  </div>
-                  <div
-                    onClick={() => setHeroActiveTab('blog')}
-                    className={`px-3 py-1.8 rounded-lg text-xs font-bold flex items-center gap-2 cursor-pointer transition ${
-                      heroActiveTab === 'blog' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'text-muted-foreground hover:bg-white/[0.02]'
-                    }`}
-                  >
-                    <Layout size={13} />
-                    <span>Blog Studio</span>
-                  </div>
-                  <div
-                    onClick={() => setHeroActiveTab('metrics')}
-                    className={`px-3 py-1.8 rounded-lg text-xs font-bold flex items-center gap-2 cursor-pointer transition ${
-                      heroActiveTab === 'metrics' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'text-muted-foreground hover:bg-white/[0.02]'
-                    }`}
-                  >
-                    <BarChart3 size={13} />
-                    <span>LinkedIn Tracker</span>
-                  </div>
+          <div ref={gridRef} className="mt-4 grid grid-cols-2 gap-3">
+            {images.map((src, i) => (
+              <TiltCard
+                key={src}
+                max={10}
+                className="rounded-xl"
+                style={{
+                  transitionDelay: `${i * 100}ms`,
+                }}
+              >
+                <div
+                  style={{
+                    transitionDelay: `${i * 100}ms`,
+                    transform: gridVisible ? "translateY(0) scale(1)" : "translateY(14px) scale(0.97)",
+                  }}
+                  className={`group relative aspect-[4/3] overflow-hidden rounded-xl border border-white/10 transition-all duration-700 ease-out ${
+                    gridVisible ? "opacity-100" : "opacity-0"
+                  }`}
+                >
+                  <img
+                    src={src || "/placeholder.svg"}
+                    alt="AI generated preview"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <span className="absolute left-2 top-2 rounded-md bg-black/60 px-2 py-0.5 font-mono text-[10px] text-white backdrop-blur-sm">
+                    v{i + 1}
+                  </span>
                 </div>
-              </div>
-              <div className="p-3 bg-white/[0.01] rounded-xl border border-white/[0.03] text-left">
-                <span className="text-[9px] font-mono text-muted-foreground block">ACTIVE BRAND</span>
-                <span className="text-[10px] font-bold text-foreground flex items-center gap-1.5 mt-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400" /> Stripe Brand
+              </TiltCard>
+            ))}
+          </div>
+
+          <div className="mt-4 flex items-center justify-between font-mono text-[11px] text-neutral-500">
+            <span>Rendered in 1.8s · Seed 042817</span>
+            <span className="text-orange-500">HD · 2048×1536</span>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
+
+/* -------------------------- Video Studio --------------------------- */
+
+function VideoStudio() {
+  const ratios = ["16:9", "9:16", "1:1", "4:5"]
+  const [barRef, barVisible] = useReveal(0.3)
+
+  return (
+    <section id="video" className="mx-auto max-w-6xl px-5 py-24">
+      <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+        <Reveal delay={100} y={30} className="order-2 lg:order-1">
+          <TiltCard max={4} className="overflow-hidden rounded-2xl">
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="mb-3 flex items-center gap-2 rounded-lg border border-white/10 bg-black/40 px-3 py-2">
+                <Video className="h-4 w-4 shrink-0 text-orange-500" />
+                <span className="truncate text-xs text-neutral-400">
+                  A drone flying through snowy mountains during sunrise.
                 </span>
               </div>
-            </div>
-
-            {/* Central Editor Mockup */}
-            <div className="p-6 flex flex-col justify-between text-left overflow-y-auto">
-              <AnimatePresence mode="wait">
-                {heroActiveTab === 'editor' && (
-                  <motion.div
-                    key="editor"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center justify-between border-b border-white/[0.03] pb-3">
-                      <div className="space-y-0.5">
-                        <span className="text-[9px] font-mono text-orange-400 uppercase tracking-widest font-black">AI Editor Workspace</span>
-                        <h3 className="text-sm font-bold text-foreground">How AI is reshaping product engineering</h3>
-                      </div>
-                      <span className="text-[9px] text-muted-foreground">Draft 03</span>
-                    </div>
-
-                    <div className="space-y-2.5 font-mono text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                      <p>Over the last decade, UI workflows have evolved rapidly. Modern teams are transitioning from static wireframe handoffs directly into interactive, code-grounded sandbox environments...</p>
-                      <p className="bg-orange-550/5 border border-orange-500/15 p-2 rounded-lg text-foreground flex items-center justify-between">
-                        <span>✨ AI Assist: Refine tone to "Confident & Thought Leadership"</span>
-                        <span className="text-[9px] text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded">Applying</span>
-                      </p>
-                      <p>This paradigm shift ensures styling fidelity remains 100% accurate, eliminating design compromises during final production compile runs...</p>
-                    </div>
-                  </motion.div>
-                )}
-
-                {heroActiveTab === 'blog' && (
-                  <motion.div
-                    key="blog"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center justify-between border-b border-white/[0.03] pb-3">
-                      <div className="space-y-0.5">
-                        <span className="text-[9px] font-mono text-amber-400 uppercase tracking-widest font-black">Blog outline generator</span>
-                        <h3 className="text-sm font-bold text-foreground">SEO Keyword Strategy Brief</h3>
-                      </div>
-                      <span className="text-[9px] text-emerald-400 font-bold">Grounded</span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="border border-white/[0.03] p-3 rounded-xl bg-white/[0.01]">
-                        <span className="text-[10px] font-bold text-foreground block">1. Introduction to Web3 Sandboxes</span>
-                        <span className="text-[9px] text-muted-foreground block mt-1">Target keywords: figma wireframe, react code blocks, sandbox engine</span>
-                      </div>
-                      <div className="border border-white/[0.03] p-3 rounded-xl bg-white/[0.01]">
-                        <span className="text-[10px] font-bold text-foreground block">2. Measuring Code Fidelity Performance</span>
-                        <span className="text-[9px] text-muted-foreground block mt-1">Target keywords: production compile, css variables, design handoff</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {heroActiveTab === 'metrics' && (
-                  <motion.div
-                    key="metrics"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="space-y-5"
-                  >
-                    <div className="flex items-center justify-between border-b border-white/[0.03] pb-3">
-                      <div className="space-y-0.5">
-                        <span className="text-[9px] font-mono text-red-400 uppercase tracking-widest font-black">Live performance monitoring</span>
-                        <h3 className="text-sm font-bold text-foreground">LinkedIn Campaign Conversion Loops</h3>
-                      </div>
-                      <span className="text-[9px] text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded">Active</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white/[0.01] border border-white/[0.03] p-3 rounded-xl">
-                        <span className="text-[9px] text-muted-foreground block">TOTAL REACH</span>
-                        <span className="text-lg font-bold text-foreground mt-1 block">142,840</span>
-                        <span className="text-[9px] text-emerald-400 font-bold">+24% this week</span>
-                      </div>
-                      <div className="bg-white/[0.01] border border-white/[0.03] p-3 rounded-xl">
-                        <span className="text-[9px] text-muted-foreground block">CONVERSIONS</span>
-                        <span className="text-lg font-bold text-foreground mt-1 block">3,490</span>
-                        <span className="text-[9px] text-emerald-400 font-bold">+18.5% this week</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Right sidebar mockup */}
-            <div className="border-l border-white/[0.03] p-4 flex flex-col justify-between hidden md:flex text-left">
-              <div className="space-y-5">
-                <span className="text-[8px] font-bold text-muted-foreground tracking-wider uppercase">BRAND COMPLIANCE</span>
-                
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-foreground font-bold flex justify-between">
-                      <span>Factual Match</span>
-                      <span className="text-orange-400">98%</span>
-                    </span>
-                    <div className="h-1 w-full bg-white/[0.03] rounded-full overflow-hidden">
-                      <div className="h-full w-[98%] bg-orange-500 rounded-full" />
-                    </div>
+              <div className="relative aspect-video overflow-hidden rounded-xl border border-white/10">
+                <img
+                  src="/snowy-mountains.png"
+                  alt="Snowy mountains sunrise"
+                  className="h-full w-full object-cover"
+                />
+                <button
+                  aria-label="Play preview"
+                  className="absolute inset-0 m-auto grid h-14 w-14 place-items-center rounded-full bg-white/90 text-black backdrop-blur transition-transform duration-300 hover:scale-110 active:scale-95"
+                >
+                  <Play className="h-6 w-6 translate-x-0.5 fill-black" />
+                </button>
+                <span className="absolute left-3 top-3 rounded-md bg-black/60 px-2 py-0.5 font-mono text-[10px] text-white">
+                  16:9
+                </span>
+                <div ref={barRef} className="absolute inset-x-3 bottom-3">
+                  <div className="flex items-center justify-between font-mono text-[10px] text-white/80">
+                    <span>Rendering · Pass 2 of 3</span>
+                    <span>62%</span>
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-foreground font-bold flex justify-between">
-                      <span>Tone Match</span>
-                      <span className="text-amber-400">95%</span>
-                    </span>
-                    <div className="h-1 w-full bg-white/[0.03] rounded-full overflow-hidden">
-                      <div className="h-full w-[95%] bg-amber-500 rounded-full" />
-                    </div>
+                  <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/20">
+                    <div
+                      className="h-full rounded-full bg-orange-500 transition-[width] duration-[1400ms] ease-out"
+                      style={{ width: barVisible ? "62%" : "0%" }}
+                    />
                   </div>
                 </div>
               </div>
-
-              <div className="p-3 bg-orange-500/5 rounded-xl border border-orange-500/10 text-left">
-                <span className="text-[9px] text-orange-400 font-bold block uppercase tracking-wider">Engine Status</span>
-                <span className="text-[10px] font-bold text-foreground mt-1 block">Fidelity Verified</span>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {ratios.map((r, i) => (
+                  <span
+                    key={r}
+                    className={`cursor-default rounded-md border px-2.5 py-1 font-mono text-[11px] transition-all duration-300 hover:-translate-y-0.5 ${
+                      i === 0
+                        ? "border-orange-500/40 bg-orange-500/10 text-orange-400"
+                        : "border-white/10 bg-white/[0.03] text-neutral-400 hover:border-orange-500/30 hover:text-orange-300"
+                    }`}
+                  >
+                    {r}
+                  </span>
+                ))}
+                <span className="ml-auto font-mono text-[11px] text-neutral-500">00:12 / 00:24</span>
               </div>
+              <div className="mt-3 space-y-1.5">
+                {["V1 · Drone Aerial", "V2 · Sun Flare", "A1 · Ambient Wind"].map((t) => (
+                  <div
+                    key={t}
+                    className="flex items-center gap-2 rounded-md border border-white/10 bg-black/40 px-3 py-1.5 font-mono text-[11px] text-neutral-400 transition-colors duration-300 hover:border-orange-500/20 hover:text-neutral-300"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+                    {t}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TiltCard>
+        </Reveal>
+
+        <Reveal delay={0} y={30} className="order-1 lg:order-2">
+          <StudioHeading
+            label="02 — Video Studio"
+            title="From prompt to cinematic footage."
+            desc="Describe a scene. Watch it render into a smooth, cinematic clip — with timeline, aspect ratios and export ready in one flow."
+          />
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            <FeatureRow icon={Video} title="Text-to-Video" status="Active" />
+            <FeatureRow icon={Play} title="Cinematic Motion" status="Active" />
+            <FeatureRow icon={ImageIcon} title="Aspect Ratios" status="Active" />
+            <FeatureRow icon={Zap} title="Fast Rendering" status="Active" />
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
+
+/* --------------------------- Blog Studio --------------------------- */
+
+function BlogStudio() {
+  const insights = [
+    "Title includes focus keyword",
+    "Meta description within 155 chars",
+    "5 internal links added",
+    "Reading grade level 8",
+  ]
+  const keywords = ["ai marketing", "personalization", "predictive ai", "roi", "growth"]
+  const [insightsRef, insightsVisible] = useReveal(0.3)
+
+  return (
+    <section id="blog" className="mx-auto max-w-6xl px-5 py-24">
+      <Reveal>
+        <StudioHeading
+          label="03 — Blog Studio"
+          title="Publish long-form that actually ranks."
+          desc="AI-drafted, SEO-tuned, source-cited articles — formatted in a Notion-style editor and exportable in one click."
+        />
+      </Reveal>
+
+      <div className="mt-12 grid gap-6 lg:grid-cols-[1fr_320px]">
+        {/* editor */}
+        <Reveal delay={100} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <span className="font-mono text-xs text-neutral-500">draft — untitled.md</span>
+            <div className="flex items-center gap-3 font-mono text-[11px] text-neutral-500">
+              <span>Words 1,842 · Read 7 min</span>
+              <span className="rounded-md bg-orange-500/10 px-2 py-0.5 text-orange-400">SEO 98/100</span>
             </div>
           </div>
-        </div>
-      </section>
+          <div className="mt-4 flex items-center gap-2 rounded-lg border border-white/10 bg-black/40 px-3 py-2">
+            <Sparkles className="h-4 w-4 shrink-0 text-orange-500" />
+            <span className="text-sm text-neutral-400">Write a blog about AI in digital marketing.</span>
+          </div>
+          <div className="mt-5 space-y-4">
+            <BlogHeading level="H1" text="AI in Digital Marketing: The 2026 Playbook" big />
+            <p className="text-sm leading-relaxed text-neutral-500">
+              The next wave of marketing is autonomous. Here is how leading teams are turning generative models into
+              measurable growth engines this year.
+            </p>
+            <BlogHeading level="H2" text="1. From Automation to Autonomy" />
+            <BlogHeading level="H2" text="2. Personalization at Scale" />
+            <BlogHeading level="H2" text="3. Measuring Real ROI" />
+          </div>
+          <button className="mt-6 inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:scale-[1.02] active:scale-95">
+            <Download className="h-4 w-4" />
+            Export article
+          </button>
+        </Reveal>
 
-      {/* 7. AUTO-ROTATING 3D COVERFLOW FEATURE CARDS */}
-      <section id="features" className="max-w-6xl mx-auto px-6 pb-24 relative z-10 text-center">
-        <div className="space-y-2 mb-10">
-          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
-            <Zap size={14} className="text-orange-400" /> Transform Your Workflow
-          </h2>
-          <p className="text-[10px] sm:text-xs text-muted-foreground">Cycles automatically — hover to pause, click a card to jump to it.</p>
-        </div>
+        {/* sidebar */}
+        <Reveal delay={200} className="space-y-4">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-neutral-500">
+              <BarChart3 className="h-3.5 w-3.5 text-orange-500" />
+              SEO Insights
+            </div>
+            <ul ref={insightsRef} className="mt-4 space-y-3">
+              {insights.map((t, i) => (
+                <li
+                  key={t}
+                  style={{
+                    transitionDelay: `${i * 90}ms`,
+                    transform: insightsVisible ? "translateX(0)" : "translateX(-10px)",
+                  }}
+                  className={`flex items-start gap-2 text-sm text-neutral-300 transition-all duration-500 ease-out ${
+                    insightsVisible ? "opacity-100" : "opacity-0"
+                  }`}
+                >
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="font-mono text-xs uppercase tracking-wider text-neutral-500">Suggested Keywords</div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {keywords.map((k) => (
+                <span
+                  key={k}
+                  className="inline-flex cursor-default items-center gap-1 rounded-md border border-white/10 bg-black/40 px-2.5 py-1 text-xs text-neutral-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-500/30 hover:text-orange-300"
+                >
+                  <Hash className="h-3 w-3 text-orange-500" />
+                  {k}
+                </span>
+              ))}
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
 
-        {/* Coverflow stage: perspective container */}
-        <div
-          className="relative h-[450px] sm:h-[500px] flex items-center justify-center"
-          style={{ perspective: '1600px' }}
-          onMouseEnter={() => setIsCoverflowPaused(true)}
-          onMouseLeave={() => setIsCoverflowPaused(false)}
-        >
-          {featuresData.map((card, idx) => {
-            const offset = getOffset(idx);
-            const abs = Math.abs(offset);
-            const isActive = offset === 0;
+function BlogHeading({ level, text, big }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="mt-1 rounded bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-neutral-500">{level}</span>
+      <span className={`font-semibold text-white ${big ? "text-xl" : "text-base"}`}>{text}</span>
+    </div>
+  )
+}
 
-            if (abs > 2) return null;
+/* ------------------------- Tracker Studio -------------------------- */
 
-            const translateX = offset * 280;
-            const scale = isActive ? 1 : abs === 1 ? 0.8 : 0.62;
-            const rotateY = isActive ? 0 : offset > 0 ? -38 : 38;
-            const opacity = isActive ? 1 : abs === 1 ? 0.65 : 0.32;
-            const zIndex = 20 - abs;
+function TrackerStudio() {
+  const stats = [
+    { v: "128.4K", l: "Impressions", d: "+34.2%" },
+    { v: "12.5K", l: "Engagement", d: "+18.7%" },
+    { v: "492", l: "CTR", d: "+9.1%" },
+    { v: "8.4K", l: "Followers", d: "+12.4%" },
+  ]
+  const bars = [420, 560, 690, 510, 780, 640, 910]
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  const posts = [
+    { r: "01", t: "How we used AI to write 40 case studies in 4 hours", a: "42.1K", b: "3.8K", c: "6.9%" },
+    { r: "02", t: "The prompt template that got us 100K impressions", a: "38.7K", b: "3.1K", c: "5.4%" },
+    { r: "03", t: "Why every marketer should learn one AI workflow a week", a: "24.2K", b: "1.9K", c: "4.1%" },
+  ]
 
-            return (
-              <motion.div
-                key={card.title}
-                onClick={() => (isActive ? handleLaunch(card.path) : setActiveIndex(idx))}
-                animate={{ x: translateX, scale, rotateY, opacity }}
-                transition={{ type: 'spring', stiffness: 140, damping: 22 }}
-                style={{ zIndex, transformStyle: 'preserve-3d' }}
-                className="absolute w-[330px] sm:w-[370px] h-[380px] sm:h-[420px] cursor-pointer bg-card/75 border border-white/[0.06] rounded-3xl p-8 flex flex-col justify-between backdrop-blur-sm shadow-2xl"
-              >
-                <div className="space-y-6 text-left">
-                  <div className={`w-14 h-14 rounded-2xl ${card.iconBg} border ${card.iconBorder} flex items-center justify-center ${card.iconColor} shadow-sm`}>
-                    <card.icon size={24} />
-                  </div>
-                  <div className="space-y-3">
-                    <h3 className="font-display text-xl font-black text-foreground">{card.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed font-normal">
-                      {card.desc}
-                    </p>
-                  </div>
-                </div>
+  const line = useMemo(() => {
+    const pts = [120, 240, 210, 360, 420, 500, 620, 760]
+    const max = Math.max(...pts)
+    return pts.map((p, i) => `${(i / (pts.length - 1)) * 100},${100 - (p / max) * 100}`).join(" ")
+  }, [])
 
-                <div className={`flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-widest ${card.iconColor} text-left`}>
-                  <span>Explore workspace</span>
-                  <ArrowRight size={13} />
-                </div>
+  const [statsRef, statsVisible] = useReveal(0.3)
+  const [barsRef, barsVisible] = useReveal(0.3)
+  const [lineRef, lineVisible] = useReveal(0.3)
+  const [postsRef, postsVisible] = useReveal(0.3)
 
-                {isActive && (
+  return (
+    <section id="tracker" className="mx-auto max-w-6xl px-5 py-24">
+      <Reveal>
+        <StudioHeading
+          label="04 — LinkedIn Tracker"
+          title="See what's working. Do more of it."
+          desc="A living dashboard tracking impressions, engagement, CTR and follower growth — with content-level analytics baked in."
+        />
+      </Reveal>
+
+      <div ref={statsRef} className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {stats.map((s, i) => (
+          <div
+            key={s.l}
+            style={{
+              transitionDelay: `${i * 90}ms`,
+              transform: statsVisible ? "translateY(0)" : "translateY(16px)",
+            }}
+            className={`rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-700 ease-out hover:-translate-y-1 hover:border-orange-500/20 hover:bg-white/[0.05] ${
+              statsVisible ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="flex items-center gap-1 text-xs font-medium text-orange-400">
+              <TrendingUp className="h-3.5 w-3.5" />
+              {s.d}
+            </div>
+            <div className="mt-2 text-2xl font-bold text-white">
+              <StatValue value={s.v} visible={statsVisible} />
+            </div>
+            <div className="mt-0.5 text-xs text-neutral-500">{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        {/* bar chart */}
+        <Reveal delay={100} className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-neutral-500">
+              Impressions · Last 7 days
+            </span>
+            <span className="text-xs font-medium text-orange-400">+34.2% WoW</span>
+          </div>
+          <div ref={barsRef} className="mt-6 flex h-44 items-end justify-between gap-3">
+            {bars.map((b, i) => (
+              <div key={days[i]} className="flex flex-1 flex-col items-center gap-2">
+                <div className="flex w-full flex-1 items-end">
                   <div
-                    className="absolute -inset-px rounded-3xl -z-10 blur-2xl pointer-events-none"
-                    style={{ background: `radial-gradient(220px circle, ${card.glowColor} 0%, transparent 80%)` }}
+                    className="w-full rounded-t-md bg-gradient-to-t from-orange-600/40 to-orange-500 transition-[height] ease-out"
+                    style={{
+                      height: barsVisible ? `${(b / 910) * 100}%` : "0%",
+                      transitionDuration: "900ms",
+                      transitionDelay: `${i * 70}ms`,
+                    }}
                   />
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
+                </div>
+                <span className="font-mono text-[10px] text-neutral-600">{days[i]}</span>
+              </div>
+            ))}
+          </div>
+        </Reveal>
 
-        {/* Position indicators */}
-        <div className="flex items-center justify-center gap-2 mt-6">
-          {featuresData.map((card, idx) => (
-            <button
-              key={card.title}
-              onClick={() => setActiveIndex(idx)}
-              aria-label={`Show ${card.title}`}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                idx === activeIndex ? `w-6 ${card.iconColor.replace('text-', 'bg-')}` : 'w-1.5 bg-white/15'
+        {/* line chart */}
+        <Reveal delay={200} className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-neutral-500">Follower Growth</span>
+            <span className="text-xs font-medium text-orange-400">+2,412</span>
+          </div>
+          <div
+            ref={lineRef}
+            style={{
+              transform: lineVisible ? "scale(1)" : "scale(0.96)",
+              transitionDelay: "120ms",
+            }}
+            className={`mt-6 h-44 origin-bottom transition-all duration-700 ease-out ${
+              lineVisible ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
+              <defs>
+                <linearGradient id="fillGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="rgb(249 115 22)" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="rgb(249 115 22)" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <polygon points={`0,100 ${line} 100,100`} fill="url(#fillGrad)" />
+              <polyline
+                points={line}
+                fill="none"
+                stroke="rgb(249 115 22)"
+                strokeWidth="2"
+                vectorEffect="non-scaling-stroke"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                pathLength="100"
+                strokeDasharray="100"
+                strokeDashoffset={lineVisible ? "0" : "100"}
+                style={{ transition: "stroke-dashoffset 1.4s ease-out 0.2s" }}
+              />
+            </svg>
+          </div>
+        </Reveal>
+      </div>
+
+      {/* top posts */}
+      <Reveal delay={100} className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-white">Top performing posts</span>
+          <span className="font-mono text-[11px] uppercase tracking-wider text-neutral-500">This month</span>
+        </div>
+        <div ref={postsRef} className="mt-4 divide-y divide-white/10">
+          {posts.map((p, i) => (
+            <div
+              key={p.r}
+              style={{
+                transitionDelay: `${i * 90}ms`,
+                transform: postsVisible ? "translateX(0)" : "translateX(-12px)",
+              }}
+              className={`flex items-center gap-4 rounded-lg py-3.5 pl-2 transition-all duration-500 ease-out hover:bg-white/[0.04] hover:pl-4 ${
+                postsVisible ? "opacity-100" : "opacity-0"
               }`}
-            />
+            >
+              <span className="font-mono text-sm text-orange-500">#{p.r}</span>
+              <span className="min-w-0 flex-1 truncate text-sm text-neutral-200">{p.t}</span>
+              <div className="hidden shrink-0 gap-6 font-mono text-xs text-neutral-500 sm:flex">
+                <span>{p.a} imp</span>
+                <span>{p.b} eng</span>
+                <span className="text-orange-400">{p.c}</span>
+              </div>
+            </div>
           ))}
         </div>
-      </section>
+      </Reveal>
+    </section>
+  )
+}
 
-      {/* 8. AUTO-PLAYING WORKFLOW TIMELINE */}
-      <section id="workflow" className="max-w-5xl mx-auto px-6 pb-24 relative z-10">
-        <div className="text-center space-y-2 mb-14">
-          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
-            <Workflow size={14} className="text-orange-400" /> How It Flows
-          </h2>
-          <p className="text-[10px] sm:text-xs text-muted-foreground">Plays automatically — hover to pause, click a step to jump to it.</p>
+/* ------------------------- Platform Studio ------------------------- */
+
+function PlatformStudio() {
+  const nodes = [
+    { icon: ImageIcon, t: "Image Studio", s: "Text-to-Image" },
+    { icon: Video, t: "Video Studio", s: "Text-to-Video" },
+    { icon: FileText, t: "Blog Studio", s: "Long-form writing" },
+    { icon: BarChart3, t: "LinkedIn Tracker", s: "Growth analytics" },
+  ]
+  const [nodesRef, nodesVisible] = useReveal(0.2)
+
+  return (
+    <section id="platform" className="mx-auto max-w-6xl px-5 py-24">
+      <Reveal className="text-center">
+        <div className="flex justify-center">
+          <SectionLabel>05 — Unified Platform</SectionLabel>
         </div>
+        <h2 className="mx-auto mt-5 max-w-2xl text-balance text-4xl font-bold tracking-tight text-white md:text-5xl">
+          Everything you need to create content.
+        </h2>
+        <p className="mx-auto mt-5 max-w-2xl text-pretty text-lg leading-relaxed text-neutral-400">
+          One workspace. Four studios. Zero context-switching. Assets, prompts and analytics — all connected through
+          the same intelligent core.
+        </p>
+      </Reveal>
 
-        <div
-          onMouseEnter={() => setIsTimelinePaused(true)}
-          onMouseLeave={() => setIsTimelinePaused(false)}
-        >
-          {/* Step rail */}
-          <div className="relative flex items-center justify-between mb-12 px-2 sm:px-6">
-            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-white/[0.06] mx-2 sm:mx-6" />
-            <motion.div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] mx-2 sm:mx-6"
-              style={{ background: `linear-gradient(90deg, ${workflowSteps.map(s => s.lineColor).join(', ')})` }}
-              animate={{ width: `${(activeStepIndex / (workflowSteps.length - 1)) * 100}%` }}
-              transition={{ type: 'spring', stiffness: 90, damping: 20 }}
-            />
-            {workflowSteps.map((step, idx) => {
-              const isActive = idx === activeStepIndex;
-              const isPast = idx < activeStepIndex;
-              return (
-                <button
-                  key={step.title}
-                  onClick={() => setActiveStepIndex(idx)}
-                  className="relative z-10 flex flex-col items-center gap-3 cursor-pointer group bg-transparent border-0"
-                >
-                  <motion.div
-                    animate={{
-                      scale: isActive ? 1.15 : 1,
-                      backgroundColor: isActive || isPast ? step.solidColor : '#0d0d0f',
-                      borderColor: isActive || isPast ? step.solidColor : 'rgba(255,255,255,0.12)'
-                    }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-                    className="w-11 h-11 sm:w-14 sm:h-14 rounded-full border-2 flex items-center justify-center shadow-lg"
-                    style={isActive ? { boxShadow: `0 0 24px ${step.glow}` } : undefined}
-                  >
-                    <step.icon size={20} className={isActive || isPast ? 'text-slate-950' : 'text-slate-550'} />
-                  </motion.div>
-                  <span className={`text-[11px] sm:text-xs font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
-                    {step.title}
+      <div className="mt-14">
+        <Reveal delay={100}>
+          <div className="cos-core-ring mx-auto mb-8 flex max-w-sm flex-col items-center rounded-2xl border border-orange-500/30 bg-orange-500/[0.06] p-6 text-center">
+            <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 text-black">
+              <Sparkles className="h-6 w-6" />
+            </span>
+            <div className="mt-3 text-lg font-bold text-white">CreativeOS Core</div>
+            <div className="font-mono text-xs uppercase tracking-wider text-orange-400/80">Universal prompt bar</div>
+          </div>
+        </Reveal>
+
+        <div ref={nodesRef} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {nodes.map((n, i) => (
+            <div
+              key={n.t}
+              style={{
+                transitionDelay: `${i * 100}ms`,
+                transform: nodesVisible ? "translateY(0)" : "translateY(18px)",
+              }}
+              className={`transition-all duration-700 ease-out ${nodesVisible ? "opacity-100" : "opacity-0"}`}
+            >
+              <TiltCard max={10}>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-colors duration-300 hover:border-orange-500/30 hover:bg-white/[0.05]">
+                  <span className="grid h-10 w-10 place-items-center rounded-lg bg-orange-500/10 text-orange-500">
+                    <n.icon className="h-5 w-5" />
                   </span>
+                  <div className="mt-4 text-sm font-semibold text-white">{n.t}</div>
+                  <div className="mt-0.5 text-xs text-neutral-500">{n.s}</div>
+                </div>
+              </TiltCard>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ------------------------------ Waitlist --------------------------- */
+
+function Waitlist() {
+  const [email, setEmail] = useState("")
+  const [done, setDone] = useState(false)
+  return (
+    <section id="waitlist" className="mx-auto max-w-6xl px-5 py-24">
+      <Reveal className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] px-6 py-16 text-center">
+        <div className="pointer-events-none absolute left-1/2 top-0 h-80 w-[600px] -translate-x-1/2 rounded-full bg-orange-600/20 blur-[120px]" />
+        <div className="relative z-10">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 font-mono text-xs text-neutral-300">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />3 creators in queue
+          </span>
+          <h2 className="mx-auto mt-6 max-w-lg text-balance text-4xl font-bold tracking-tight text-white md:text-5xl">
+            Creative<span className="text-orange-500">OS</span>
+          </h2>
+          <p className="mx-auto mt-4 max-w-md text-pretty text-lg text-neutral-400">
+            One AI platform. Unlimited creativity.
+          </p>
+
+          {done ? (
+            <div className="mx-auto mt-8 inline-flex animate-[cos-float_1s_ease-in-out] items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-5 py-3 text-sm font-medium text-orange-300">
+              <Check className="h-4 w-4" />
+              You&apos;re on the list — see you soon.
+            </div>
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (email.trim()) setDone(true)
+              }}
+              className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row"
+            >
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email address"
+                aria-label="Email address"
+                className="min-w-0 flex-1 rounded-full border border-white/10 bg-black/40 px-5 py-3.5 text-sm text-white outline-none transition-colors placeholder:text-neutral-600 focus:border-orange-500/50"
+              />
+              <Magnetic strength={0.2}>
+                <button
+                  type="submit"
+                  className="w-full shrink-0 rounded-full bg-orange-500 px-6 py-3.5 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:scale-[1.02] active:scale-95 sm:w-auto"
+                >
+                  Start Creating Today
                 </button>
-              );
-            })}
-          </div>
-
-          {/* Active step detail panel */}
-          <div className="relative min-h-[220px] sm:min-h-[200px]">
-            <AnimatePresence mode="wait">
-              {workflowSteps.map((step, idx) => (
-                idx === activeStepIndex && (
-                  <motion.div
-                    key={step.title}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -16 }}
-                    transition={{ duration: 0.35 }}
-                    className="bg-card/45 border border-white/[0.06] rounded-3xl p-8 sm:p-10 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-8 items-center"
-                  >
-                    <div className="text-left space-y-3">
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: step.solidColor }}>
-                        Step {idx + 1} of {workflowSteps.length}
-                      </span>
-                      <h3 className="font-display text-2xl sm:text-3xl font-black text-foreground">{step.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed max-w-md">{step.desc}</p>
-                    </div>
-
-                    <div className="flex gap-2 sm:flex-col shrink-0">
-                      {step.chips.map((chip) => (
-                        <span
-                          key={chip}
-                          className="text-[10px] sm:text-xs font-semibold px-3 py-2 rounded-xl border whitespace-nowrap"
-                          style={{ color: step.solidColor, borderColor: `${step.solidColor}40`, backgroundColor: `${step.solidColor}14` }}
-                        >
-                          {chip}
-                        </span>
-                      ))}
-                    </div>
-                  </motion.div>
-                )
-              ))}
-            </AnimatePresence>
-          </div>
+              </Magnetic>
+            </form>
+          )}
+          <p className="mt-4 text-xs text-neutral-600">No spam. Unsubscribe any time.</p>
         </div>
-      </section>
+      </Reveal>
+    </section>
+  )
+}
 
-      {/* 9. DRIBBBLE-STYLE BENTO GRID FEATURE SHOWCASE */}
-      <section id="engine" className="border-t border-white/[0.02] bg-background/60 py-28 relative z-10">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="text-center space-y-4 mb-20">
-            <h3 className="font-display text-4xl font-black text-foreground">Consolidated OS Engine</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
-              How our system bridges creative expression and growth metrics natively.
-            </p>
-          </div>
+/* ------------------------------ Footer ----------------------------- */
 
-          {/* Bento Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-            {/* Bento Card 1: Brand Grounding Engine (Col Span 2) */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.5 }}
-              className="md:col-span-2 bg-card/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
-            >
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-4 shadow-sm">
-                  <Brain size={18} />
-                </div>
-                <h4 className="font-display font-black text-foreground text-xl">Core AI Grounding Engine</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed font-normal mt-2">
-                  AI references uploaded corporate wikis, pitch decks, and guidelines to ensure drafts maintain strict brand consistency.
-                </p>
-              </div>
-
-              {/* Interactive Mock Doc Checklist */}
-              <div className="bg-background/70 border border-white/[0.03] p-4.5 rounded-2xl space-y-3">
-                <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground tracking-wider">
-                  <span>GROUNDING DOCUMENTS</span>
-                  <span className="text-orange-400">✓ GROUNDED</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs p-2 bg-white/[0.01] border border-white/[0.03] rounded-lg">
-                    <span className="text-slate-350 flex items-center gap-2"><FileText size={12} className="text-orange-400" /> pitch_deck_v3.pdf</span>
-                    <span className="text-[10px] text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">Indexed</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs p-2 bg-white/[0.01] border border-white/[0.03] rounded-lg">
-                    <span className="text-slate-350 flex items-center gap-2"><FileText size={12} className="text-orange-400" /> brand_voice_guide.docx</span>
-                    <span className="text-[10px] text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">Indexed</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Bento Card 2: Interactive Persona Selector (Col Span 1) */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="bg-card/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
-            >
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-4 shadow-sm">
-                  <Compass size={18} />
-                </div>
-                <h4 className="font-display font-black text-foreground text-xl">Interactive Personas</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed font-normal mt-2">
-                  Configure custom buyer personas with distinct writing speeds, vocabularies, and demographics.
-                </p>
-              </div>
-
-              {/* Mini Interactive Persona Badge */}
-              <div className="bg-background/70 border border-white/[0.03] p-4 rounded-2xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center font-black text-xs text-white">
-                  TE
-                </div>
-                <div className="text-left space-y-0.5">
-                  <span className="text-xs font-bold text-white block">Tech Exec</span>
-                  <span className="text-[9px] text-orange-400 font-bold uppercase tracking-wider block">Analytical Tone</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Bento Card 3: Multi-Platform Publisher (Col Span 1) */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-card/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
-            >
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-4 shadow-sm">
-                  <Layout size={18} />
-                </div>
-                <h4 className="font-display font-black text-foreground text-xl">Multi-Channel Layouts</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed font-normal mt-2">
-                  Draft blogs once, then compile and reformat for LinkedIn, Medium, and Substack channels.
-                </p>
-              </div>
-
-              {/* Connected Icons mockup */}
-              <div className="bg-background/70 border border-white/[0.03] p-4 rounded-2xl flex justify-between items-center relative overflow-hidden">
-                <div className="w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">LI</div>
-                <div className="w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">MD</div>
-                <div className="w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400">SU</div>
-              </div>
-            </motion.div>
-
-            {/* Bento Card 4: Campaigns metrics tracker (Col Span 2) */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.5, delay: 0.45 }}
-              className="md:col-span-2 bg-card/30 border border-white/[0.04] hover:border-orange-500/20 rounded-3xl p-8 flex flex-col justify-between space-y-6 text-left transition duration-300"
-            >
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-4 shadow-sm">
-                  <BarChart3 size={18} />
-                </div>
-                <h4 className="font-display font-black text-foreground text-xl">Real-Time Campaigns Console</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed font-normal mt-2">
-                  Launch automated LinkedIn campaigns, recharge wallets, map conversions, and run data audits.
-                </p>
-              </div>
-
-              {/* Live Metric Graph visual mockup */}
-              <div className="bg-background/70 border border-white/[0.03] p-4.5 rounded-2xl space-y-3">
-                <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground">
-                  <span>CTR ANALYTICS</span>
-                  <span className="text-orange-400 font-mono font-black">+14.2%</span>
-                </div>
-                <div className="h-10 bg-orange-550/10 border border-orange-500/10 rounded-lg overflow-hidden flex items-end px-2 gap-1.5">
-                  <div className="w-full h-[30%] bg-orange-400/40 rounded-t" />
-                  <div className="w-full h-[60%] bg-orange-400/60 rounded-t" />
-                  <div className="w-full h-[45%] bg-orange-400/40 rounded-t" />
-                  <div className="w-full h-[85%] bg-orange-400 rounded-t" />
-                </div>
-              </div>
-            </motion.div>
-
-          </div>
+function Footer() {
+  return (
+    <footer className="relative z-10 border-t border-white/10">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 sm:flex-row">
+        <div className="flex items-center gap-6">
+          <span className="text-sm font-bold text-white">
+            Creative<span className="text-orange-500">OS</span>
+          </span>
+          <span className="font-mono text-xs text-neutral-600">© 2026</span>
         </div>
-      </section>
+        <nav className="flex items-center gap-6 text-sm text-neutral-400">
+          <a href="#" className="transition-colors hover:text-white">
+            Home
+          </a>
+          <a href="#platform" className="transition-colors hover:text-white">
+            Studios
+          </a>
+          <a href="#waitlist" className="transition-colors hover:text-white">
+            Waitlist
+          </a>
+        </nav>
+        <span className="font-mono text-xs text-neutral-600">Made for creators.</span>
+      </div>
+    </footer>
+  )
+}
 
-      {/* 10. FOOTER */}
-      <footer className="border-t border-white/[0.02] py-8 text-center text-xs text-muted-foreground relative z-10 bg-background">
-        <p>&copy; 2026 CreativeStudio OS. All rights reserved.</p>
-      </footer>
+/* --------------------------- Background ---------------------------- */
+
+function Starfield() {
+  const [mounted, setMounted] = useState(false)
+  const fieldRef = useRef(null)
+  useEffect(() => setMounted(true), [])
+
+  // Very light parallax drift for the whole field as the page scrolls.
+  useEffect(() => {
+    let raf = null
+    const onScroll = () => {
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        if (fieldRef.current) {
+          fieldRef.current.style.transform = `translateY(${window.scrollY * 0.04}px)`
+        }
+        raf = null
+      })
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  const dots = useMemo(
+    () =>
+      Array.from({ length: 60 }, (_, i) => ({
+        id: i,
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        size: Math.random() * 2 + 1,
+        opacity: Math.random() * 0.5 + 0.15,
+      })),
+    [],
+  )
+  return (
+    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#0a0705]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(249,115,22,0.12),transparent_55%)]" />
+      <div ref={fieldRef} className="absolute inset-0 transition-transform duration-75 ease-out">
+        {mounted &&
+          dots.map((d) => (
+            <span
+              key={d.id}
+              className="absolute rounded-full bg-orange-400"
+              style={{
+                top: `${d.top}%`,
+                left: `${d.left}%`,
+                width: `${d.size}px`,
+                height: `${d.size}px`,
+                opacity: d.opacity,
+              }}
+            />
+          ))}
+      </div>
     </div>
-  );
-};
+  )
+}
 
-export default LandingPage;
+// Support both `import { LandingPage }` and `import LandingPage` styles.
+export default LandingPage
