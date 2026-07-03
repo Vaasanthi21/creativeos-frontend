@@ -174,7 +174,7 @@ function Magnetic({ children, strength = 0.25, className = "" }) {
   )
 }
 
-/** Splits "12M+" -> {num:12, suffix:"M+"}, "99.9%" -> {num:99.9, suffix:"%", decimals:1} */
+/** Splits "12K+" -> {num:12, suffix:"M+"}, "99.9%" -> {num:99.9, suffix:"%", decimals:1} */
 function splitStat(value) {
   const m = String(value).match(/^([\d.,]+)(.*)$/)
   if (!m) return { num: 0, suffix: String(value), decimals: 0 }
@@ -322,8 +322,8 @@ function Hero() {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
   const stats = [
-    { v: "12M+", l: "Assets Generated" },
-    { v: "48K", l: "Creators Onboarded" },
+    { v: "20K+", l: "Assets Generated" },
+    { v: "12K", l: "Creators Onboarded" },
     { v: "4", l: "Integrated Studios" },
     { v: "99.9%", l: "Uptime SLA" },
   ]
