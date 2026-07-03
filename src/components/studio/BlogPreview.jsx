@@ -768,7 +768,11 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
 
     if (activeTab === 'canonical') {
       const strippedContent = stripLeadingTitle(blogRecord.content, blogRecord.title);
-      plainText = yamlFrontMatter + `# ${blogRecord.title}\n\n`;
+      plainText = yamlFrontMatter;
+      if (companyLogo) {
+        plainText += `![Brand Logo](${companyLogo})\n\n`;
+      }
+      plainText += `# ${blogRecord.title}\n\n`;
       if (resolvedCoverImageUrl) {
         plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
       }
@@ -782,6 +786,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
         const titleText = renderedRecord.title || blogRecord.title;
         const strippedCopy = cleanPlatformCopy(renderedRecord.copy, titleText);
         plainText = `Author: ${author}\nCategory: ${category}\nDate: ${date}\n\n`;
+        if (companyLogo) plainText += `[Brand Logo: ${companyLogo}]\n\n`;
         if (renderedRecord.title) plainText += `${renderedRecord.title}\n\n`;
         if (resolvedCoverImageUrl) plainText += `[Image Attachment: ${resolvedCoverImageUrl}]\n\n`;
         plainText += cleanCopyWithoutTrailingHashtags(strippedCopy);
@@ -794,7 +799,11 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
         const { subtitle, cleanCopy } = extractSubtitle(renderedRecord.copy);
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         const copyWithCodeBlockTables = convertTablesToCodeBlocks(strippedCopy);
-        plainText = yamlFrontMatter + `# ${titleText}\n\n`;
+        plainText = yamlFrontMatter;
+        if (companyLogo) {
+          plainText += `![Brand Logo](${companyLogo})\n\n`;
+        }
+        plainText += `# ${titleText}\n\n`;
         if (subtitle) {
           plainText += `${subtitle}\n\n`;
         }
@@ -808,7 +817,11 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
         const { subtitle: extractedSub, cleanCopy } = extractSubtitle(renderedRecord.copy);
         const displaySubtitle = renderedRecord.metaDescription || extractedSub;
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
-        plainText = yamlFrontMatter + `# ${titleText}\n\n`;
+        plainText = yamlFrontMatter;
+        if (companyLogo) {
+          plainText += `![Brand Logo](${companyLogo})\n\n`;
+        }
+        plainText += `# ${titleText}\n\n`;
         if (displaySubtitle) {
           plainText += `${displaySubtitle}\n\n`;
         }
@@ -821,7 +834,11 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
         const titleText = renderedRecord.title || blogRecord.title;
         const { subtitle, cleanCopy } = extractSubtitle(renderedRecord.copy);
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
-        plainText = yamlFrontMatter + `# ${titleText}\n\n`;
+        plainText = yamlFrontMatter;
+        if (companyLogo) {
+          plainText += `![Brand Logo](${companyLogo})\n\n`;
+        }
+        plainText += `# ${titleText}\n\n`;
         if (subtitle) {
           plainText += `${subtitle}\n\n`;
         }
@@ -833,7 +850,11 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
       } else if (activeTab === 'devto') {
         const titleText = renderedRecord.title || blogRecord.title;
         const strippedCopy = cleanPlatformCopy(renderedRecord.copy, titleText);
-        plainText = cleanCopyWithoutTrailingHashtags(strippedCopy);
+        plainText = "";
+        if (companyLogo) {
+          plainText += `![Brand Logo](${companyLogo})\n\n`;
+        }
+        plainText += cleanCopyWithoutTrailingHashtags(strippedCopy);
         filename = `devto_${slugName}.md`;
       }
     }
@@ -1016,6 +1037,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
   </style>
 </head>
 <body>
+  ${companyLogo ? `<div style="margin-bottom: 20px;"><img src="${companyLogo}" alt="Brand Logo" style="max-height: 40px; width: auto; object-fit: contain;" /></div>` : ''}
   ${resolvedCoverImageUrl ? `<div style="width: 100%; background-color: #0B0F17; border-bottom: 1px solid rgba(255, 255, 255, 0.05); text-align: center; margin-bottom: 24px; border-radius: 12px; overflow: hidden;"><img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width: 100%; height: auto; display: block;" /></div>` : ''}
   
   <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
@@ -1123,6 +1145,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
   </style>
 </head>
 <body>
+  ${companyLogo ? `<div style="margin-bottom: 20px;"><img src="${companyLogo}" alt="Brand Logo" style="max-height: 40px; width: auto; object-fit: contain;" /></div>` : ''}
   <h1 class="font-display">${titleText}</h1>
   ${subtitleText ? `<h2 style="font-size: 1.4rem; font-weight: 400; color: #6b7280; margin-top: 4px; margin-bottom: 20px; font-family: Georgia, Cambria, 'Times New Roman', Times, serif; line-height: 1.4;" class="font-display">${subtitleText}</h2>` : ''}
   ${resolvedCoverImageUrl ? `<img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-top:16px; margin-bottom:24px; display:block;" />` : ''}
