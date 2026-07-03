@@ -31,6 +31,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   Sparkles,
   ArrowUpRight,
@@ -316,6 +317,7 @@ function Nav() {
 /* ------------------------------ Hero ------------------------------- */
 
 function Hero() {
+  const navigate = useNavigate()
   const stats = [
     { v: "12M+", l: "Assets Generated" },
     { v: "48K", l: "Creators Onboarded" },
@@ -372,14 +374,14 @@ function Hero() {
       <Reveal delay={240} y={18}>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Magnetic strength={0.25}>
-            <a
-              href="#waitlist"
+            <button
+              onClick={() => navigate("/login")}
               className="group inline-flex items-center gap-2 rounded-full bg-orange-500 px-7 py-3.5 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:shadow-lg hover:shadow-orange-500/30 active:scale-95"
             >
               <Sparkles className="h-4 w-4" />
               Start Creating
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </a>
+            </button>
           </Magnetic>
           <Magnetic strength={0.25}>
             <a
@@ -427,35 +429,41 @@ function Hero() {
 /* the dedicated deep-dive section for each one.                         */
 
 function StudioCoverflow() {
+  const navigate = useNavigate()
   const cards = [
     {
       title: "Image Studio",
       desc: "Turn a sentence into a full visual world — four HD styles in seconds.",
       anchor: "#image",
+      path: "/image-studio",
       icon: ImageIcon,
     },
     {
       title: "Video Studio",
       desc: "Describe a scene, get cinematic footage with timeline and export ready.",
       anchor: "#video",
+      path: "/video-studio",
       icon: Video,
     },
     {
       title: "Blog Studio",
       desc: "SEO-tuned, source-cited long-form articles in a Notion-style editor.",
       anchor: "#blog",
+      path: "/blog-studio",
       icon: FileText,
     },
     {
       title: "LinkedIn Tracker",
       desc: "A living dashboard for impressions, engagement, CTR and follower growth.",
       anchor: "#tracker",
+      path: "/linkedinads",
       icon: BarChart3,
     },
     {
       title: "Platform Core",
       desc: "One universal prompt bar routes every request to the right studio.",
       anchor: "#platform",
+      path: "/generate",
       icon: Sparkles,
     },
   ]
@@ -481,11 +489,6 @@ function StudioCoverflow() {
     if (diff > cardCount / 2) diff -= cardCount
     if (diff < -cardCount / 2) diff += cardCount
     return diff
-  }
-
-  const goTo = (anchor) => {
-    const el = document.querySelector(anchor)
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
   }
 
   return (
@@ -530,7 +533,7 @@ function StudioCoverflow() {
           return (
             <div
               key={card.title}
-              onClick={() => (isActive ? goTo(card.anchor) : setActiveIndex(idx))}
+              onClick={() => (isActive ? navigate(card.path) : setActiveIndex(idx))}
               style={{
                 transform: `translateX(${translateX}px) scale(${scale}) rotateY(${rotateY}deg)`,
                 opacity,
@@ -621,6 +624,7 @@ function FeatureRow({ icon: Icon, title, status }) {
 /* -------------------------- Image Studio --------------------------- */
 
 function ImageStudio() {
+  const navigate = useNavigate()
   const [prompt, setPrompt] = useState("A futuristic cyberpunk city at sunset.")
   const images = ["/cyberpunk-1.png", "/cyberpunk-2.png", "/cyberpunk-3.png", "/cyberpunk-4.png"]
   const [gridRef, gridVisible] = useReveal(0.2)
@@ -644,7 +648,13 @@ function ImageStudio() {
         </Reveal>
 
         <Reveal delay={180} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 md:p-6">
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 p-2 pl-4 transition-colors duration-300 focus-within:border-orange-500/40">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              navigate("/image-studio", { state: { prompt } })
+            }}
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 p-2 pl-4 transition-colors duration-300 focus-within:border-orange-500/40"
+          >
             <Sparkles className="h-4 w-4 shrink-0 text-orange-500" />
             <input
               value={prompt}
@@ -653,10 +663,10 @@ function ImageStudio() {
               placeholder="Describe your image..."
               aria-label="Image prompt"
             />
-            <button className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:scale-[1.03] active:scale-95">
+            <button type="submit" className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:scale-[1.03] active:scale-95">
               Generate
             </button>
-          </div>
+          </form>
 
           <div ref={gridRef} className="mt-4 grid grid-cols-2 gap-3">
             {images.map((src, i) => (
@@ -703,6 +713,7 @@ function ImageStudio() {
 /* -------------------------- Video Studio --------------------------- */
 
 function VideoStudio() {
+  const navigate = useNavigate()
   const ratios = ["16:9", "9:16", "1:1", "4:5"]
   const [barRef, barVisible] = useReveal(0.3)
 
@@ -726,6 +737,7 @@ function VideoStudio() {
                 />
                 <button
                   aria-label="Play preview"
+                  onClick={() => navigate("/video-studio", { state: { prompt: "A drone flying through snowy mountains during sunrise." } })}
                   className="absolute inset-0 m-auto grid h-14 w-14 place-items-center rounded-full bg-white/90 text-black backdrop-blur transition-transform duration-300 hover:scale-110 active:scale-95"
                 >
                   <Play className="h-6 w-6 translate-x-0.5 fill-black" />
@@ -788,6 +800,13 @@ function VideoStudio() {
             <FeatureRow icon={ImageIcon} title="Aspect Ratios" status="Active" />
             <FeatureRow icon={Zap} title="Fast Rendering" status="Active" />
           </div>
+          <button
+            onClick={() => navigate("/video-studio")}
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-orange-500/10 border border-orange-500/30 px-4 py-2.5 text-sm font-semibold text-orange-500 transition-all hover:bg-orange-500/20 hover:scale-[1.02] active:scale-95"
+          >
+            <span>Open Video Studio</span>
+            <ArrowRight className="h-4 w-4" />
+          </button>
         </Reveal>
       </div>
     </section>
@@ -797,6 +816,7 @@ function VideoStudio() {
 /* --------------------------- Blog Studio --------------------------- */
 
 function BlogStudio() {
+  const navigate = useNavigate()
   const insights = [
     "Title includes focus keyword",
     "Meta description within 155 chars",
@@ -840,9 +860,12 @@ function BlogStudio() {
             <BlogHeading level="H2" text="2. Personalization at Scale" />
             <BlogHeading level="H2" text="3. Measuring Real ROI" />
           </div>
-          <button className="mt-6 inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:scale-[1.02] active:scale-95">
-            <Download className="h-4 w-4" />
-            Export article
+          <button
+            onClick={() => navigate("/blog-studio?view=generate&suggestedTopicName=AI in Digital Marketing: The 2026 Playbook")}
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-black transition-all hover:bg-orange-400 hover:scale-[1.02] active:scale-95"
+          >
+            <span>Open Blog Studio</span>
+            <ArrowRight className="h-4 w-4" />
           </button>
         </Reveal>
 

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useGenerationJobs } from '@/contexts/GenerationJobsContext';
 import { buildCompanyPersonaPayload } from '@/utils/personaPayload';
@@ -80,7 +81,8 @@ const getShareLinks = (videoUrl, caption) => {
 };
 
 export default function VideoStudio() {
-  const [prompt, setPrompt] = useState('');
+  const location = useLocation();
+  const [prompt, setPrompt] = useState(location.state?.prompt || '');
   const [platform, setPlatform] = useState('instagram');
   const [style, setStyle] = useState('cinematic');
   const [aspectRatio, setAspectRatio] = useState('9:16'); 

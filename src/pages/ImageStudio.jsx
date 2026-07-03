@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { startAsyncImageGeneration, createGenerationPoller } from '@/services/generationPollingService';
 import { useGenerationJobs } from '@/contexts/GenerationJobsContext';
@@ -84,7 +85,8 @@ const getShareLinks = (imageUrl, caption) => {
 };
 
 export default function ImageStudio() {
-  const [prompt, setPrompt] = useState('');
+  const location = useLocation();
+  const [prompt, setPrompt] = useState(location.state?.prompt || '');
   const [style, setStyle] = useState('realistic');
   const [platform, setPlatform] = useState('instagram');
   const [lighting, setLighting] = useState('cinematic');
