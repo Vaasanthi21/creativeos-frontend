@@ -466,7 +466,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
                   ) : (
                     <>
                       <Zap size={13} />
-                      <span>Auto Optimize SEO</span>
+                      <span>Auto Optimize SEO (5 Credits)</span>
                     </>
                   )}
                 </button>
