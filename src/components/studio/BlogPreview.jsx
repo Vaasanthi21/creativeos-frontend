@@ -1511,7 +1511,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
                           ) : (
                             <Sparkles size={13} />
                           )}
-                          <span>Auto Optimize SEO</span>
+                          <span>Auto Optimize SEO (5 Credits)</span>
                         </button>
                       </>
                     )}
