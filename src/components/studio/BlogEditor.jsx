@@ -583,7 +583,7 @@ export const BlogEditor = ({ blogId, onBack }) => {
                       className="px-3 py-1.5 border border-primary/20 hover:border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-xl transition-all"
                     >
                       <RotateCw size={13} className="inline mr-1" />
-                      <span>Regenerate</span>
+                      <span>Regenerate (10 Credits)</span>
                     </button>
 
                     <button
