@@ -203,3 +203,12 @@
 .dark textarea:focus {
   border-color: #f25b18 !important;
 }
+
+/* Force high-contrast text colors on canonical blog preview prose elements */
+.prose p, .prose li, .prose strong, .prose em {
+  color: #1e293b !important;
+}
+
+.dark .prose p, .dark .prose li, .dark .prose strong, .dark .prose em {
+  color: #cbd5e1 !important;
+}
