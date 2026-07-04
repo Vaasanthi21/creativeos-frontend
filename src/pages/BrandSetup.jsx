@@ -820,7 +820,12 @@ export const BrandSetup = () => {
             
             <div className="space-y-4">
               <div className="text-3xl">🤖</div>
-              <h3 className="font-display text-xl font-bold text-foreground">AI Assisted Setup</h3>
+              <h3 className="font-display text-xl font-bold text-foreground">
+                AI Assisted Setup
+                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary ml-1.5">
+                  10 Credits
+                </span>
+              </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Connect your website URL and upload key company docs. The AI will parse your site, generate profiles, extract audience personas, and build a tailored knowledge base automatically.
               </p>
@@ -853,7 +858,7 @@ export const BrandSetup = () => {
               onClick={() => setViewMode('ai_setup')}
               className="w-full py-3 bg-gradient-to-r from-primary to-accent text-primary-foreground font-extrabold rounded-xl transition-all duration-300 shadow-sm hover:opacity-90 active:scale-[0.98] cursor-pointer"
             >
-              Start AI Setup
+              Start AI Setup (10 Credits)
             </button>
           </div>
 
@@ -2900,7 +2905,7 @@ export const BrandSetup = () => {
               className="px-4 py-2.5 bg-gradient-to-r from-primary to-accent text-primary-foreground font-extrabold rounded-xl text-xs shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center gap-1"
             >
               <Sparkles size={12} />
-              <span>Generate Blog</span>
+              <span>Generate Blog (10 Credits)</span>
             </button>
 
             <button
