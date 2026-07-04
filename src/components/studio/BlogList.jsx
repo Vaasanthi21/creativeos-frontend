@@ -254,7 +254,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
                 onClick={() => onOpenGenerate()}
                 className="w-full md:w-auto px-6 py-3.5 hover:opacity-90 font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer animate-premium-btn"
               >
-                <span>Generate First Blog</span>
+                <span>Generate First Blog (10 Credits)</span>
                 <ArrowRight size={14} />
               </button>
             ) : (
@@ -484,7 +484,7 @@ export const BlogList = ({ onOpenEditor, onOpenPreview, onOpenGenerate }) => {
           className="shrink-0 flex items-center gap-2 px-5 py-2.5 hover:opacity-90 font-extrabold rounded-xl text-xs cursor-pointer animate-premium-btn"
         >
           <Plus size={16} />
-          <span>{blogs.length === 0 ? 'Generate First Blog' : 'Generate New Blog'}</span>
+          <span>{blogs.length === 0 ? 'Generate First Blog (10 Credits)' : 'Generate New Blog (10 Credits)'}</span>
         </button>
       </div>
 

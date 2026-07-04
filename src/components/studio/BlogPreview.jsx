@@ -1312,7 +1312,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
               ) : (
                 <>
                   <Sparkles size={13} />
-                  <span>{resolvedCoverImageUrl ? 'Regenerate Cover' : 'Generate Cover'}</span>
+                  <span>{resolvedCoverImageUrl ? 'Regenerate Cover (3 Credits)' : 'Generate Cover (3 Credits)'}</span>
                 </>
               )}
             </button>
@@ -1483,7 +1483,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
                     className="px-6 py-3 bg-gradient-to-r from-primary to-accent text-background font-bold rounded-xl shadow-glow transition-all hover:opacity-90 flex items-center gap-2 cursor-pointer"
                   >
                     <Sparkles size={16} />
-                    <span>Render for {resolvedPlatformName}</span>
+                    <span>Render for {resolvedPlatformName} (5 Credits)</span>
                   </button>
                 </div>
               ) : (
@@ -1542,7 +1542,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
                       className="px-3 py-1.5 bg-gradient-to-r from-primary/10 to-primary/20 hover:from-primary/20 hover:to-primary/30 text-primary border border-primary/20 hover:border-primary/30 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-glow-sm cursor-pointer"
                     >
                       <Repeat2 size={13} className={(adaptTaskId && tasks[adaptTaskId]?.status === 'running') ? "animate-spin" : ""} />
-                      <span>Regenerate</span>
+                      <span>Regenerate (5 Credits)</span>
                     </button>
                   </div>
 
