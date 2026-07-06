@@ -43,8 +43,8 @@ export default function Settings() {
 
   const generationsThisMonth = userMetrics?.generationsThisMonth ?? 0;
   const planName = userMetrics?.planName ?? 'Free';
-  const companyPersonaCount = userMetrics?.companyPersonaCount ?? 0;
-  const companyPersonaLimit = userMetrics?.companyPersonaLimit ?? 0;
+  const companyCount = userMetrics?.companyCount ?? 0;
+  const companyLimit = userMetrics?.companyLimit ?? 0;
   const activeCompanyName = user?.company || user?.full_name || 'Current Company';
   const activeCompanyInitial = activeCompanyName.charAt(0).toUpperCase();
   const isDarkTheme = theme !== 'light';
@@ -188,9 +188,9 @@ export default function Settings() {
             </span>
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <p className="text-sm text-foreground">Company personas</p>
+            <p className="text-sm text-foreground">Company profiles</p>
             <span className="text-sm font-medium text-foreground">
-              {metricsLoading ? '—' : `${companyPersonaCount}/${companyPersonaLimit}`}
+              {metricsLoading ? '—' : `${companyCount}/${companyLimit}`}
             </span>
           </div>
         </CardContent>
