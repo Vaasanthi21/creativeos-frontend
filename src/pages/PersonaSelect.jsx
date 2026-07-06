@@ -276,10 +276,6 @@ export default function PersonaSelect() {
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             Build multiple company personas, edit them later, upload logos, and keep usage within your subscribed plan.
           </p>
-        </div>
-        <div className="rounded-2xl border border-border/70 bg-card px-4 py-3 text-sm text-muted-foreground">
-          {companyPersonas.length}/{userMetrics?.companyPersonaLimit ?? "-"} personas on {userMetrics?.planName ?? "Free"}
-        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
