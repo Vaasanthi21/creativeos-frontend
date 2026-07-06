@@ -22,7 +22,6 @@ import {
   ArrowRightLeft,
   ArrowRight,
   Newspaper,
-  Upload,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
@@ -225,47 +224,6 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* Brand Settings */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-display flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-primary" />
-            Brand Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <p className="text-sm text-foreground">Brand Logo</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Upload a transparent PNG logo for your brand
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {userMetrics?.brandLogoUrl ? (
-              <img
-                src={userMetrics.brandLogoUrl}
-                alt="Brand logo"
-                className="h-12 w-12 rounded-lg border border-border/70 bg-background object-cover"
-              />
-            ) : (
-              <div className="h-12 w-12 rounded-lg border border-border/70 bg-muted/30 flex items-center justify-center text-muted-foreground">
-                <Upload className="h-5 w-5" />
-              </div>
-            )}
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => navigate("/brand-setup")}
-            >
-              <Upload className="w-3.5 h-3.5" />
-              Upload Logo
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Publishing */}
       <Card>
