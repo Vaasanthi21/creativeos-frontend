@@ -384,10 +384,6 @@ export default function GenerationForm({
                     the sidebar.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-xs text-muted-foreground">
-                  {companyPersonas.length}/{user?.companyPersonaLimit ?? "-"}{" "}
-                  personas on {planName}
-                </div>
               </div>
 
               <div className="mt-4 grid gap-4 lg:grid-cols-2">
