@@ -1,14 +1,15 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../lib/AuthContext"
 import { useToast } from "../components/ui/use-toast"
 import Spline from "@splinetool/react-spline"
+import HamburgerMenu from "../components/HamburgerMenu"
 import {
   Sparkles, ArrowUpRight, ArrowRight, ImageIcon, Video, FileText,
   BarChart3, Wand2, Check, Play, Hash, TrendingUp, Download, Zap,
-  Layers, Command, Eye, Pencil,
+  Layers, Command, Eye, Pencil, Menu, X,
 } from "lucide-react"
 
 /* ================================================================== */
@@ -269,43 +270,62 @@ function Logo({ className = "" }) {
   )
 }
 
-function Nav() {
+export function Nav() {
   const links = ["Content", "Image", "Video", "Blog", "Tracker", "Platform"]
   const [scrolled, setScrolled] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
     onScroll()
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
+
   return (
-    <header
-      data-testid="site-nav"
-      className={`cos-liquid-glass pointer-events-auto fixed inset-x-0 z-50 mx-auto flex max-w-6xl items-center justify-between rounded-full transition-all duration-500 ease-out md:px-6 ${
-        scrolled ? "cos-liquid-glass--scrolled top-2 px-4 py-2" : "top-4 px-4 py-2.5"
-      }`}
-    >
-      <span className="cos-liquid-sheen" aria-hidden />
-      <Logo />
-      <nav className="hidden items-center gap-7 md:flex">
-        {links.map((l) => (
-          <a
-            key={l}
-            data-testid={`nav-link-${l.toLowerCase()}`}
-            href={`#${l.toLowerCase()}`}
-            className="relative text-sm text-neutral-300 transition-colors duration-300 hover:text-white after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-orange-500 after:transition-all after:duration-300 hover:after:w-full"
+    <>
+      <header
+        data-testid="site-nav"
+        className={`cos-liquid-glass pointer-events-auto fixed inset-x-0 z-50 mx-auto flex max-w-6xl items-center justify-between rounded-full transition-all duration-500 ease-out md:px-6 ${
+          scrolled ? "cos-liquid-glass--scrolled top-2 px-4 py-2" : "top-4 px-4 py-2.5"
+        }`}
+      >
+        <span className="cos-liquid-sheen" aria-hidden />
+        <Logo />
+        <nav className="hidden items-center gap-7 md:flex">
+          {links.map((l) => (
+            <a
+              key={l}
+              data-testid={`nav-link-${l.toLowerCase()}`}
+              href={`#${l.toLowerCase()}`}
+              className="relative text-sm text-neutral-300 transition-colors duration-300 hover:text-white after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-orange-500 after:transition-all after:duration-300 hover:after:w-full"
+            >
+              {l}
+            </a>
+          ))}
+        </nav>
+        <div className="flex items-center gap-2">
+          <Magnetic strength={0.3} className="hidden sm:inline-block">
+            <a href="#waitlist" data-testid="nav-join-waitlist"
+              className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_18px_rgba(0,0,0,0.25)] transition-transform hover:scale-[1.03] active:scale-95">
+              Join waitlist
+            </a>
+          </Magnetic>
+          <button
+            type="button"
+            data-testid="nav-hamburger"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10"
           >
-            {l}
-          </a>
-        ))}
-      </nav>
-      <Magnetic strength={0.3}>
-        <a href="#waitlist" data-testid="nav-join-waitlist"
-          className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_6px_18px_rgba(0,0,0,0.25)] transition-transform hover:scale-[1.03] active:scale-95">
-          Join waitlist
-        </a>
-      </Magnetic>
-    </header>
+            {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
+        </div>
+      </header>
+
+      <HamburgerMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+    </>
   )
 }
 
@@ -1136,7 +1156,7 @@ function Waitlist() {
 
 /* ------------------------------ Footer ----------------------------- */
 
-function Footer() {
+export function Footer() {
   return (
     <footer className="pointer-events-auto relative z-10 border-t border-white/10">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 sm:flex-row">
