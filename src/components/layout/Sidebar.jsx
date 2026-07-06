@@ -30,7 +30,7 @@ const navItems = [
   { icon: Sparkles, label: "Content Studio", path: "/generate" },
   { icon: Building2, label: "Brand Setup", path: "/brand-setup" },
   { icon: BookOpen, label: "Blog Studio", path: "/blog-studio" },
-  { icon: Clock, label: "History", path: "/history" },
+  { icon: Clock, label: "Content History", path: "/history" },
   { icon: Camera, label: "Image Studio", path: "/image-studio" },
   { icon: Video, label: "Video Studio", path: "/video-studio" },
   { icon: Linkedin, label: "LinkedIn Tracker", path: "/linkedinads" },
