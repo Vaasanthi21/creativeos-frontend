@@ -46,7 +46,7 @@ const CREDIT_COSTS = [
 ];
 
 const BLOG_CREDIT_COSTS = [
-  { type: "Website Crawl", credits: 10 },
+  { type: "AI Brand Setup", credits: 10 },
   { type: "Canonical Blog + SEO Research", credits: 10 },
   { type: "Platform Rendering", credits: 5 },
   { type: "Cover Image", credits: 3 },
