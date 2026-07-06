@@ -258,7 +258,7 @@ export default function Settings() {
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => navigate("/brand-logo-upload")}
+              onClick={() => navigate("/brand-setup")}
             >
               <Upload className="w-3.5 h-3.5" />
               Upload Logo
