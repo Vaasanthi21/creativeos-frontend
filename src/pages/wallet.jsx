@@ -45,6 +45,13 @@ const CREDIT_COSTS = [
   { type: "Text + Video", credits: 11 },
 ];
 
+const BLOG_CREDIT_COSTS = [
+  { type: "Website Crawl", credits: 10 },
+  { type: "Canonical Blog + SEO Research", credits: 10 },
+  { type: "Platform Rendering", credits: 5 },
+  { type: "Cover Image", credits: 3 },
+];
+
 export default function WalletPage() {
   const [loadingTierId, setLoadingTierId] = useState(null);
   const token = tokenStorage.getUserToken();
@@ -125,15 +132,38 @@ export default function WalletPage() {
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
               Credit Costs
             </p>
-            <div className="mt-2 space-y-1">
-              {CREDIT_COSTS.map((item) => (
-                <div key={item.type} className="flex items-center justify-between gap-6 text-xs">
-                  <span className="text-muted-foreground">{item.type}</span>
-                  <span className="font-medium text-foreground">
-                    {item.credits} {item.credits === 1 ? "credit" : "credits"}
-                  </span>
+            <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-3">
+              <div className="space-y-1.5">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-primary/70">
+                  Content Studio
+                </p>
+                <div className="space-y-1">
+                  {CREDIT_COSTS.map((item) => (
+                    <div key={item.type} className="flex items-center justify-between gap-4 text-xs">
+                      <span className="text-muted-foreground">{item.type}</span>
+                      <span className="font-medium text-foreground">
+                        {item.credits} {item.credits === 1 ? "credit" : "credits"}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              <div className="space-y-1.5 border-l border-border/60 pl-6">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-primary/70">
+                  Blog Studio
+                </p>
+                <div className="space-y-1">
+                  {BLOG_CREDIT_COSTS.map((item) => (
+                    <div key={item.type} className="flex items-center justify-between gap-4 text-xs">
+                      <span className="text-muted-foreground">{item.type}</span>
+                      <span className="font-medium text-foreground">
+                        {item.credits} {item.credits === 1 ? "credit" : "credits"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

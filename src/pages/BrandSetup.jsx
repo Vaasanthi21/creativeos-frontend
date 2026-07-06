@@ -376,6 +376,7 @@ export const BrandSetup = () => {
       queryClient.invalidateQueries({ queryKey: ['company'] });
       queryClient.invalidateQueries({ queryKey: ['personas'] });
       queryClient.invalidateQueries({ queryKey: ['knowledge'] });
+      queryClient.invalidateQueries({ queryKey: ['user-credit-balance'] });
       triggerToast('Website crawled & brand context generated successfully!');
     },
     onError: (err) => {
@@ -394,6 +395,7 @@ export const BrandSetup = () => {
       queryClient.invalidateQueries({ queryKey: ['company'] });
       queryClient.invalidateQueries({ queryKey: ['personas'] });
       queryClient.invalidateQueries({ queryKey: ['knowledge'] });
+      queryClient.invalidateQueries({ queryKey: ['user-credit-balance'] });
       triggerToast('AI Brand Context & Personas extracted successfully!');
     },
     onError: (err) => {

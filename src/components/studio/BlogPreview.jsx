@@ -404,6 +404,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
     if (task) {
       if (task.status === 'success') {
         queryClient.invalidateQueries({ queryKey: ['images', blogId] });
+        queryClient.invalidateQueries({ queryKey: ['user-credit-balance'] });
         triggerToast('Cover image generated successfully!');
         clearTask(coverImageTaskId);
       } else if (task.status === 'error') {
@@ -448,6 +449,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
       if (task.status === 'success') {
         const newRendered = task.data;
         queryClient.setQueryData(['rendered', blogId, resolvedPlatformName], newRendered);
+        queryClient.invalidateQueries({ queryKey: ['user-credit-balance'] });
         triggerToast(`Content adapted for ${resolvedPlatformName} successfully!`);
         
         // Show 100% complete briefly

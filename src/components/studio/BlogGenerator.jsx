@@ -282,6 +282,7 @@ export const BlogGenerator = ({ initialTopicId, initialCustomAngle, onBack, onGe
       if (task.status === 'success') {
         const newBlog = task.data;
         queryClient.invalidateQueries({ queryKey: ['blogs-list'] });
+        queryClient.invalidateQueries({ queryKey: ['user-credit-balance'] });
         triggerToast('Grounded SEO Blog generated successfully!');
         
         // Show 100% complete briefly
