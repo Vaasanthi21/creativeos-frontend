@@ -50,6 +50,7 @@ const BLOG_CREDIT_COSTS = [
   { type: "Canonical Blog + SEO Research", credits: 10 },
   { type: "Platform Rendering", credits: 5 },
   { type: "Cover Image", credits: 3 },
+  { type: "Auto Optimize SEO", credits: 5 },
 ];
 
 export default function WalletPage() {
