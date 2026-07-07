@@ -576,9 +576,37 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
   };
 
   const coverImage = getCoverImageForPlatform();
-  const resolvedCoverImageUrl = coverImage
-    ? (coverImage.startsWith('/uploads') ? `http://localhost:4000${coverImage}` : coverImage)
-    : null;
+  const getResolvedCoverImageUrl = (url) => {
+    if (!url) return null;
+    
+    let originalUrl = url;
+    if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:image')) {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+      if (apiBaseUrl.startsWith('http://') || apiBaseUrl.startsWith('https://')) {
+        const host = apiBaseUrl.replace(/\/api\/?$/, '');
+        originalUrl = `${host}${url}`;
+      } else {
+        const backendPort = '3002';
+        originalUrl = `${window.location.protocol}//${window.location.hostname}:${backendPort}${url}`;
+      }
+    }
+
+    if (originalUrl.startsWith('data:image')) {
+      return originalUrl;
+    }
+
+    // Mask S3 / Cloudinary URL completely via base64 token query to media-proxy
+    const base64Token = btoa(originalUrl);
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+    let baseHost = '';
+    if (apiBaseUrl.startsWith('http://') || apiBaseUrl.startsWith('https://')) {
+      baseHost = apiBaseUrl.replace(/\/api\/?$/, '');
+    } else {
+      baseHost = window.location.origin;
+    }
+    return `${baseHost}/api/media-proxy?token=${base64Token}`;
+  };
+  const resolvedCoverImageUrl = getResolvedCoverImageUrl(coverImage);
 
   const handleDownloadCoverImage = async () => {
     if (!resolvedCoverImageUrl) return;
