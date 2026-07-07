@@ -18,7 +18,7 @@ import {
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0a0705] font-sans text-neutral-200 antialiased selection:bg-orange-500/30">
+    <div className="min-h-dvh bg-[#0a0705] font-sans text-neutral-200 antialiased selection:bg-orange-500/30">
       <GlobalMotionStyles />
       <ScrollProgress />
       <SplineBackground />
@@ -173,6 +173,10 @@ function ScrollProgress() {
 function GlobalMotionStyles() {
   return (
     <style>{`
+      html, body {
+        overscroll-behavior-y: none;
+        height: 100%;
+      }
       @keyframes cos-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
       @keyframes cos-pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(249,115,22,0.35); } 70% { box-shadow: 0 0 0 14px rgba(249,115,22,0); } 100% { box-shadow: 0 0 0 0 rgba(249,115,22,0); } }
       @keyframes cos-shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
@@ -751,6 +755,23 @@ function VideoStudio() {
   const { toast } = useToast()
   const ratios = ["16:9", "9:16", "1:1", "4:5"]
   const [barRef, barVisible] = useReveal(0.3)
+  const [playing, setPlaying] = useState(false)
+  const videoRef = useRef(null)
+
+  // Reset to poster if the section scrolls out of view while playing (saves battery/data on mobile)
+  useEffect(() => {
+    if (!playing) return
+    const el = videoRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) setPlaying(false)
+      },
+      { threshold: 0.2 },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [playing])
 
   return (
     <section id="video" className="mx-auto max-w-6xl px-5 py-24">
@@ -762,30 +783,50 @@ function VideoStudio() {
                 <Video className="h-4 w-4 shrink-0 text-orange-500" />
                 <span className="truncate text-xs text-neutral-400">A drone flying through snowy mountains during sunrise.</span>
               </div>
-              <div className="relative aspect-video overflow-hidden rounded-xl border border-white/10">
-                <img src="/snowy-mountains.png" alt="Snowy mountains sunrise" className="h-full w-full object-cover" />
-                <button aria-label="Play preview" data-testid="video-play-btn"
-                  onClick={() => {
-                    if (isAuthenticated) navigate("/video-studio", { state: { prompt: "A drone flying through snowy mountains during sunrise." } })
-                    else {
-                      toast({ title: "Authentication Required", description: "Please login or create an account to access the studios." })
-                      navigate("/login?redirect=/video-studio")
-                    }
-                  }}
-                  className="absolute inset-0 m-auto grid h-14 w-14 place-items-center rounded-full bg-white/90 text-black backdrop-blur transition-transform duration-300 hover:scale-110 active:scale-95">
-                  <Play className="h-6 w-6 translate-x-0.5 fill-black" />
-                </button>
+
+              <div ref={videoRef} className="relative aspect-video overflow-hidden rounded-xl border border-white/10">
+                {playing ? (
+                  <video
+                    src="/video-preview.mp4"
+                    poster="/snowy-mountains.png"
+                    className="h-full w-full cursor-pointer object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    aria-label="Drone flying through snowy mountains during sunrise — playing"
+                    onClick={() => setPlaying(false)}
+                  />
+                ) : (
+                  <img src="/snowy-mountains.png" alt="Snowy mountains sunrise" className="h-full w-full object-cover" />
+                )}
+
+                {!playing && (
+                  <button
+                    type="button"
+                    aria-label="Play preview"
+                    data-testid="video-play-btn"
+                    onClick={() => setPlaying(true)}
+                    className="absolute inset-0 m-auto grid h-14 w-14 place-items-center rounded-full bg-white/90 text-black backdrop-blur transition-transform duration-300 hover:scale-110 active:scale-95">
+                    <Play className="h-6 w-6 translate-x-0.5 fill-black" />
+                  </button>
+                )}
+
                 <span className="absolute left-3 top-3 rounded-md bg-black/60 px-2 py-0.5 font-mono text-[10px] text-white">16:9</span>
-                <div ref={barRef} className="absolute inset-x-3 bottom-3">
-                  <div className="flex items-center justify-between font-mono text-[10px] text-white/80">
-                    <span>Rendering · Pass 2 of 3</span><span>62%</span>
+
+                {!playing && (
+                  <div ref={barRef} className="absolute inset-x-3 bottom-3">
+                    <div className="flex items-center justify-between font-mono text-[10px] text-white/80">
+                      <span>Rendering · Pass 2 of 3</span><span>62%</span>
+                    </div>
+                    <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/20">
+                      <div className="h-full rounded-full bg-orange-500 transition-[width] duration-[1400ms] ease-out"
+                        style={{ width: barVisible ? "62%" : "0%" }} />
+                    </div>
                   </div>
-                  <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/20">
-                    <div className="h-full rounded-full bg-orange-500 transition-[width] duration-[1400ms] ease-out"
-                      style={{ width: barVisible ? "62%" : "0%" }} />
-                  </div>
-                </div>
+                )}
               </div>
+
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {ratios.map((r, i) => (
                   <span key={r}
@@ -1179,7 +1220,10 @@ export function Footer() {
 
 function SplineBackground() {
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden bg-[#0a0705]">
+    <div
+      className="fixed inset-0 z-0 h-[100dvh] w-full overflow-hidden bg-[#0a0705]"
+      style={{ transform: "translateZ(0)", WebkitTransform: "translateZ(0)" }}
+    >
       <Spline scene="https://prod.spline.design/1aDqxN5NtaOu23Lj/scene.splinecode"
         className="absolute inset-0 h-full w-full" />
     </div>
