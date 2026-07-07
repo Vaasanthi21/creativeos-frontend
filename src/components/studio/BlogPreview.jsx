@@ -299,6 +299,54 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
   const [activeProgressStep, setActiveProgressStep] = useState(0);
   const [progressTimer, setProgressTimer] = useState(null);
 
+  // Cache of raw asset URL (S3/Cloudinary) -> masked public asset URL, so that
+  // any file the user downloads or copies never contains the raw bucket host.
+  // Reuses the same /api/create-share-link + /api/public-asset/:id proxy that
+  // Image Studio / Video Studio use, keeping the bucket name out of anything
+  // that leaves the app (Markdown/HTML files, clipboard content).
+  const [assetShareCache, setAssetShareCache] = useState({});
+
+  const getMaskedAssetUrl = async (rawUrl) => {
+    if (!rawUrl) return null;
+    // Only mask actual remote asset URLs (S3/Cloudinary); leave data: URIs,
+    // relative /uploads paths, etc. untouched since those aren't exposing a bucket.
+    if (!/^https?:\/\//i.test(rawUrl)) return rawUrl;
+    if (assetShareCache[rawUrl]) return assetShareCache[rawUrl];
+
+    try {
+      const token = window.localStorage.getItem('creative_studio_token');
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+      const response = await fetch(`${apiBaseUrl}/create-share-link`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          assetUrl: rawUrl,
+          caption: blogRecord?.title || 'Asset',
+          title: blogRecord?.title || 'Asset',
+        }),
+      });
+
+      if (!response.ok) throw new Error(`Failed to mask asset URL: ${response.status}`);
+      const data = await response.json();
+
+      // /api/create-share-link returns an HTML interstitial page URL
+      // (/share/:id). For embedding directly as an <img>/markdown image src we
+      // want the raw byte-streaming endpoint instead, which is /api/public-asset/:id.
+      const directUrl = data.shareUrl
+        ? data.shareUrl.replace('/share/', '/api/public-asset/')
+        : rawUrl;
+
+      setAssetShareCache((prev) => ({ ...prev, [rawUrl]: directUrl }));
+      return directUrl;
+    } catch (err) {
+      console.error('Failed to mask asset URL, falling back to original URL:', err);
+      return rawUrl;
+    }
+  };
+
   const triggerToast = (msg) => {
     setToastMessage(msg);
     setShowToast(true);
@@ -650,14 +698,20 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
   };
 
   const handleCopy = async () => {
+    // Resolve masked (non-S3/Cloudinary) versions of the cover image once up
+    // front, so nothing that gets copied to the clipboard leaks the bucket host.
+    const maskedCoverImageUrl = resolvedCoverImageUrl
+      ? await getMaskedAssetUrl(resolvedCoverImageUrl)
+      : null;
+
     if (activeTab === 'canonical') {
       if (!blogRecord) return;
       const strippedContent = stripLeadingTitle(blogRecord.content, blogRecord.title);
       let plainText = `# ${blogRecord.title}\n\n`;
       let htmlText = `<h1 class="font-display">${blogRecord.title}</h1>\n`;
-      if (resolvedCoverImageUrl) {
-        plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
-        htmlText += `<img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
+      if (maskedCoverImageUrl) {
+        plainText += `![Cover Image](${maskedCoverImageUrl})\n\n`;
+        htmlText += `<img src="${maskedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
       }
       plainText += strippedContent;
       htmlText += renderMarkdownToHTML(strippedContent);
@@ -679,9 +733,9 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
           plainPart += `${renderedRecord.title}\n\n`;
           htmlPart += `<h1 class="font-display">${renderedRecord.title}</h1>\n`;
         }
-        if (resolvedCoverImageUrl) {
-          plainPart += `[Image Attachment: ${resolvedCoverImageUrl}]\n\n`;
-          htmlPart += `<img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
+        if (maskedCoverImageUrl) {
+          plainPart += `[Image Attachment: ${maskedCoverImageUrl}]\n\n`;
+          htmlPart += `<img src="${maskedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
         }
 
         const cleanCopy = cleanCopyWithoutTrailingHashtags(strippedCopy);
@@ -707,9 +761,9 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
           plainText += `${subtitle}\n\n`;
           htmlText += `<h2 class="font-display">${subtitle}</h2>\n`;
         }
-        if (resolvedCoverImageUrl) {
-          plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
-          htmlText += `<img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
+        if (maskedCoverImageUrl) {
+          plainText += `![Cover Image](${maskedCoverImageUrl})\n\n`;
+          htmlText += `<img src="${maskedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
         }
         plainText += copyWithCodeBlockTables;
         htmlText += renderMarkdownToHTML(copyWithCodeBlockTables);
@@ -724,9 +778,9 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
           plainText += `${displaySubtitle}\n\n`;
           htmlText += `<h2 class="font-display">${displaySubtitle}</h2>\n`;
         }
-        if (resolvedCoverImageUrl) {
-          plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
-          htmlText += `<img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
+        if (maskedCoverImageUrl) {
+          plainText += `![Cover Image](${maskedCoverImageUrl})\n\n`;
+          htmlText += `<img src="${maskedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
         }
         plainText += strippedCopy;
         htmlText += renderMarkdownToHTML(strippedCopy);
@@ -740,9 +794,9 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
           plainText += `${subtitle}\n\n`;
           htmlText += `<h2 class="font-display">${subtitle}</h2>\n`;
         }
-        if (resolvedCoverImageUrl) {
-          plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
-          htmlText += `<img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
+        if (maskedCoverImageUrl) {
+          plainText += `![Cover Image](${maskedCoverImageUrl})\n\n`;
+          htmlText += `<img src="${maskedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-bottom:24px; display:block;" />\n`;
         }
         plainText += strippedCopy;
         htmlText += renderMarkdownToHTML(strippedCopy);
@@ -758,7 +812,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
     }
   };
 
-  const handleDownloadMD = () => {
+  const handleDownloadMD = async () => {
     let plainText = "";
     let filename = "";
 
@@ -774,17 +828,27 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
       resolvedCoverImageUrl.startsWith('data:image')
     );
 
+    // Resolve masked (non-S3/Cloudinary) URLs once up front. These are what
+    // actually get embedded in the downloaded file, so the bucket host is
+    // never exposed to whoever opens the .md file later.
+    const maskedCoverImageUrl = resolvedCoverImageUrl
+      ? await getMaskedAssetUrl(resolvedCoverImageUrl)
+      : null;
+    const maskedCompanyLogo = companyLogo
+      ? await getMaskedAssetUrl(companyLogo)
+      : null;
+
     const yamlFrontMatter = `---\ntitle: "${blogRecord.title}"\nauthor: "${author}"\ncategory: "${category}"\ndate: "${date}"\n---\n\n`;
 
     if (activeTab === 'canonical') {
       const strippedContent = stripLeadingTitle(blogRecord.content, blogRecord.title);
       plainText = yamlFrontMatter;
-      if (companyLogo && !isGeneratedCover) {
-        plainText += `![Brand Logo](${companyLogo})\n\n`;
+      if (maskedCompanyLogo && !isGeneratedCover) {
+        plainText += `![Brand Logo](${maskedCompanyLogo})\n\n`;
       }
       plainText += `# ${blogRecord.title}\n\n`;
-      if (resolvedCoverImageUrl) {
-        plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
+      if (maskedCoverImageUrl) {
+        plainText += `![Cover Image](${maskedCoverImageUrl})\n\n`;
       }
       plainText += strippedContent;
       filename = `${blogRecord.slug || 'canonical'}.md`;
@@ -796,9 +860,9 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
         const titleText = renderedRecord.title || blogRecord.title;
         const strippedCopy = cleanPlatformCopy(renderedRecord.copy, titleText);
         plainText = `Author: ${author}\nCategory: ${category}\nDate: ${date}\n\n`;
-        if (companyLogo && !isGeneratedCover) plainText += `[Brand Logo: ${companyLogo}]\n\n`;
+        if (maskedCompanyLogo && !isGeneratedCover) plainText += `[Brand Logo: ${maskedCompanyLogo}]\n\n`;
         if (renderedRecord.title) plainText += `${renderedRecord.title}\n\n`;
-        if (resolvedCoverImageUrl) plainText += `[Image Attachment: ${resolvedCoverImageUrl}]\n\n`;
+        if (maskedCoverImageUrl) plainText += `[Image Attachment: ${maskedCoverImageUrl}]\n\n`;
         plainText += cleanCopyWithoutTrailingHashtags(strippedCopy);
         if (renderedRecord.hashtags && renderedRecord.hashtags.length > 0) {
           plainText += `\n\n${renderedRecord.hashtags.map(t => `#${t}`).join(' ')}`;
@@ -810,15 +874,15 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         const copyWithCodeBlockTables = convertTablesToCodeBlocks(strippedCopy);
         plainText = yamlFrontMatter;
-        if (companyLogo && !isGeneratedCover) {
-          plainText += `![Brand Logo](${companyLogo})\n\n`;
+        if (maskedCompanyLogo && !isGeneratedCover) {
+          plainText += `![Brand Logo](${maskedCompanyLogo})\n\n`;
         }
         plainText += `# ${titleText}\n\n`;
         if (subtitle) {
           plainText += `${subtitle}\n\n`;
         }
-        if (resolvedCoverImageUrl) {
-          plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
+        if (maskedCoverImageUrl) {
+          plainText += `![Cover Image](${maskedCoverImageUrl})\n\n`;
         }
         plainText += copyWithCodeBlockTables;
         filename = `medium_${slugName}.md`;
@@ -828,15 +892,15 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
         const displaySubtitle = renderedRecord.metaDescription || extractedSub;
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         plainText = yamlFrontMatter;
-        if (companyLogo && !isGeneratedCover) {
-          plainText += `![Brand Logo](${companyLogo})\n\n`;
+        if (maskedCompanyLogo && !isGeneratedCover) {
+          plainText += `![Brand Logo](${maskedCompanyLogo})\n\n`;
         }
         plainText += `# ${titleText}\n\n`;
         if (displaySubtitle) {
           plainText += `${displaySubtitle}\n\n`;
         }
-        if (resolvedCoverImageUrl) {
-          plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
+        if (maskedCoverImageUrl) {
+          plainText += `![Cover Image](${maskedCoverImageUrl})\n\n`;
         }
         plainText += strippedCopy;
         filename = `substack_${slugName}.md`;
@@ -845,15 +909,15 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
         const { subtitle, cleanCopy } = extractSubtitle(renderedRecord.copy);
         const strippedCopy = cleanPlatformCopy(cleanCopy, titleText);
         plainText = yamlFrontMatter;
-        if (companyLogo && !isGeneratedCover) {
-          plainText += `![Brand Logo](${companyLogo})\n\n`;
+        if (maskedCompanyLogo && !isGeneratedCover) {
+          plainText += `![Brand Logo](${maskedCompanyLogo})\n\n`;
         }
         plainText += `# ${titleText}\n\n`;
         if (subtitle) {
           plainText += `${subtitle}\n\n`;
         }
-        if (resolvedCoverImageUrl) {
-          plainText += `![Cover Image](${resolvedCoverImageUrl})\n\n`;
+        if (maskedCoverImageUrl) {
+          plainText += `![Cover Image](${maskedCoverImageUrl})\n\n`;
         }
         plainText += strippedCopy;
         filename = `blog_${slugName}.md`;
@@ -861,8 +925,8 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
         const titleText = renderedRecord.title || blogRecord.title;
         const strippedCopy = cleanPlatformCopy(renderedRecord.copy, titleText);
         plainText = "";
-        if (companyLogo && !isGeneratedCover) {
-          plainText += `![Brand Logo](${companyLogo})\n\n`;
+        if (maskedCompanyLogo && !isGeneratedCover) {
+          plainText += `![Brand Logo](${maskedCompanyLogo})\n\n`;
         }
         plainText += cleanCopyWithoutTrailingHashtags(strippedCopy);
         filename = `devto_${slugName}.md`;
@@ -889,7 +953,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
     }
   };
 
-  const handleDownloadHTML = () => {
+  const handleDownloadHTML = async () => {
     let titleText = "";
     let subtitleText = "";
     let bodyHtml = "";
@@ -905,6 +969,15 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
     const author = blogRecord.author || 'Unassigned';
     const category = blogRecord.keywordCategory || 'General';
     const date = blogRecord.publishDate ? new Date(blogRecord.publishDate).toLocaleDateString() : new Date().toLocaleDateString();
+
+    // Resolve masked (non-S3/Cloudinary) URLs once up front, same as in
+    // handleDownloadMD, so the exported HTML file never contains the bucket host.
+    const maskedCoverImageUrl = resolvedCoverImageUrl
+      ? await getMaskedAssetUrl(resolvedCoverImageUrl)
+      : null;
+    const maskedCompanyLogo = companyLogo
+      ? await getMaskedAssetUrl(companyLogo)
+      : null;
 
     if (activeTab === 'canonical') {
       const strippedContent = stripLeadingTitle(blogRecord.content, blogRecord.title);
@@ -1053,8 +1126,8 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
   </style>
 </head>
 <body>
-  ${companyLogo && !isGeneratedCover ? `<div style="margin-bottom: 20px;"><img src="${companyLogo}" alt="Brand Logo" style="max-height: 40px; width: auto; object-fit: contain;" /></div>` : ''}
-  ${resolvedCoverImageUrl ? `<div style="width: 100%; background-color: #0B0F17; border-bottom: 1px solid rgba(255, 255, 255, 0.05); text-align: center; margin-bottom: 24px; border-radius: 12px; overflow: hidden;"><img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width: 100%; height: auto; display: block;" /></div>` : ''}
+  ${maskedCompanyLogo && !isGeneratedCover ? `<div style="margin-bottom: 20px;"><img src="${maskedCompanyLogo}" alt="Brand Logo" style="max-height: 40px; width: auto; object-fit: contain;" /></div>` : ''}
+  ${maskedCoverImageUrl ? `<div style="width: 100%; background-color: #0B0F17; border-bottom: 1px solid rgba(255, 255, 255, 0.05); text-align: center; margin-bottom: 24px; border-radius: 12px; overflow: hidden;"><img src="${maskedCoverImageUrl}" alt="Cover Image" style="width: 100%; height: auto; display: block;" /></div>` : ''}
   
   <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
     <div style="width: 36px; height: 36px; border-radius: 50%; background-color: #1e293b; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ffffff; font-size: 0.75rem; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">VO</div>
@@ -1161,10 +1234,10 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
   </style>
 </head>
 <body>
-  ${companyLogo && !isGeneratedCover ? `<div style="margin-bottom: 20px;"><img src="${companyLogo}" alt="Brand Logo" style="max-height: 40px; width: auto; object-fit: contain;" /></div>` : ''}
+  ${maskedCompanyLogo && !isGeneratedCover ? `<div style="margin-bottom: 20px;"><img src="${maskedCompanyLogo}" alt="Brand Logo" style="max-height: 40px; width: auto; object-fit: contain;" /></div>` : ''}
   <h1 class="font-display">${titleText}</h1>
   ${subtitleText ? `<h2 style="font-size: 1.4rem; font-weight: 400; color: #6b7280; margin-top: 4px; margin-bottom: 20px; font-family: Georgia, Cambria, 'Times New Roman', Times, serif; line-height: 1.4;" class="font-display">${subtitleText}</h2>` : ''}
-  ${resolvedCoverImageUrl ? `<img src="${resolvedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-top:16px; margin-bottom:24px; display:block;" />` : ''}
+  ${maskedCoverImageUrl ? `<img src="${maskedCoverImageUrl}" alt="Cover Image" style="width:100%; max-width:680px; height:auto; border-radius:12px; margin-top:16px; margin-bottom:24px; display:block;" />` : ''}
   ${bodyHtml}
 </body>
 </html>`;
