@@ -15,11 +15,18 @@ import { apiClient, tokenStorage } from '@/api/apiClient';
 import { addHistoryEntry } from '@/services/aiService';
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 
-const PLATFORMS = [
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'youtube', label: 'YouTube' },
-  { value: 'linkedin', label: 'LinkedIn' },
-  { value: 'facebook', label: 'Facebook' },
+// Each preset carries the exact pixel output the user expects, plus the
+// platform label used for AI prompt tailoring and the aspect-ratio bucket
+// used to pick the closest Azure generation size (1024x1024 / 1792x1024 / 1024x1792).
+// The backend crops/resizes the generated image down to the exact width/height below.
+const OUTPUT_FORMATS = [
+  { value: 'instagram_feed', label: 'Instagram Feed (Square)', dimensions: '1080×1080', width: 1080, height: 1080, aspectRatioBucket: '1:1', platform: 'instagram' },
+  { value: 'instagram_portrait', label: 'Instagram Portrait', dimensions: '1080×1350', width: 1080, height: 1350, aspectRatioBucket: '4:5', platform: 'instagram' },
+  { value: 'story_reel', label: 'IG/FB Story, Reel', dimensions: '1080×1920', width: 1080, height: 1920, aspectRatioBucket: '9:16', platform: 'instagram' },
+  { value: 'facebook_post', label: 'Facebook Post', dimensions: '1200×630', width: 1200, height: 630, aspectRatioBucket: '1.91:1', platform: 'facebook' },
+  { value: 'linkedin_post', label: 'LinkedIn Post', dimensions: '1200×627', width: 1200, height: 627, aspectRatioBucket: '1.91:1', platform: 'linkedin' },
+  { value: 'twitter_post', label: 'X/Twitter Post', dimensions: '1600×900', width: 1600, height: 900, aspectRatioBucket: '16:9', platform: 'twitter' },
+  { value: 'youtube_thumbnail', label: 'YouTube Thumbnail', dimensions: '1280×720', width: 1280, height: 720, aspectRatioBucket: '16:9', platform: 'youtube' },
 ];
 
 const IMAGE_STYLES = [
@@ -39,12 +46,6 @@ const LIGHTING_MODES = [
   { value: 'neon', label: 'Cyberpunk Neon Cyber Glow' },
   { value: 'studio', label: 'Studio Three-Point Lighting' },
   { value: 'dramatic', label: 'Dramatic Chiaroscuro' },
-];
-
-const ASPECT_RATIOS = [
-  { value: '1:1', label: 'Square (1:1) - Post' },
-  { value: '16:9', label: 'Landscape (16:9) - Desktop' },
-  { value: '9:16', label: 'Portrait (9:16) - Mobile/Stories' },
 ];
 
 const LOGO_PLACEMENTS = [
@@ -103,9 +104,8 @@ export default function ImageStudio() {
   const location = useLocation();
   const [prompt, setPrompt] = useState(location.state?.prompt || '');
   const [style, setStyle] = useState('realistic');
-  const [platform, setPlatform] = useState('instagram');
+  const [outputFormat, setOutputFormat] = useState('instagram_feed');
   const [lighting, setLighting] = useState('cinematic');
-  const [aspectRatio, setAspectRatio] = useState('1:1');
   const [logoPlacement, setLogoPlacement] = useState('persona-default'); 
   const [selectedPersona, setSelectedPersona] = useState(''); 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -114,6 +114,8 @@ export default function ImageStudio() {
   const [isCreatingShareLink, setIsCreatingShareLink] = useState(false);
   const { getJob, setJob, clearJob } = useGenerationJobs();
   const imageJob = getJob('image');
+
+  const selectedFormat = OUTPUT_FORMATS.find((f) => f.value === outputFormat) || OUTPUT_FORMATS[0];
 
   const generatedImage = imageJob?.generatedImage || null;
   const isPolling = imageJob?.isPolling || false;
@@ -192,7 +194,7 @@ export default function ImageStudio() {
               variants: [{
                 content: prompt,
                 image_url: imageUrl,
-                title: `${style.toUpperCase()} Studio Design (${aspectRatio})`
+                title: `${style.toUpperCase()} Studio Design (${selectedFormat.label})`
               }],
               status: "completed"
             };
@@ -217,7 +219,7 @@ export default function ImageStudio() {
       },
       3000
     );
-  }, [prompt, style, aspectRatio, setJob]);
+  }, [prompt, style, selectedFormat, setJob]);
 
   useEffect(() => {
     if (hasResumedRef.current) return;
@@ -241,8 +243,10 @@ export default function ImageStudio() {
         topic: finalBuiltPrompt,
         style: params.style,
         platform: params.platform,
-        aspectRatio: params.aspectRatio,      
-        aspect_ratio: params.aspectRatio,     
+        aspectRatio: params.aspectRatioBucket,
+        aspect_ratio: params.aspectRatioBucket,
+        outputWidth: params.outputWidth,
+        outputHeight: params.outputHeight,
         companyPersona: companyPersonaPayload,
         logoPlacement: params.logoPlacement,
         logo_placement: params.logoPlacement, 
@@ -276,12 +280,14 @@ export default function ImageStudio() {
       prompt: prompt.trim(),
       style: style,
       lighting: lighting,
-      aspectRatio: aspectRatio,
-      platform: platform,
+      platform: selectedFormat.platform,
+      aspectRatioBucket: selectedFormat.aspectRatioBucket,
+      outputWidth: selectedFormat.width,
+      outputHeight: selectedFormat.height,
       personaObject: selectedPersonaObject,
       logoPlacement: logoPlacement 
     });
-  }, [prompt, style, lighting, aspectRatio, platform, selectedPersonaObject, logoPlacement, generateMutation]);
+  }, [prompt, style, lighting, selectedFormat, selectedPersonaObject, logoPlacement, generateMutation]);
 
   const handleGenerateClick = () => {
     if (!prompt.trim()) return;
@@ -363,7 +369,7 @@ export default function ImageStudio() {
       setIsCreatingShareLink(true);
       try {
         const caption = `Check out this asset I made: ${prompt}`;
-        const title = `${style.toUpperCase()} Studio Design (${aspectRatio})`;
+        const title = `${style.toUpperCase()} Studio Design (${selectedFormat.label})`;
         const url = await createShareLink(generatedImage, caption, title);
         setShareUrl(url);
       } catch (err) {
@@ -384,10 +390,17 @@ export default function ImageStudio() {
     setShareUrl(null);
   };
 
-  const getAspectRatioClass = () => {
-    if (aspectRatio === '16:9') return 'aspect-[16/9] w-full max-w-[440px]';
-    if (aspectRatio === '9:16') return 'aspect-[9/16] h-[380px] w-auto';
-    return 'aspect-square w-full max-w-[380px]';
+  const getPreviewContainerStyle = () => {
+    const ratio = selectedFormat.width / selectedFormat.height;
+    const baseStyle = { aspectRatio: `${selectedFormat.width} / ${selectedFormat.height}` };
+
+    if (ratio > 1.2) {
+      return { ...baseStyle, width: '100%', maxWidth: '440px' };
+    }
+    if (ratio < 0.85) {
+      return { ...baseStyle, height: '380px', width: 'auto' };
+    }
+    return { ...baseStyle, width: '100%', maxWidth: '380px' };
   };
 
   return (
@@ -449,25 +462,17 @@ export default function ImageStudio() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="platform">Target Platform Layout</Label>
-                <Select value={platform} onValueChange={setPlatform} disabled={isPolling}>
-                  <SelectTrigger id="platform"><SelectValue placeholder="Select network shell" /></SelectTrigger>
-                  <SelectContent>
-                    {PLATFORMS.map((p) => (<SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="aspectRatio">Canvas Layout Dimensions</Label>
-                <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={isPolling}>
-                  <SelectTrigger id="aspectRatio">
+                <Label htmlFor="outputFormat">Output Format &amp; Platform</Label>
+                <Select value={outputFormat} onValueChange={setOutputFormat} disabled={isPolling}>
+                  <SelectTrigger id="outputFormat">
                     <Maximize2 className="w-4 h-4 mr-1 text-muted-foreground" />
-                    <SelectValue />
+                    <SelectValue placeholder="Select output format" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ASPECT_RATIOS.map((ratio) => (
-                      <SelectItem key={ratio.value} value={ratio.value}>{ratio.label}</SelectItem>
+                    {OUTPUT_FORMATS.map((format) => (
+                      <SelectItem key={format.value} value={format.value}>
+                        {format.label} — {format.dimensions}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -612,7 +617,10 @@ export default function ImageStudio() {
                 </div>
               ) : generatedImage ? (
                 <div className="w-full flex flex-col items-center gap-4">
-                  <div className={`relative border border-border/60 bg-background/50 shadow-inner overflow-hidden flex items-center justify-center p-1 rounded-lg ${getAspectRatioClass()}`}>
+                  <div
+                    className="relative border border-border/60 bg-background/50 shadow-inner overflow-hidden flex items-center justify-center p-1 rounded-lg"
+                    style={getPreviewContainerStyle()}
+                  >
                     <img src={generatedImage} alt="Studio output viewport preview" className="w-full h-auto max-h-[500px] object-contain rounded-lg" />
                   </div>
                   <div className="flex gap-2 w-full max-w-[440px]">
@@ -633,9 +641,7 @@ export default function ImageStudio() {
                       </Button>
                       {showSharePopover && shareUrl && (
                         <div className="absolute bottom-full mb-2 left-0 right-0 bg-background border border-border rounded-lg shadow-lg p-2 space-y-1 z-10">
-                          {Object.entries(
-                            getShareLinks(shareUrl, `Check out this asset I made: ${prompt}`)
-                          ).map(([platformName, url]) => (
+                          {Object.entries(getShareLinks(shareUrl, `Check out this asset I made: ${prompt}`)).map(([platformName, url]) => (
                             <a
                               key={platformName}
                               href={url}
@@ -688,7 +694,7 @@ export default function ImageStudio() {
           submitGeneration();
         }}
         title="Confirm Custom Studio Generation"
-        description="High-fidelity image canvas compiling can utilize up to 2-3 minutes of render cluster time. Please maintain this viewport session active."
+        description={`High-fidelity image canvas compiling can utilize up to 2-3 minutes of render cluster time. Output will be sized exactly for ${selectedFormat.label} (${selectedFormat.dimensions}). Please maintain this viewport session active.`}
         confirmLabel="Generate Image"
       />
     </div>
