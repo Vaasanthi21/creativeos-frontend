@@ -853,6 +853,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
       resolvedCoverImageUrl.includes('creative-os-assets') || 
       resolvedCoverImageUrl.includes('dalle') || 
       resolvedCoverImageUrl.includes('amazonaws.com') || 
+      resolvedCoverImageUrl.includes('media-proxy') || 
       resolvedCoverImageUrl.startsWith('data:image')
     );
 
@@ -992,6 +993,7 @@ export const BlogPreview = ({ blogId, onBack, companyLogo }) => {
       resolvedCoverImageUrl.includes('creative-os-assets') || 
       resolvedCoverImageUrl.includes('dalle') || 
       resolvedCoverImageUrl.includes('amazonaws.com') || 
+      resolvedCoverImageUrl.includes('media-proxy') || 
       resolvedCoverImageUrl.startsWith('data:image')
     );
     const author = blogRecord.author || 'Unassigned';
