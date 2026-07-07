@@ -73,8 +73,23 @@ const formatRemainingTime = (milliseconds) => {
   return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`;
 };
 
-const getShareLinks = (imageUrl, caption) => {
-  const encodedUrl = encodeURIComponent(imageUrl);
+const createShareLink = async (imageUrl, caption, title) => {
+  const token = tokenStorage.getUserToken();
+  const response = await fetch(`${API_ORIGIN}/api/create-share-link`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ assetUrl: imageUrl, caption, title }),
+  });
+  if (!response.ok) throw new Error('Failed to create share link');
+  const data = await response.json();
+  return data.shareUrl;
+};
+
+const getShareLinks = (shareUrl, caption) => {
+  const encodedUrl = encodeURIComponent(shareUrl);
   const encodedText = encodeURIComponent(caption);
   return {
     whatsapp: `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
@@ -95,7 +110,8 @@ export default function ImageStudio() {
   const [selectedPersona, setSelectedPersona] = useState(''); 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSharePopover, setShowSharePopover] = useState(false);
-
+  const [shareUrl, setShareUrl] = useState(null);
+  const [isCreatingShareLink, setIsCreatingShareLink] = useState(false);
   const { getJob, setJob, clearJob } = useGenerationJobs();
   const imageJob = getJob('image');
 
@@ -304,12 +320,12 @@ export default function ImageStudio() {
   };
 
   const handleCopyLink = async () => {
-    if (!generatedImage) return;
+    if (!shareUrl) return;
     let success = false;
 
     if (navigator.clipboard && window.isSecureContext) {
       try {
-        await navigator.clipboard.writeText(generatedImage);
+        await navigator.clipboard.writeText(shareUrl);
         success = true;
       } catch (err) {
         console.warn('Clipboard API failed, trying fallback:', err);
@@ -318,7 +334,7 @@ export default function ImageStudio() {
 
     if (!success) {
       const textarea = document.createElement('textarea');
-      textarea.value = generatedImage;
+      textarea.value = shareUrl;
       textarea.style.position = 'fixed';
       textarea.style.opacity = '0';
       document.body.appendChild(textarea);
@@ -336,10 +352,36 @@ export default function ImageStudio() {
     setShowSharePopover(false);
   };
 
+  const handleOpenSharePopover = async () => {
+    if (showSharePopover) {
+      setShowSharePopover(false);
+      return;
+    }
+    if (!generatedImage) return;
+
+    if (!shareUrl) {
+      setIsCreatingShareLink(true);
+      try {
+        const caption = `Check out this asset I made: ${prompt}`;
+        const title = `${style.toUpperCase()} Studio Design (${aspectRatio})`;
+        const url = await createShareLink(generatedImage, caption, title);
+        setShareUrl(url);
+      } catch (err) {
+        console.error('Failed to create share link:', err);
+        alert('Could not create a shareable link. Please try again.');
+        setIsCreatingShareLink(false);
+        return;
+      }
+      setIsCreatingShareLink(false);
+    }
+    setShowSharePopover(true);
+  };
+
   const handleReset = () => {
     clearJob('image');
     setPrompt('');
     setShowSharePopover(false);
+    setShareUrl(null);
   };
 
   const getAspectRatioClass = () => {
@@ -578,16 +620,21 @@ export default function ImageStudio() {
 
                     <div className="relative flex-1">
                       <Button
-                        onClick={() => setShowSharePopover((v) => !v)}
+                        onClick={handleOpenSharePopover}
                         variant="secondary"
                         className="w-full gap-1.5"
+                        disabled={isCreatingShareLink}
                       >
-                        <Share2 className="w-4 h-4" /> Share Asset
+                        {isCreatingShareLink ? (
+                          <><Loader2 className="w-4 h-4 animate-spin" /> Preparing link...</>
+                        ) : (
+                          <><Share2 className="w-4 h-4" /> Share Asset</>
+                        )}
                       </Button>
-                      {showSharePopover && (
+                      {showSharePopover && shareUrl && (
                         <div className="absolute bottom-full mb-2 left-0 right-0 bg-background border border-border rounded-lg shadow-lg p-2 space-y-1 z-10">
                           {Object.entries(
-                            getShareLinks(generatedImage, `Check out this asset I made: ${prompt}`)
+                            getShareLinks(shareUrl, `Check out this asset I made: ${prompt}`)
                           ).map(([platformName, url]) => (
                             <a
                               key={platformName}

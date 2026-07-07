@@ -67,6 +67,24 @@ const formatRemainingTime = (milliseconds) => {
   return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`;
 };
 
+// Calls the backend to create a masked, non-S3 share link for the given
+// asset URL. Same endpoint the Image Studio uses - hides the bucket host
+// from social crawlers by proxying through /share/:id and /api/public-asset/:id.
+const createShareLink = async (assetUrl, caption, title) => {
+  const token = tokenStorage.getUserToken();
+  const response = await fetch(`${API_ORIGIN}/api/create-share-link`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ assetUrl, caption, title }),
+  });
+  if (!response.ok) throw new Error('Failed to create share link');
+  const data = await response.json();
+  return data.shareUrl;
+};
+
 // Builds platform share-intent URLs. These are plain links (no Web Share API),
 // so they work over HTTP and on desktop, unlike navigator.share.
 const getShareLinks = (videoUrl, caption) => {
@@ -89,6 +107,8 @@ export default function VideoStudio() {
   const [logoPlacement, setLogoPlacement] = useState('persona-default');
   const [selectedPersona, setSelectedPersona] = useState(''); 
   const [showSharePopover, setShowSharePopover] = useState(false);
+  const [shareUrl, setShareUrl] = useState(null);
+  const [isCreatingShareLink, setIsCreatingShareLink] = useState(false);
   
   const [pan, setPan] = useState(0);
   const [zoom, setZoom] = useState(1);
@@ -360,12 +380,12 @@ export default function VideoStudio() {
   };
 
   const handleCopyLink = async () => {
-    if (!generatedVideo) return;
+    if (!shareUrl) return;
     let success = false;
 
     if (navigator.clipboard && window.isSecureContext) {
       try {
-        await navigator.clipboard.writeText(generatedVideo);
+        await navigator.clipboard.writeText(shareUrl);
         success = true;
       } catch (err) {
         console.warn('Clipboard API failed, trying fallback:', err);
@@ -376,7 +396,7 @@ export default function VideoStudio() {
       // navigator.clipboard is unavailable on plain HTTP origins (non-secure context).
       // Fall back to the legacy execCommand approach via a hidden textarea.
       const textarea = document.createElement('textarea');
-      textarea.value = generatedVideo;
+      textarea.value = shareUrl;
       textarea.style.position = 'fixed';
       textarea.style.opacity = '0';
       document.body.appendChild(textarea);
@@ -394,11 +414,40 @@ export default function VideoStudio() {
     setShowSharePopover(false);
   };
 
+  // Lazily creates the masked share link (via /api/create-share-link) the
+  // first time the popover is opened for a given generated video, then
+  // reuses it for subsequent opens/clicks. Mirrors ImageStudio.jsx.
+  const handleOpenSharePopover = async () => {
+    if (showSharePopover) {
+      setShowSharePopover(false);
+      return;
+    }
+    if (!generatedVideo) return;
+
+    if (!shareUrl) {
+      setIsCreatingShareLink(true);
+      try {
+        const caption = `Check out this video I made: ${prompt}`;
+        const title = `${platform.toUpperCase()} Studio Video (${aspectRatio})`;
+        const url = await createShareLink(generatedVideo, caption, title);
+        setShareUrl(url);
+      } catch (err) {
+        console.error('Failed to create share link:', err);
+        alert('Could not create a shareable link. Please try again.');
+        setIsCreatingShareLink(false);
+        return;
+      }
+      setIsCreatingShareLink(false);
+    }
+    setShowSharePopover(true);
+  };
+
   const handleReset = () => {
     clearJob('video');
     setPrompt('');
     setIsPlaying(false);
     setShowSharePopover(false);
+    setShareUrl(null);
   };
 
   const togglePlay = () => {
@@ -664,16 +713,21 @@ export default function VideoStudio() {
 
                     <div className="relative flex-1">
                       <Button
-                        onClick={() => setShowSharePopover((v) => !v)}
+                        onClick={handleOpenSharePopover}
                         variant="secondary"
                         className="w-full gap-1.5"
+                        disabled={isCreatingShareLink}
                       >
-                        <Share2 className="w-4 h-4" /> Share Asset
+                        {isCreatingShareLink ? (
+                          <><Loader2 className="w-4 h-4 animate-spin" /> Preparing link...</>
+                        ) : (
+                          <><Share2 className="w-4 h-4" /> Share Asset</>
+                        )}
                       </Button>
-                      {showSharePopover && (
+                      {showSharePopover && shareUrl && (
                         <div className="absolute bottom-full mb-2 left-0 right-0 bg-background border border-border rounded-lg shadow-lg p-2 space-y-1 z-10">
                           {Object.entries(
-                            getShareLinks(generatedVideo, `Check out this video I made: ${prompt}`)
+                            getShareLinks(shareUrl, `Check out this video I made: ${prompt}`)
                           ).map(([platformName, url]) => (
                             <a
                               key={platformName}
