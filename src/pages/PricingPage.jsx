@@ -1,339 +1,636 @@
-"\"use client\";
-import { useState } from \"react\";
-import { Link } from \"react-router-dom\";
-import { Check, Sparkles, DollarSign, Zap, Save, TrendingUp, ArrowRight, X, Info } from \"lucide-react\";
-import PageShell from \"@/components/PageShell\";
-import SEO from \"@/components/SEO\";
+"use client"
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Check,
+  X,
+  Sparkles,
+  ArrowRight,
+  Info,
+  Film,
+  Image as ImageIcon,
+  Type,
+  ChevronDown,
+} from "lucide-react";
+import PageShell from "@/components/PageShell";
+import SEO from "@/components/SEO";
 
-const PACKS = [
+/* ---------------------------------------------------------
+   Motion helpers — a scroll reveal hook and a pointer-tilt hook.
+   Both respect prefers-reduced-motion.
+--------------------------------------------------------- */
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+function useReveal(threshold = 0.15) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      setVisible(true);
+      return;
+    }
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.unobserve(el);
+        }
+      },
+      { threshold }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return [ref, visible];
+}
+
+function Reveal({ children, className = "", delay = 0, as: Tag = "div" }) {
+  const [ref, visible] = useReveal();
+  return (
+    <Tag
+      ref={ref}
+      className={`transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:transform-none ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      } ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+function useTilt(maxTilt = 7) {
+  const ref = useRef(null);
+
+  const onMouseMove = (e) => {
+    if (prefersReducedMotion()) return;
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.transform = `perspective(1000px) rotateX(${(-py * maxTilt).toFixed(
+      2
+    )}deg) rotateY(${(px * maxTilt).toFixed(2)}deg) translateY(-6px) scale(1.02)`;
+    el.style.setProperty("--glow-x", `${(px + 0.5) * 100}%`);
+    el.style.setProperty("--glow-y", `${(py + 0.5) * 100}%`);
+
+    const shine = el.querySelector(".tilt-shine");
+    if (shine) {
+      shine.style.opacity = "1";
+      shine.style.background = `radial-gradient(circle at ${(px + 0.5) * 100}% ${
+        (py + 0.5) * 100
+      }%, rgba(255,255,255,0.08), transparent 55%)`;
+    }
+  };
+
+  const onMouseLeave = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform =
+      "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px) scale(1)";
+    const shine = el.querySelector(".tilt-shine");
+    if (shine) shine.style.opacity = "0";
+  };
+
+  return { ref, onMouseMove, onMouseLeave };
+}
+
+function TiltCard({ children, className = "", maxTilt = 9 }) {
+  const { ref, onMouseMove, onMouseLeave } = useTilt(maxTilt);
+  return (
+    <div
+      ref={ref}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+      className={`tilt-card relative will-change-transform transition-transform duration-300 ease-out motion-reduce:transition-none ${className}`}
+    >
+      <span className="tilt-shine pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-300" />
+      {children}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------
+   Content
+--------------------------------------------------------- */
+
+const FORMATS = [
   {
-    name: \"Starter Save\",
-    testid: \"pack-starter\",
-    credits: 500,
-    price: 9,
-    per: \"$0.018 / credit\",
-    tagline: \"Try before you commit.\",
-    highlights: [
-      \"500 credits — never expire\",
-      \"Access to all 6 studios\",
-      \"Standard rendering queue\",
-      \"Email support\",
-    ],
+    eyebrow: "Everywhere · Free",
+    icon: ImageIcon,
+    title: "Still image",
+    subtitle: "One frame, one moment",
+    desc: "A still graphic for a post or thumbnail. Useful, but every AI tool — including the free ones — does this equally well.",
+    highlight: false,
   },
   {
-    name: \"Grow Pack\",
-    testid: \"pack-grow\",
-    credits: 3000,
-    price: 45,
-    per: \"$0.015 / credit\",
-    tagline: \"For creators shipping weekly.\",
+    eyebrow: "Creative Studio",
+    icon: Film,
+    title: "AI video, 10–12 sec",
+    subtitle: "A scene that moves, with sound",
+    desc: "Dozens of frames generated in sequence with synced audio — the part that normally needs a camera, an editor, and a day's work.",
+    highlight: true,
+  },
+];
+
+const BUNDLED = [
+  { label: "Text generations", value: "300–600 / mo" },
+  { label: "Image generations", value: "80–200 / mo" },
+  { label: "Brand-matched styling", value: "Included" },
+];
+
+const BILLED = [
+  { label: "AI video, 10–12 sec", value: "6–18 / mo" },
+  { label: "Per-video cost to you", value: "~₹190–280" },
+  { label: "Vs. an editor's day rate", value: "Cheaper" },
+];
+
+const PLANS = [
+  {
+    name: "Pro",
+    testid: "pack-pro",
+    tagline: "For creators shipping content weekly",
+    price: "1,899",
+    videos: 6,
+    features: [
+      "300 text generations",
+      "80 image generations",
+      "Brand-matched styling",
+      "One-time pack or monthly plan",
+    ],
+    cta: "Start with Pro",
+    popular: false,
+  },
+  {
+    name: "Studio",
+    testid: "pack-studio",
+    tagline: "For teams and high-output creators",
+    price: "4,999",
+    videos: 18,
+    features: [
+      "600 text generations",
+      "200 image generations",
+      "Brand-matched styling",
+      "One-time pack or monthly plan",
+    ],
+    cta: "Start with Studio",
     popular: true,
-    highlights: [
-      \"3,000 credits — never expire\",
-      \"Priority rendering queue\",
-      \"HD image + video exports\",
-      \"Save 💾 unused credits forever\",
-      \"Slack + email support\",
-    ],
-  },
-  {
-    name: \"Scale Bundle\",
-    testid: \"pack-scale\",
-    credits: 10000,
-    price: 129,
-    per: \"$0.013 / credit\",
-    tagline: \"Best value for teams & agencies.\",
-    highlights: [
-      \"10,000 credits — never expire\",
-      \"Fastest rendering priority\",
-      \"4K exports + brand kit\",
-      \"Team seats (up to 5)\",
-      \"Dedicated success manager\",
-    ],
-  },
-  {
-    name: \"Enterprise\",
-    testid: \"pack-enterprise\",
-    credits: null,
-    price: null,
-    per: \"Custom\",
-    tagline: \"For large studios & organisations.\",
-    highlights: [
-      \"Custom volume pricing\",
-      \"SSO + audit logs\",
-      \"SLA-backed uptime\",
-      \"White-label options\",
-      \"24/7 priority support\",
-    ],
   },
 ];
 
-const USAGE_TABLE = [
-  { action: \"Text post (Content Studio)\", credits: \"1\" },
-  { action: \"AI image, HD (Image Studio)\", credits: \"3\" },
-  { action: \"Video clip, up to 10s (Video Studio)\", credits: \"69\" },
-  { action: \"Text + Image bundle\", credits: \"4\" },
-  { action: \"Long-form blog article, SEO-tuned\", credits: \"10\" },
-  { action: \"LinkedIn Tracker refresh\", credits: \"0 (free)\" },
+const FAQ = [
+  {
+    q: "Why charge anything if images are free elsewhere?",
+    a: "We don't really charge for images — they're bundled in generously on every plan, including the trial. The price on this page reflects video generation, which is the one format that isn't free anywhere else.",
+  },
+  {
+    q: "What happens if I use all my videos for the month?",
+    a: "You can top up with a one-time pack at any point, or upgrade to Studio. Text and image generation stay available even if your video count runs out.",
+  },
+  {
+    q: "Do one-time packs expire?",
+    a: "No. One-time packs are used at your pace. Monthly plans refresh automatically and are billed each cycle.",
+  },
+  {
+    q: "Can I switch between Pro and Studio?",
+    a: "Yes, anytime. Changes apply from your next billing cycle, or immediately if you're moving from a one-time pack.",
+  },
 ];
 
-const COMPARE = [
-  { label: \"Never expires\", included: true },
-  { label: \"No recurring subscription\", included: true },
-  { label: \"Auto-renew charges\", included: false },
-  { label: \"Unused credits roll over forever\", included: true },
-  { label: \"All studios unlocked\", included: true },
-  { label: \"Hidden fees\", included: false },
-];
+/* ---------------------------------------------------------
+   FAQ accordion item
+--------------------------------------------------------- */
+
+function FaqItem({ item, index }) {
+  const [open, setOpen] = useState(index === 0);
+  return (
+    <div className="border-b border-white/5 last:border-b-0">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        data-testid={`faq-toggle-${index}`}
+        className="flex w-full items-center justify-between gap-4 py-5 text-left"
+      >
+        <span className="text-sm font-medium text-neutral-100 md:text-base">
+          {item.q}
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-orange-400 transition-transform duration-300 ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      <div
+        className="grid overflow-hidden transition-all duration-300 ease-out"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">
+          <p className="pb-5 pr-8 text-sm leading-relaxed text-neutral-400">
+            {item.a}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------
+   Page
+--------------------------------------------------------- */
 
 export default function PricingPage() {
-  const [billing, setBilling] = useState(\"packs\");
-
   const jsonLd = {
-    \"@context\": \"https://schema.org\",
-    \"@type\": \"PriceSpecification\",
-    name: \"CreativeOS Usage-Based Pricing\",
+    "@context": "https://schema.org",
+    "@type": "PriceSpecification",
+    name: "Creative Studio Pricing",
     description:
-      \"Buy credits once, use them forever. No subscription, no auto-renewal. Credits work across all six CreativeOS studios.\",
-    priceCurrency: \"USD\",
-    offers: PACKS.filter((p) => p.price).map((p) => ({
-      \"@type\": \"Offer\",
+      "Text and image generation come bundled generously into every plan. AI video with synced audio is the one format with real production cost behind it — and the only thing you're billed for.",
+    priceCurrency: "INR",
+    offers: PLANS.map((p) => ({
+      "@type": "Offer",
       name: p.name,
-      price: p.price,
-      priceCurrency: \"USD\",
-      description: `${p.credits} credits — ${p.tagline}`,
+      price: p.price.replace(",", ""),
+      priceCurrency: "INR",
+      description: `${p.videos} AI videos / month — ${p.tagline}`,
     })),
   };
 
   return (
-    <PageShell testid=\"pricing-page\">
+    <PageShell testid="pricing-page">
       <SEO
-        title=\"Pricing — Usage-based, no subscriptions\"
-        description=\"CreativeOS pricing: buy credits once, use them forever. No subscription. No auto-renewal. Save 💾 and Grow — pay only for what you generate across all studios.\"
-        path=\"/pricing\"
+        title="Pricing — Creative Studio · Growth OS"
+        description="Text and images are bundled in generously. AI video with synced audio is the one format that costs real money anywhere else — and the only thing billed here."
+        path="/pricing"
         jsonLd={jsonLd}
       />
 
-      <section className=\"mx-auto max-w-6xl px-5 pt-32 pb-12\">
-        <div className=\"text-center\">
-          <span className=\"inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 font-mono text-xs text-orange-300\">
-            <Save className=\"h-3.5 w-3.5\" /> Save 💾 and Grow
-          </span>
-          <h1 className=\"mx-auto mt-6 max-w-3xl text-balance text-5xl font-extrabold leading-[1.02] tracking-tight text-white md:text-6xl\">
-            Pay only for what you <span className=\"text-orange-500\">create</span>.
-          </h1>
-          <p className=\"mx-auto mt-5 max-w-xl text-pretty text-base text-neutral-400 md:text-lg\">
-            Usage-based pricing. No monthly subscriptions. No auto-renewals. Credits never expire — bank them today, spend them next quarter.
-          </p>
+      <style>{`
+        .tilt-card { transform-style: preserve-3d; }
+        .glow-surface {
+          background-image: radial-gradient(
+            circle at var(--glow-x, 50%) var(--glow-y, 50%),
+            rgba(249, 115, 22, 0.14),
+            transparent 60%
+          );
+        }
+        .tilt-shine { z-index: 1; }
+        .tilt-card > *:not(.tilt-shine) { position: relative; z-index: 2; }
+      `}</style>
 
-          <div className=\"mx-auto mt-8 inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1\" role=\"tablist\">
-            <button
-              data-testid=\"billing-packs\"
-              onClick={() => setBilling(\"packs\")}
-              className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
-                billing === \"packs\" ? \"bg-orange-500 text-black\" : \"text-neutral-400 hover:text-white\"
-              }`}
-            >
-              Credit packs
-            </button>
-            <button
-              data-testid=\"billing-usage\"
-              onClick={() => setBilling(\"usage\")}
-              className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
-                billing === \"usage\" ? \"bg-orange-500 text-black\" : \"text-neutral-400 hover:text-white\"
-              }`}
-            >
-              Usage table
-            </button>
-          </div>
+      {/* Hero */}
+      <section className="mx-auto max-w-4xl px-5 pt-32 pb-16 text-center">
+        <Reveal>
+          <span className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 font-mono text-xs text-orange-300">
+            Creative Studio · Growth OS
+          </span>
+        </Reveal>
+        <Reveal delay={80}>
+          <h1 className="mx-auto mt-6 max-w-3xl text-balance text-4xl font-extrabold leading-[1.05] tracking-tight text-white md:text-5xl">
+            Everyone can make an image now.{" "}
+            <span className="text-orange-500">Almost no one can make this.</span>
+          </h1>
+        </Reveal>
+        <Reveal delay={160}>
+          <p className="mx-auto mt-5 max-w-xl text-pretty text-base text-neutral-400 md:text-lg">
+            Text and images are common ground — every tool gives you those for
+            free. Creative Studio&apos;s edge is the one format that still
+            takes a real production budget anywhere else: AI video with
+            synced audio, generated in your brand.
+          </p>
+        </Reveal>
+      </section>
+
+      {/* Format comparison — tilt cards */}
+      <section className="mx-auto max-w-5xl px-5 pb-16">
+        <div className="grid gap-6 md:grid-cols-2">
+          {FORMATS.map((f, i) => (
+            <Reveal key={f.title} delay={i * 120}>
+              <TiltCard
+                className={`glow-surface relative flex h-full flex-col rounded-2xl border p-7 ${
+                  f.highlight
+                    ? "border-orange-500/50 bg-gradient-to-b from-orange-500/[0.08] to-white/[0.02] shadow-[0_0_60px_-20px_rgba(249,115,22,0.4)]"
+                    : "border-white/10 bg-white/[0.03]"
+                }`}
+              >
+                <span
+                  className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest ${
+                    f.highlight
+                      ? "bg-orange-500 text-black"
+                      : "border border-white/15 text-neutral-400"
+                  }`}
+                >
+                  {f.eyebrow}
+                </span>
+                <span
+                  className={`mt-5 grid h-11 w-11 place-items-center rounded-lg ${
+                    f.highlight
+                      ? "bg-orange-500/15 text-orange-400"
+                      : "bg-white/5 text-neutral-400"
+                  }`}
+                >
+                  <f.icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-4 text-xl font-bold text-white">{f.title}</h3>
+                <p className="mt-1 text-sm font-medium text-neutral-300">
+                  {f.subtitle}
+                </p>
+                <p className="mt-4 text-sm leading-relaxed text-neutral-400">
+                  {f.desc}
+                </p>
+              </TiltCard>
+            </Reveal>
+          ))}
         </div>
       </section>
 
-      {billing === \"packs\" ? (
-        <section className=\"mx-auto max-w-6xl px-5 pb-16\">
-          <div className=\"grid gap-5 md:grid-cols-2 lg:grid-cols-4\">
-            {PACKS.map((p) => (
-              <div
-                key={p.name}
-                data-testid={p.testid}
-                className={`relative flex flex-col rounded-2xl border p-6 transition-all hover:-translate-y-1 ${
+      {/* The honest breakdown */}
+      <section className="mx-auto max-w-5xl px-5 pb-16">
+        <Reveal className="text-center">
+          <span className="font-mono text-xs uppercase tracking-widest text-orange-400">
+            What&apos;s included, what&apos;s billed
+          </span>
+          <h2 className="mx-auto mt-3 max-w-xl text-2xl font-bold text-white md:text-3xl">
+            The honest breakdown
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm text-neutral-400 md:text-base">
+            You&apos;re not paying for the image. You&apos;re paying for the
+            video. Text and image generation cost us next to nothing to
+            provide, so they come generously bundled into every plan. Video
+            is the one format with real production cost behind it — the
+            only thing on this page with a number attached.
+          </p>
+        </Reveal>
+
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
+          <Reveal delay={80}>
+            <TiltCard className="glow-surface h-full rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+              <div className="flex items-center gap-2">
+                <Type className="h-4 w-4 text-emerald-400" />
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
+                  Bundled in, generously
+                </h3>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-neutral-400">
+                Available free elsewhere, so we don&apos;t ration it either.
+                Use it as much as your plan allows without watching a
+                counter.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {BUNDLED.map((row) => (
+                  <li
+                    key={row.label}
+                    className="flex items-center justify-between border-b border-white/5 pb-3 text-sm last:border-b-0"
+                  >
+                    <span className="text-neutral-200">{row.label}</span>
+                    <span className="font-mono text-emerald-400">
+                      {row.value}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </TiltCard>
+          </Reveal>
+
+          <Reveal delay={160}>
+            <TiltCard className="glow-surface h-full rounded-2xl border border-orange-500/40 bg-orange-500/[0.05] p-7">
+              <div className="flex items-center gap-2">
+                <Film className="h-4 w-4 text-orange-400" />
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-orange-400">
+                  What you&apos;re actually paying for
+                </h3>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-neutral-400">
+                AI video with synced audio — the format that needs real
+                compute, and the one thing free tools don&apos;t hand out.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {BILLED.map((row) => (
+                  <li
+                    key={row.label}
+                    className="flex items-center justify-between border-b border-white/5 pb-3 text-sm last:border-b-0"
+                  >
+                    <span className="text-neutral-200">{row.label}</span>
+                    <span className="font-mono text-orange-400">
+                      {row.value}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </TiltCard>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Plans */}
+      <section className="mx-auto max-w-5xl px-5 pb-10">
+        <Reveal className="text-center">
+          <span className="font-mono text-xs uppercase tracking-widest text-orange-400">
+            Choose a plan
+          </span>
+          <h2 className="mx-auto mt-3 max-w-lg text-2xl font-bold text-white md:text-3xl">
+            Two ways to work, both built around video
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm text-neutral-400 md:text-base">
+            Every plan includes generous text and image generation. The
+            number that actually changes is how many videos you can make a
+            month.
+          </p>
+        </Reveal>
+
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
+          {PLANS.map((p, i) => (
+            <Reveal key={p.name} delay={i * 120}>
+              <TiltCard
+                className={`glow-surface relative flex h-full flex-col rounded-2xl border p-7 ${
                   p.popular
-                    ? \"border-orange-500/60 bg-gradient-to-b from-orange-500/[0.08] to-white/[0.02] shadow-[0_0_60px_-20px_rgba(249,115,22,0.4)]\"
-                    : \"border-white/10 bg-white/[0.03] hover:border-orange-500/30\"
+                    ? "border-orange-500/60 bg-gradient-to-b from-orange-500/[0.08] to-white/[0.02] shadow-[0_0_60px_-20px_rgba(249,115,22,0.4)]"
+                    : "border-white/10 bg-white/[0.03]"
                 }`}
               >
                 {p.popular && (
-                  <span className=\"absolute -top-3 left-6 rounded-full bg-orange-500 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black\">
-                    Most popular
+                  <span className="absolute -top-3 left-7 rounded-full bg-orange-500 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-black">
+                    Most output
                   </span>
                 )}
-                <div className=\"text-sm font-semibold uppercase tracking-widest text-orange-400\">
+                <div className="text-sm font-semibold uppercase tracking-widest text-orange-400">
                   {p.name}
                 </div>
-                <div className=\"mt-4 flex items-baseline gap-1.5\">
-                  {p.price ? (
-                    <>
-                      <span className=\"text-4xl font-extrabold text-white\">${p.price}</span>
-                      <span className=\"text-sm text-neutral-500\">one-time</span>
-                    </>
-                  ) : (
-                    <span className=\"text-3xl font-extrabold text-white\">Let&apos;s talk</span>
-                  )}
-                </div>
-                <div className=\"mt-1 text-xs font-mono text-neutral-500\">{p.per}</div>
-                <p className=\"mt-4 text-sm text-neutral-400\">{p.tagline}</p>
+                <p className="mt-1 text-sm text-neutral-400">{p.tagline}</p>
 
-                <ul className=\"mt-6 space-y-2.5\">
-                  {p.highlights.map((h) => (
-                    <li key={h} className=\"flex items-start gap-2 text-sm text-neutral-200\">
-                      <Check className=\"mt-0.5 h-4 w-4 shrink-0 text-orange-500\" />
-                      {h}
+                <div className="mt-5 flex items-baseline gap-1.5">
+                  <span className="text-4xl font-extrabold text-white">
+                    ₹{p.price}
+                  </span>
+                  <span className="text-sm text-neutral-500">/ month</span>
+                </div>
+                <div className="mt-1 text-xs text-neutral-500">
+                  or buy as a one-time pack — never expires
+                </div>
+
+                <div className="mt-6 rounded-xl border border-white/10 bg-black/20 p-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-extrabold text-orange-400">
+                      {p.videos}
+                    </span>
+                    <span className="text-sm text-neutral-300">
+                      videos per month
+                    </span>
+                  </div>
+                  <div className="mt-1 text-xs text-neutral-500">
+                    AI videos, 10–12 sec, with synced audio
+                  </div>
+                </div>
+
+                <ul className="mt-6 space-y-2.5">
+                  {p.features.map((f) => (
+                    <li
+                      key={f}
+                      className="flex items-start gap-2 text-sm text-neutral-200"
+                    >
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
+                      {f}
                     </li>
                   ))}
                 </ul>
 
-                <div className=\"mt-8\">
-                  {p.name === \"Enterprise\" ? (
-                    <Link
-                      to=\"/contact\"
-                      data-testid={`${p.testid}-cta`}
-                      className=\"inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-white/10\"
-                    >
-                      Contact sales <ArrowRight className=\"h-4 w-4\" />
-                    </Link>
-                  ) : (
-                    <Link
-                      to=\"/signup\"
-                      data-testid={`${p.testid}-cta`}
-                      className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all ${
-                        p.popular
-                          ? \"bg-orange-500 text-black hover:bg-orange-400\"
-                          : \"border border-orange-500/40 bg-orange-500/10 text-orange-300 hover:bg-orange-500/20\"
-                      }`}
-                    >
-                      Get {p.credits.toLocaleString()} credits <ArrowRight className=\"h-4 w-4\" />
-                    </Link>
-                  )}
+                <div className="mt-8">
+                  <Link
+                    to="/signup"
+                    data-testid={`${p.testid}-cta`}
+                    className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-all ${
+                      p.popular
+                        ? "bg-orange-500 text-black hover:bg-orange-400"
+                        : "border border-orange-500/40 bg-orange-500/10 text-orange-300 hover:bg-orange-500/20"
+                    }`}
+                  >
+                    {p.cta} <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </div>
-              </div>
-            ))}
-          </div>
+              </TiltCard>
+            </Reveal>
+          ))}
+        </div>
 
-          <div className=\"mt-10 flex items-center justify-center gap-2 rounded-2xl border border-orange-500/20 bg-orange-500/[0.04] px-5 py-4 text-sm text-orange-100\">
-            <Info className=\"h-4 w-4 shrink-0 text-orange-400\" />
+        {/* Trial pack */}
+        <Reveal delay={240}>
+          <TiltCard
+            maxTilt={4}
+            className="glow-surface mt-6 flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-7 py-6 text-center md:flex-row md:justify-between md:text-left"
+          >
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-widest text-neutral-300">
+                Try it first
+              </h3>
+              <p className="mt-1 text-base font-semibold text-white">
+                Trial pack — see your first video before you commit
+              </p>
+              <p className="mt-1 text-sm text-neutral-400">
+                A small one-time pack to test the workflow: a handful of
+                videos plus text and image generation, no subscription.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-center gap-3">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-extrabold text-white">₹499</span>
+                <span className="text-xs text-neutral-500">
+                  one-time · no auto-renew
+                </span>
+              </div>
+              <Link
+                to="/signup"
+                data-testid="pack-trial-cta"
+                className="inline-flex items-center gap-2 rounded-full border border-orange-500/40 bg-orange-500/10 px-6 py-2.5 text-sm font-semibold text-orange-300 transition-all hover:bg-orange-500/20"
+              >
+                Try for ₹499 <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </TiltCard>
+        </Reveal>
+
+        <Reveal delay={280}>
+          <div className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-orange-500/20 bg-orange-500/[0.04] px-5 py-4 text-sm text-orange-100">
+            <Info className="h-4 w-4 shrink-0 text-orange-400" />
             <span>
-              <strong className=\"text-white\">No recurring payments.</strong> You&apos;re never
-              charged again unless you top up. Credits roll over indefinitely.
+              <strong className="text-white">No recurring surprises.</strong>{" "}
+              One-time packs never expire, and monthly plans only bill on
+              the cycle you choose.
             </span>
           </div>
-        </section>
-      ) : (
-        <section className=\"mx-auto max-w-4xl px-5 pb-16\">
-          <div className=\"overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]\">
-            <table className=\"w-full text-sm\">
-              <thead className=\"bg-white/[0.04]\">
-                <tr>
-                  <th className=\"p-4 text-left font-mono text-[11px] uppercase tracking-widest text-neutral-400\">
-                    Action
-                  </th>
-                  <th className=\"p-4 text-right font-mono text-[11px] uppercase tracking-widest text-neutral-400\">
-                    Credits
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {USAGE_TABLE.map((row, i) => (
-                  <tr key={row.action} className={i % 2 ? \"bg-white/[0.02]\" : \"\"}>
-                    <td className=\"p-4 text-neutral-200\">{row.action}</td>
-                    <td className=\"p-4 text-right font-mono text-orange-400\">{row.credits}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className=\"mt-4 text-center text-xs text-neutral-500\">
-            Only charged when a render completes successfully. Retries are free.
-          </p>
-        </section>
-      )}
-
-      {/* Why usage-based */}
-      <section className=\"mx-auto max-w-6xl px-5 py-12\">
-        <div className=\"grid gap-5 md:grid-cols-3\">
-          {[
-            { icon: DollarSign, title: \"No subscriptions\", desc: \"You pay once for credits. There's no auto-renewal, no surprise invoice.\" },
-            { icon: Save, title: \"Save 💾 and Grow\", desc: \"Credits never expire. Buy the pack that fits — use them today or next year.\" },
-            { icon: Zap, title: \"One balance, six studios\", desc: \"The same credits work across Content, Image, Video, Blog, Tracker & Platform.\" },
-          ].map((c) => (
-            <div key={c.title} className=\"rounded-2xl border border-white/10 bg-white/[0.03] p-6\">
-              <span className=\"grid h-10 w-10 place-items-center rounded-lg bg-orange-500/10 text-orange-500\">
-                <c.icon className=\"h-5 w-5\" />
-              </span>
-              <h3 className=\"mt-4 text-base font-semibold text-white\">{c.title}</h3>
-              <p className=\"mt-2 text-sm leading-relaxed text-neutral-400\">{c.desc}</p>
-            </div>
-          ))}
-        </div>
+        </Reveal>
       </section>
 
-      {/* Compare */}
-      <section className=\"mx-auto max-w-3xl px-5 pb-16\">
-        <h2 className=\"text-center text-2xl font-bold text-white md:text-3xl\">
-          Usage-based vs subscription
-        </h2>
-        <div className=\"mt-8 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]\">
-          {COMPARE.map((c, i) => (
-            <div
-              key={c.label}
-              className={`flex items-center justify-between px-5 py-4 text-sm ${
-                i !== COMPARE.length - 1 ? \"border-b border-white/5\" : \"\"
-              }`}
-            >
-              <span className=\"text-neutral-200\">{c.label}</span>
-              {c.included ? (
-                <span className=\"inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-emerald-400\">
-                  <Check className=\"h-4 w-4\" /> CreativeOS
-                </span>
-              ) : (
-                <span className=\"inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-rose-400\">
-                  <X className=\"h-4 w-4\" /> Never
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
+      {/* FAQ */}
+      <section className="mx-auto max-w-3xl px-5 pb-16">
+        <Reveal className="text-center">
+          <span className="font-mono text-xs uppercase tracking-widest text-orange-400">
+            Questions
+          </span>
+          <h2 className="mx-auto mt-3 text-2xl font-bold text-white md:text-3xl">
+            Before you ask
+          </h2>
+          <p className="mt-2 text-sm text-neutral-400">Common questions</p>
+        </Reveal>
+
+        <Reveal delay={100}>
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] px-6">
+            {FAQ.map((item, i) => (
+              <FaqItem key={item.q} item={item} index={i} />
+            ))}
+          </div>
+        </Reveal>
       </section>
 
       {/* CTA */}
-      <section className=\"mx-auto max-w-5xl px-5 pb-24\">
-        <div className=\"relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-orange-500/[0.15] to-transparent px-8 py-14 text-center\">
-          <TrendingUp className=\"mx-auto h-10 w-10 text-orange-500\" />
-          <h3 className=\"mt-4 text-3xl font-bold text-white md:text-4xl\">
-            Ready to Save 💾 and Grow?
-          </h3>
-          <p className=\"mx-auto mt-3 max-w-lg text-neutral-300\">
-            Start with 100 free credits. Explore every studio. Only top up if you love it.
-          </p>
-          <div className=\"mt-8 flex flex-wrap items-center justify-center gap-3\">
-            <Link
-              to=\"/signup\"
-              data-testid=\"pricing-cta-start\"
-              className=\"inline-flex items-center gap-2 rounded-full bg-orange-500 px-7 py-3.5 text-sm font-semibold text-black transition-all hover:bg-orange-400\"
-            >
-              <Sparkles className=\"h-4 w-4\" />
-              Claim free credits
-            </Link>
-            <Link
-              to=\"/faq\"
-              data-testid=\"pricing-cta-faq\"
-              className=\"inline-flex items-center rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/10\"
-            >
-              Read the FAQ
-            </Link>
-          </div>
-        </div>
+      <section className="mx-auto max-w-5xl px-5 pb-24">
+        <Reveal>
+          <TiltCard
+            maxTilt={3}
+            className="glow-surface relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-orange-500/[0.15] to-transparent px-8 py-14 text-center"
+          >
+            <Sparkles className="mx-auto h-10 w-10 text-orange-500" />
+            <h3 className="mt-4 text-3xl font-bold text-white md:text-4xl">
+              See your first video before you commit
+            </h3>
+            <p className="mx-auto mt-3 max-w-lg text-neutral-300">
+              Start with the ₹499 trial pack, or jump straight into Pro or
+              Studio — text and image generation are bundled in either way.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                to="/signup"
+                data-testid="pricing-cta-start"
+                className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-7 py-3.5 text-sm font-semibold text-black transition-all hover:bg-orange-400"
+              >
+                <Sparkles className="h-4 w-4" />
+                Try for ₹499
+              </Link>
+              <Link
+                to="/faq"
+                data-testid="pricing-cta-faq"
+                className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/10"
+              >
+                Read the FAQ
+              </Link>
+            </div>
+          </TiltCard>
+        </Reveal>
+
+        <p className="mx-auto mt-8 max-w-2xl text-center text-xs leading-relaxed text-neutral-600">
+          Video generation features are offered subject to underlying
+          provider availability and may be updated as the underlying
+          technology changes. Pricing shown in INR, billed in your local
+          currency where applicable.
+          <br className="hidden md:block" /> Growth OS · Creative Studio — a
+          Digverve Solutions product
+        </p>
       </section>
     </PageShell>
   );
 }
-"

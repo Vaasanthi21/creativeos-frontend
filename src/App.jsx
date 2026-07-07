@@ -20,10 +20,14 @@ import ImageStudio from './pages/ImageStudio';
 import VideoStudio from './pages/VideoStudio';
 import PublishingAccounts from './components/publishing/PublishingAccounts';
 import WalletPage from "@/pages/wallet";
-import ContactPage from "@/pages/contact";
+import ContactPage from "@/pages/ContactPage";
 import AdminRoute from "@/components/AdminRoute";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AmbassadorPortal from "./components/programs/AmbassadorPortal";
+import PricingPage from './pages/PricingPage';
+import BlogPage from './pages/BlogPage';
+import FAQPage from './pages/FAQPage';
+import BlogPostPage from "./pages/BlogPostPage"; // adjust the path to wherever you save it
 import SuperAdminLogin from './pages/superadmin/SuperAdminLogin';
 import SuperAdminLayout from './components/superadmin/SuperAdminLayout';
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard';
@@ -63,6 +67,12 @@ const AuthenticatedApp = () => {
     return (
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
+        <Route path="/faq" element={<FAQPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route element={<SuperAdminLayout />}>
@@ -102,7 +112,6 @@ const AuthenticatedApp = () => {
         <Route path="/publishing" element={<PublishingAccounts />} />
         <Route path="/ambassador" element={<AmbassadorPortal />} />
         <Route path="/wallet" element={<WalletPage />} />
-        <Route path="/contact" element={<ContactPage />} />
         <Route path="/brand-setup" element={<BrandSetup />} />
         <Route path="/blog-studio" element={<BlogStudio />} />
       </Route>

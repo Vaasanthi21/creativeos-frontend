@@ -85,6 +85,9 @@ export default function HamburgerMenu({ open, onClose }) {
                   : "border-transparent text-neutral-300 hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
               }`
 
+            // "Studios" stays a plain anchor: it scrolls to a section on the
+            // homepage (#platform), not a standalone route, so it can't use
+            // NavLink's active-route matching.
             if (isHashLink) {
               return (
                 <a
@@ -100,6 +103,8 @@ export default function HamburgerMenu({ open, onClose }) {
               )
             }
 
+            // Everything else is a real page — Home, Pricing, Blog, FAQ, Contact —
+            // so NavLink handles both navigation and the active-page highlight.
             return (
               <NavLink
                 key={item.label}
