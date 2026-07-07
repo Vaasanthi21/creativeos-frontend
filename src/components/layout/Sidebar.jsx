@@ -19,18 +19,21 @@ import {
   LifeBuoy,
   Video,
   Wallet,
-  X, // 🚀 Added close icon token
+  X,
+  BookOpen,
 } from "lucide-react";
 import { getPersonaById } from "@/lib/personas";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/AuthContext";
 
 const navItems = [
-  { icon: Sparkles, label: "Generate", path: "/" },
-  { icon: Building2, label: "Company Personas", path: "/personas" },
-  { icon: Clock, label: "History", path: "/history" },
+  { icon: Sparkles, label: "Content Studio", path: "/generate" },
+  { icon: Building2, label: "Brand Setup", path: "/brand-setup" },
+  { icon: BookOpen, label: "Blog Studio", path: "/blog-studio" },
+  { icon: Clock, label: "Content History", path: "/history" },
   { icon: Camera, label: "Image Studio", path: "/image-studio" },
   { icon: Video, label: "Video Studio", path: "/video-studio" },
+  { icon: Linkedin, label: "LinkedIn Tracker", path: "/linkedinads" },
   { icon: Wallet, label: "Wallet", path: "/wallet" },
   { icon: Settings, label: "Settings", path: "/settings" },
   { icon: LifeBuoy, label: "Support Center", path: "/support" },
@@ -47,6 +50,7 @@ export default function Sidebar({
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const persona = getPersonaById(activePersona);
+
 
   const platformIcons = {
     linkedin: Linkedin,

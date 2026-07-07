@@ -22,12 +22,9 @@ import {
   ArrowRightLeft,
   ArrowRight,
   Newspaper,
-  Upload,
-  Linkedin,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
-import LinkedInAds from "./LinkedInAds";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -45,8 +42,8 @@ export default function Settings() {
 
   const generationsThisMonth = userMetrics?.generationsThisMonth ?? 0;
   const planName = userMetrics?.planName ?? 'Free';
-  const companyPersonaCount = userMetrics?.companyPersonaCount ?? 0;
-  const companyPersonaLimit = userMetrics?.companyPersonaLimit ?? 0;
+  const companyCount = userMetrics?.companyCount ?? 0;
+  const companyLimit = userMetrics?.companyLimit ?? 0;
   const activeCompanyName = user?.company || user?.full_name || 'Current Company';
   const activeCompanyInitial = activeCompanyName.charAt(0).toUpperCase();
   const isDarkTheme = theme !== 'light';
@@ -190,14 +187,15 @@ export default function Settings() {
             </span>
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <p className="text-sm text-foreground">Company personas</p>
+            <p className="text-sm text-foreground">Company profiles</p>
             <span className="text-sm font-medium text-foreground">
-              {metricsLoading ? '—' : `${companyPersonaCount}/${companyPersonaLimit}`}
+              {metricsLoading ? '—' : `${companyCount}/${companyLimit}`}
             </span>
           </div>
         </CardContent>
       </Card>
 
+      {/* Personas List */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-display flex items-center gap-2">
@@ -226,47 +224,6 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* Brand Settings */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-display flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-primary" />
-            Brand Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <p className="text-sm text-foreground">Brand Logo</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Upload a transparent PNG logo for your brand
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {userMetrics?.brandLogoUrl ? (
-              <img
-                src={userMetrics.brandLogoUrl}
-                alt="Brand logo"
-                className="h-12 w-12 rounded-lg border border-border/70 bg-background object-cover"
-              />
-            ) : (
-              <div className="h-12 w-12 rounded-lg border border-border/70 bg-muted/30 flex items-center justify-center text-muted-foreground">
-                <Upload className="h-5 w-5" />
-              </div>
-            )}
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => navigate("/brand-logo-upload")}
-            >
-              <Upload className="w-3.5 h-3.5" />
-              Upload Logo
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Publishing */}
       <Card>
@@ -290,33 +247,6 @@ export default function Settings() {
           >
             <Newspaper className="w-4 h-4" />
             Go to Publishing
-            <ArrowRight className="w-4 h-4 ml-auto" />
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Linkedin Campaign Tracker */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-display flex items-center gap-2">
-            <Linkedin className="w-4 h-4 text-[#0077B5]" />
-            Linkedin Campaign Tracker
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <p className="text-sm text-foreground">Track LinkedIn Ad Campaigns</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Monitor impressions, clicks, spend, leads, CTR, and CPL from your connected LinkedIn Ads account
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            className="w-full gap-2"
-            onClick={() => navigate("/linkedinads")}
-          >
-            <Linkedin className="w-4 h-4 text-[#0077B5]" />
-            Go to Campaign Tracker
             <ArrowRight className="w-4 h-4 ml-auto" />
           </Button>
         </CardContent>

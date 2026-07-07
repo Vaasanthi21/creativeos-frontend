@@ -1,11 +1,14 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useGenerationJobs } from '@/contexts/GenerationJobsContext';
+import { buildCompanyPersonaPayload } from '@/utils/personaPayload';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Sparkles, Download, RefreshCw, Video, Play, Pause, Volume2 } from 'lucide-react';
+import { Loader2, Sparkles, Download, Share2, RefreshCw, Video, Play, Pause, Volume2, Film, Sliders, Eye, Wand2, Maximize2, Layers, Building2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { apiClient, tokenStorage } from '@/api/apiClient';
 import { addHistoryEntry } from '@/services/aiService';
@@ -19,17 +22,42 @@ const PLATFORMS = [
 ];
 
 const VIDEO_STYLES = [
-  { value: 'cinematic', label: 'Cinematic' },
-  { value: 'documentary', label: 'Documentary' },
-  { value: 'promotional', label: 'Promotional' },
-  { value: 'testimonial', label: 'Testimonial' },
-  { value: 'tutorial', label: 'Tutorial' },
-  { value: 'animated', label: 'Animated' },
-  { value: 'live-action', label: 'Live Action' },
-  { value: 'minimalist', label: 'Minimalist' },
+  { value: 'cinematic', label: 'Cinematic Hyper-Real' },
+  { value: 'documentary', label: 'Documentary Realism' },
+  { value: 'promotional', label: 'High-Impact Promotional' },
+  { value: 'testimonial', label: 'Authentic Testimonial' },
+  { value: 'tutorial', label: 'Crisp E-Learning Tutorial' },
+  { value: 'animated', label: '3D Stylized Animated' },
+  { value: 'live-action', label: 'Natural Live Action' },
+  { value: 'minimalist', label: 'Clean Editorial Minimalist' },
+];
+
+// Note: 1:1 (Square) intentionally excluded - Azure Sora's video API only
+// supports '720x1280', '1280x720', '1024x1792', '1792x1024' (all rectangular,
+// no square option exists). Requesting a square size returns a hard error
+// from Azure, so we don't offer it in the UI at all.
+const ASPECT_RATIOS = [
+  { value: '16:9', label: 'Landscape (16:9)', description: 'Standard widescreen' },
+  { value: '9:16', label: 'Portrait (9:16)', description: 'Optimized for Reels & Shorts' }
+];
+
+const LOGO_PLACEMENTS = [
+  // NOTE: value must be 'persona-default' (hyphen) to match the backend's
+  // exact string check (logoPlacement === 'persona-default') in index.js.
+  // Using underscore here previously caused the persona's actual saved
+  // placement to be silently ignored.
+  { value: 'persona-default', label: 'Persona Default' },
+  { value: 'none', label: 'No logo' },
+  { value: 'top_left', label: 'Top Left' },
+  { value: 'top_right', label: 'Top Right' },
+  { value: 'bottom_left', label: 'Bottom Left' },
+  { value: 'bottom_right', label: 'Bottom Right' },
+  { value: 'center', label: 'Centralized overlay' },
 ];
 
 const ESTIMATED_TOTAL_MS = 600000; // 10 minutes total video processing allocation
+
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/api\/?$/, '');
 
 const formatRemainingTime = (milliseconds) => {
   const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
@@ -39,14 +67,48 @@ const formatRemainingTime = (milliseconds) => {
   return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`;
 };
 
+// Calls the backend to create a masked, non-S3 share link for the given
+// asset URL. Same endpoint the Image Studio uses - hides the bucket host
+// from social crawlers by proxying through /share/:id and /api/public-asset/:id.
+const createShareLink = async (assetUrl, caption, title) => {
+  const token = tokenStorage.getUserToken();
+  const response = await fetch(`${API_ORIGIN}/api/create-share-link`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ assetUrl, caption, title }),
+  });
+  if (!response.ok) throw new Error('Failed to create share link');
+  const data = await response.json();
+  return data.shareUrl;
+};
+
+// Builds platform share-intent URLs. These are plain links (no Web Share API),
+// so they work over HTTP and on desktop, unlike navigator.share.
+const getShareLinks = (videoUrl, caption) => {
+  const encodedUrl = encodeURIComponent(videoUrl);
+  const encodedText = encodeURIComponent(caption);
+  return {
+    whatsapp: `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+  };
+};
+
 export default function VideoStudio() {
-  const [prompt, setPrompt] = useState('');
+  const location = useLocation();
+  const [prompt, setPrompt] = useState(location.state?.prompt || '');
   const [platform, setPlatform] = useState('instagram');
   const [style, setStyle] = useState('cinematic');
-  const [generatedVideo, setGeneratedVideo] = useState(null);
-  const [isPolling, setIsPolling] = useState(false);
-  const [pollingStatus, setPollingStatus] = useState(null);
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [aspectRatio, setAspectRatio] = useState('9:16'); 
+  const [logoPlacement, setLogoPlacement] = useState('persona-default');
+  const [selectedPersona, setSelectedPersona] = useState(''); 
+  const [showSharePopover, setShowSharePopover] = useState(false);
+  const [shareUrl, setShareUrl] = useState(null);
+  const [isCreatingShareLink, setIsCreatingShareLink] = useState(false);
   
   const [pan, setPan] = useState(0);
   const [zoom, setZoom] = useState(1);
@@ -59,20 +121,62 @@ export default function VideoStudio() {
   const [volume, setVolume] = useState(1);
   const videoRef = useRef(null);
 
-  // Time tracker state variables
-  const [stageStartedAt, setStageStartedAt] = useState(null);
+  // Job state (isPolling, pollingStatus, stageStartedAt, generatedVideo, errorMessage)
+  // now lives in GenerationJobsContext instead of local useState, so it survives
+  // navigating away from this page and back, same pattern as ImageStudio.jsx.
+  const { getJob, setJob, clearJob } = useGenerationJobs();
+  const videoJob = getJob('video');
+
+  const generatedVideo = videoJob?.generatedVideo || null;
+  const isPolling = videoJob?.isPolling || false;
+  const pollingStatus = videoJob?.pollingStatus || null;
+  const stageStartedAt = videoJob?.stageStartedAt || null;
+  const errorMessage = videoJob?.errorMessage || null;
   const [stageElapsedMs, setStageElapsedMs] = useState(0);
+
+  const hasResumedRef = useRef(false);
+
+  const { data: personasList, isLoading: loadingPersonas } = useQuery({
+    queryKey: ['companyPersonasOverviewList'],
+    queryFn: async () => {
+      const token = tokenStorage.getUserToken();
+      if (!token) return [];
+      const response = await apiClient.get('/company-personas', token);
+
+      if (Array.isArray(response)) return response;
+      if (Array.isArray(response?.items)) return response.items;
+      if (Array.isArray(response?.data)) return response.data;
+      if (Array.isArray(response?.personas)) return response.personas;
+      if (Array.isArray(response?.data?.personas)) return response.data.personas;
+
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    if (personasList?.length > 0 && !selectedPersona) {
+      const defaultActive = personasList.find(p => p.isActive || p.active) || personasList[0];
+      setSelectedPersona(defaultActive.id || defaultActive._id);
+    }
+  }, [personasList, selectedPersona]);
+
+  // Resolve the selected persona ID into its full object. The backend's
+  // /api/generate-video route only reads req.body.companyPersona (a full
+  // object with logoUrl already on it) - it does not look up persona_id
+  // server-side - so we must resolve it to the full object here before
+  // sending, rather than sending the bare ID alone.
+  const selectedPersonaObject = personasList?.find(
+    (p) => (p.id || p._id) === selectedPersona
+  ) || null;
 
   useEffect(() => {
     if (!isPolling || !stageStartedAt) {
       setStageElapsedMs(0);
       return undefined;
     }
-
     const updateElapsed = () => {
       setStageElapsedMs(Date.now() - stageStartedAt);
     };
-
     updateElapsed();
     const intervalId = window.setInterval(updateElapsed, 1000);
     return () => window.clearInterval(intervalId);
@@ -84,19 +188,98 @@ export default function VideoStudio() {
 
   const displayRemainingMs = Math.max(0, ESTIMATED_TOTAL_MS - stageElapsedMs);
 
+  // Shared polling logic, used both for a freshly started generation and for
+  // resuming a job that was already in flight when the user navigates back.
+  const attachPoller = useCallback((jobId) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const token = tokenStorage.getUserToken();
+        const statusResponse = await apiClient.get(
+          `/video-status/${encodeURIComponent(jobId)}`,
+          token
+        );
+
+        const statusCode = statusResponse.status;
+        setJob('video', { pollingStatus: statusCode });
+
+        if (statusCode === 'completed') {
+          clearInterval(pollInterval);
+
+          if (statusResponse.video_url) {
+            const videoEntry = {
+              topic: statusResponse.prompt || prompt,
+              content_type: "Video",
+              platform: platform,
+              variants: [{
+                content: statusResponse.prompt || prompt,
+                video_url: statusResponse.video_url,
+                title: platform + " Video"
+              }],
+              status: "completed"
+            };
+            addHistoryEntry(videoEntry).catch(err => console.error("Failed to save video to history:", err));
+
+            setJob('video', {
+              isPolling: false,
+              stageStartedAt: null,
+              pollingStatus: 'completed',
+              generatedVideo: statusResponse.video_url,
+              errorMessage: null,
+            });
+          } else {
+            setJob('video', { isPolling: false, stageStartedAt: null, pollingStatus: 'failed' });
+          }
+        } else if (statusCode === 'failed') {
+          clearInterval(pollInterval);
+          setJob('video', {
+            isPolling: false,
+            stageStartedAt: null,
+            pollingStatus: 'failed',
+            errorMessage: statusResponse.error || 'Video generation failed',
+          });
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }, 3000);
+  }, [prompt, platform, setJob]);
+
+  // On mount: if a job was already in flight when the user navigated away, resume
+  // polling it here instead of starting fresh. Runs once per mount.
+  useEffect(() => {
+    if (hasResumedRef.current) return;
+    hasResumedRef.current = true;
+
+    const existing = videoJob;
+    if (existing?.jobId && existing.isPolling && existing.pollingStatus !== 'completed' && existing.pollingStatus !== 'failed') {
+      attachPoller(existing.jobId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const generateMutation = useMutation({
     mutationFn: async (params) => {
-      setPollingStatus('preparing');
+      setJob('video', { pollingStatus: 'preparing' });
       const token = tokenStorage.getUserToken();
       if (!token) {
         throw new Error('User token not available');
       }
 
-      // ✂️ aspect ratio key removed from post data payload
+      const activeStyleLabel = VIDEO_STYLES.find(s => s.value === params.style)?.label || params.style;
+      const finalBuiltPrompt = `${params.prompt}, shot in a distinct ${activeStyleLabel} style environment`;
+
+      // Resolve persona ID to the full persona object the backend expects,
+      // instead of sending a bare persona_id (which the backend ignores).
+      const companyPersonaPayload = buildCompanyPersonaPayload(params.personaObject);
+
       const response = await apiClient.post('/generate-video', {
-        topic: params.prompt,
+        topic: finalBuiltPrompt,
         platform: params.platform,
         contentType: params.style,
+        aspect_ratio: params.aspectRatio,     // backend strict schema expects snake_case
+        companyPersona: companyPersonaPayload,
+        logoPlacement: params.logoPlacement,
+        logo_placement: params.logoPlacement, 
         cameraPan: params.pan,
         cameraZoom: params.zoom,
         motionStrength: params.motionStrength,
@@ -106,75 +289,31 @@ export default function VideoStudio() {
       return response;
     },
     onSuccess: (response) => {
-      console.log('Video generation started:', response);
       const jobId = response.video_id || response.jobId || response.id || response.job_id;
 
       if (!jobId) {
-        console.error('No job ID returned', response);
-        setPollingStatus('failed');
-        setIsPolling(false);
-        setErrorMessage('No job ID returned from server');
+        setJob('video', { pollingStatus: 'failed', isPolling: false, errorMessage: 'No job ID returned from server' });
         return;
       }
 
-      setIsPolling(true);
-      setStageStartedAt(Date.now());
-      setPollingStatus('queued');
-      setErrorMessage(null);
+      setJob('video', {
+        jobId,
+        isPolling: true,
+        stageStartedAt: Date.now(),
+        pollingStatus: 'queued',
+        errorMessage: null,
+        generatedVideo: null,
+      });
 
-      const pollInterval = setInterval(async () => {
-        try {
-          const token = tokenStorage.getUserToken();
-          const statusResponse = await apiClient.get(
-            `/video-status/${encodeURIComponent(jobId)}`,
-            token
-          );
-
-          console.log('Video status update:', statusResponse);
-          const statusCode = statusResponse.status;
-          setPollingStatus(statusCode);
-
-          if (statusCode === 'completed') {
-            clearInterval(pollInterval);
-            setIsPolling(false);
-            setStageStartedAt(null);
-            
-            if (statusResponse.video_url) {
-              setGeneratedVideo(statusResponse.video_url);
-              
-              const videoEntry = {
-                topic: statusResponse.prompt || prompt,
-                content_type: "Video",
-                platform: platform,
-                variants: [{
-                  content: statusResponse.prompt || prompt,
-                  video_url: statusResponse.video_url,
-                  title: platform + " Video"
-                }],
-                status: "completed"
-              };
-              addHistoryEntry(videoEntry).catch(err => console.error("Failed to save video to history:", err));
-              setPollingStatus('completed');
-              setErrorMessage(null);
-            }
-          } else if (statusCode === 'failed') {
-            clearInterval(pollInterval);
-            setIsPolling(false);
-            setStageStartedAt(null);
-            setPollingStatus('failed');
-            setErrorMessage(statusResponse.error || 'Video generation failed');
-          }
-        } catch (error) {
-          console.error('Polling error:', error);
-        }
-      }, 3000);
+      attachPoller(jobId);
     },
     onError: (error) => {
-      console.error('Video generation failed:', error);
-      setIsPolling(false);
-      setStageStartedAt(null);
-      setPollingStatus('failed');
-      setErrorMessage(error.message || 'Video generation failed');
+      setJob('video', {
+        isPolling: false,
+        stageStartedAt: null,
+        pollingStatus: 'failed',
+        errorMessage: error.message || 'Video generation failed',
+      });
     },
   });
 
@@ -183,11 +322,14 @@ export default function VideoStudio() {
       prompt: prompt.trim(),
       platform: platform,
       style: style,
+      aspectRatio: aspectRatio, 
+      personaObject: selectedPersonaObject, 
+      logoPlacement: logoPlacement, 
       pan: pan,
       zoom: zoom,
       motionStrength: motionStrength
     });
-  }, [prompt, platform, style, pan, zoom, motionStrength, generateMutation]);
+  }, [prompt, platform, style, aspectRatio, selectedPersonaObject, logoPlacement, pan, zoom, motionStrength, generateMutation]);
 
   const handleAnimate = () => {
     if (!prompt.trim()) {
@@ -202,44 +344,110 @@ export default function VideoStudio() {
       alert('Please enter a prompt');
       return;
     }
-    setErrorMessage(null);
+    setJob('video', { errorMessage: null });
     setShowConfirmDialog(true);
   };
 
   const handleDownload = async () => {
     if (!generatedVideo) return;
     try {
-      const response = await fetch(generatedVideo, { mode: 'cors' });
-      if (!response.ok) throw new Error("Network request rejected by file provider");
+      const token = tokenStorage.getUserToken();
+      const filename = `creativeos-video-${Date.now()}.mp4`;
+      const downloadUrl = `${API_ORIGIN}/api/download-asset?url=${encodeURIComponent(generatedVideo)}&filename=${encodeURIComponent(filename)}`;
+
+      const response = await fetch(downloadUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'X-Auth-Token': token,
+        },
+      });
+      if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `creativeos-video-${Date.now()}.mp4`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.warn('CORS blob compilation restricted, triggering proxy window fallback:', error);
-      const a = document.createElement('a');
-      a.href = generatedVideo;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.setAttribute('download', `creativeos-video-${Date.now()}.mp4`);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      console.error('Download failed:', error);
+      // Fallback: open the asset in a new tab so the user can save it manually
+      window.open(generatedVideo, '_blank', 'noopener,noreferrer');
     }
   };
 
+  const handleCopyLink = async () => {
+    if (!shareUrl) return;
+    let success = false;
+
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        success = true;
+      } catch (err) {
+        console.warn('Clipboard API failed, trying fallback:', err);
+      }
+    }
+
+    if (!success) {
+      // navigator.clipboard is unavailable on plain HTTP origins (non-secure context).
+      // Fall back to the legacy execCommand approach via a hidden textarea.
+      const textarea = document.createElement('textarea');
+      textarea.value = shareUrl;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        success = document.execCommand('copy');
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    alert(success ? 'Link copied to clipboard!' : 'Could not copy automatically. Long-press or select the link text to copy it manually.');
+    setShowSharePopover(false);
+  };
+
+  // Lazily creates the masked share link (via /api/create-share-link) the
+  // first time the popover is opened for a given generated video, then
+  // reuses it for subsequent opens/clicks. Mirrors ImageStudio.jsx.
+  const handleOpenSharePopover = async () => {
+    if (showSharePopover) {
+      setShowSharePopover(false);
+      return;
+    }
+    if (!generatedVideo) return;
+
+    if (!shareUrl) {
+      setIsCreatingShareLink(true);
+      try {
+        const caption = `Check out this video I made: ${prompt}`;
+        const title = `${platform.toUpperCase()} Studio Video (${aspectRatio})`;
+        const url = await createShareLink(generatedVideo, caption, title);
+        setShareUrl(url);
+      } catch (err) {
+        console.error('Failed to create share link:', err);
+        alert('Could not create a shareable link. Please try again.');
+        setIsCreatingShareLink(false);
+        return;
+      }
+      setIsCreatingShareLink(false);
+    }
+    setShowSharePopover(true);
+  };
+
   const handleReset = () => {
-    setGeneratedVideo(null);
+    clearJob('video');
     setPrompt('');
-    setPollingStatus(null);
     setIsPlaying(false);
-    setErrorMessage(null);
-    setStageStartedAt(null);
+    setShowSharePopover(false);
+    setShareUrl(null);
   };
 
   const togglePlay = () => {
@@ -260,38 +468,68 @@ export default function VideoStudio() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Header */}
+        {/* Header Block */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             <Video className="w-8 h-8 text-primary" />
-            Video Studio
+            Video Studio Pro
           </h1>
           <p className="text-muted-foreground mt-2">
-            Create stunning AI-powered videos with camera controls
+            Advanced motion picture engine designed for granular camera manipulation and multi-platform scenario generation.
           </p>
         </div>
 
+        {/* Feature Differentiation Explainer Banner */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 bg-muted/30 border border-border/70 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <Sliders className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-foreground">Kinetic Control Panels</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Manipulate complex physical attributes like camera panning matrices, focal zoom speeds, and animation motion weight parameters.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Film className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-foreground">Target Platform Sizing</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Bake custom timeline containers formatted perfectly for distribution rules across primary global video distribution networks.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Wand2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-foreground">Standalone Render Core</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">High-end computing blocks optimized specifically for generating autonomous timeline footage clips without needing post context fields.</p>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Panel */}
+          {/* Left Panel - Video Configuration */}
           <Card>
-            <CardHeader><CardTitle>Video Settings</CardTitle></CardHeader>
-            <CardContent className="space-y-6">
+            <CardHeader>
+              <CardTitle className="text-md flex items-center gap-2">
+                <Wand2 className="w-4 h-4 text-primary" />
+                Studio Parameters
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="prompt">Prompt</Label>
+                <Label htmlFor="prompt">Prompt Brief Scenario</Label>
                 <Textarea
                   id="prompt"
-                  placeholder="Describe the video you want to create..."
+                  placeholder="Describe your scene trajectory, subjects, and lighting environment details..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[140px]"
+                  className="min-h-[140px] resize-none"
                   disabled={generateMutation.isPending || isPolling}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="platform">Platform</Label>
+                <Label htmlFor="platform">Target Platform Layout</Label>
                 <Select value={platform} onValueChange={setPlatform} disabled={generateMutation.isPending || isPolling}>
-                  <SelectTrigger><SelectValue placeholder="Select platform" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select network shell" /></SelectTrigger>
                   <SelectContent>
                     {PLATFORMS.map((p) => (<SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>))}
                   </SelectContent>
@@ -299,72 +537,133 @@ export default function VideoStudio() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="style">Style</Label>
+                <Label htmlFor="aspectRatio" className="flex items-center gap-1.5">
+                  <Maximize2 className="w-3.5 h-3.5 text-muted-foreground" /> Video Aspect Ratio
+                </Label>
+                <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={generateMutation.isPending || isPolling}>
+                  <SelectTrigger id="aspectRatio"><SelectValue placeholder="Select dimensions" /></SelectTrigger>
+                  <SelectContent>
+                    {ASPECT_RATIOS.map((ar) => (
+                      <SelectItem key={ar.value} value={ar.value}>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{ar.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="companyPersona" className="flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-muted-foreground" /> Active Brand Persona Profile
+                </Label>
+                <Select value={selectedPersona} onValueChange={setSelectedPersona} disabled={generateMutation.isPending || isPolling || loadingPersonas}>
+                  <SelectTrigger id="companyPersona">
+                    <SelectValue placeholder={loadingPersonas ? "Syncing brand elements..." : "Select targeted profile context"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {personasList?.map((persona) => (
+                      <SelectItem key={persona.id || persona._id} value={persona.id || persona._id}>
+                        <div className="flex items-center gap-2">
+                          {persona.logoUrl || persona.logo_url ? (
+                            <img src={persona.logoUrl || persona.logo_url} alt="" className="h-4 w-4 object-contain rounded" />
+                          ) : (
+                            <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          )}
+                          <span>{persona.name || persona.personaName || persona.persona_name || "Unnamed Persona"}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="logoPlacement" className="flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-muted-foreground" /> Watermark Overlay Placement
+                </Label>
+                <Select value={logoPlacement} onValueChange={setLogoPlacement} disabled={generateMutation.isPending || isPolling}>
+                  <SelectTrigger id="logoPlacement"><SelectValue placeholder="Select logo placement" /></SelectTrigger>
+                  <SelectContent>
+                    {LOGO_PLACEMENTS.map((lp) => (
+                      <SelectItem key={lp.value} value={lp.value}>{lp.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="style">Artistic Direction Style</Label>
                 <Select value={style} onValueChange={setStyle} disabled={generateMutation.isPending || isPolling}>
-                  <SelectTrigger><SelectValue placeholder="Select style" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select style matrix" /></SelectTrigger>
                   <SelectContent>
                     {VIDEO_STYLES.map((s) => (<SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <Button onClick={handleAnimate} disabled={!prompt.trim() || generateMutation.isPending || isPolling} className="w-full" variant="outline">
-                <Sparkles className="w-4 h-4 mr-2" /> Animate with Camera Control
-              </Button>
-
-              <Button 
-                onClick={handleGenerateClick} 
-                disabled={isButtonDisabled} 
-                className="w-full" 
-                size="lg"
-              >
-                {generateMutation.isPending || isPolling ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-                ) : (
-                  <><Video className="w-4 h-4 mr-2" /> Generate Video</>
-                )}
-              </Button>
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <Button onClick={handleAnimate} disabled={!prompt.trim() || generateMutation.isPending || isPolling} className="flex-1 gap-2" variant="outline">
+                  <Sliders className="w-4 h-4" /> Camera Controls ({pan !== 0 || zoom !== 1 || motionStrength !== 5 ? "Modified" : "Default"})
+                </Button>
+                
+                <Button 
+                  onClick={handleGenerateClick} 
+                  disabled={isButtonDisabled} 
+                  className="flex-1 gap-2" 
+                  size="lg"
+                >
+                  {generateMutation.isPending || isPolling ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Rendering...</>
+                  ) : (
+                    <><Sparkles className="w-4 h-4" /> Generate Video</>
+                  )}
+                </Button>
+              </div>
 
               {errorMessage && (
-                <div className="text-center p-3 bg-red-500/10 border border-red-500 rounded">
-                  <p className="text-sm text-red-500"> {errorMessage}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Please add credits to your account to generate videos
-                  </p>
+                <div className="text-center p-3 bg-red-500/10 border border-red-500 rounded-lg">
+                  <p className="text-sm text-red-500 font-semibold">{errorMessage}</p>
+                  {/credit|quota|insufficient|balance/i.test(errorMessage) && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Please add credits to your wallet dashboard to continue generating videos.
+                    </p>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Right Panel */}
-          <Card>
-            <CardHeader><CardTitle>Studio Output</CardTitle></CardHeader>
-            <CardContent>
+          {/* Right Panel - Studio Viewport Frame Container */}
+          <Card className="flex flex-col">
+            <CardHeader>
+              <CardTitle className="text-md flex items-center gap-2">
+                <Eye className="w-4 h-4 text-primary" />
+                Studio Viewport
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[440px] bg-muted/10 rounded-b-xl p-6">
               {isPolling || generateMutation.isPending ? (
-                <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-center min-h-[400px] gap-5">
+                <div className="w-full space-y-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
-                      <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5">
+                      <div className="rounded-full bg-primary/10 p-2 text-primary mt-0.5 relative">
                         <Loader2 className="h-5 w-5 animate-spin" />
+                        <span className="absolute inset-0 flex items-center justify-center animate-pulse text-[9px] font-bold">🎬</span>
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          Generating video
-                        </p>
+                        <p className="text-sm font-semibold text-foreground">Generating video</p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {pollingStatus === 'queued'
                             ? 'Queued in frame sequencer pipeline. Preparing simulation context...'
-                            : 'Azure/Sora cluster is generating high-fidelity scene intervals.'}
+                            : 'Video generation is asynchronous. The preview will update automatically when the provider finishes processing.'}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-semibold tracking-tight text-foreground">
-                        {displayProgressValue}%
-                      </p>
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                        Estimated progress
-                      </p>
+                      <p className="text-2xl font-bold text-primary tracking-tight">{displayProgressValue}%</p>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Estimated progress</p>
                     </div>
                   </div>
 
@@ -385,7 +684,7 @@ export default function VideoStudio() {
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 1</p>
                       <p className="mt-1 text-xs font-medium text-foreground">Prepare Prompt</p>
                     </div>
-                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
+                    <div className={`rounded-xl border px-3 py-3 ${pollingStatus === 'queued' || pollingStatus === 'processing' || isPolling ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-background/60'}`}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step 2</p>
                       <p className="mt-1 text-xs font-medium text-foreground">Generate Video</p>
                     </div>
@@ -396,32 +695,70 @@ export default function VideoStudio() {
                   </div>
                 </div>
               ) : generatedVideo ? (
-                <div className="space-y-4">
-                  <div className="relative rounded-lg overflow-hidden border bg-black">
+                <div className="w-full space-y-4">
+                  <div className="relative rounded-xl overflow-hidden border bg-black shadow-lg">
                     <video ref={videoRef} src={generatedVideo} controls className="w-full h-auto" style={{ minHeight: '300px', maxHeight: '500px' }} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent flex items-center gap-3">
+                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center gap-3 opacity-0 hover:opacity-100 transition-opacity duration-200">
                       <Button onClick={togglePlay} size="sm" variant="ghost" className="text-white hover:bg-white/20">
                         {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                       </Button>
                       <div className="flex items-center gap-2">
                         <Volume2 className="w-4 h-4 text-white" />
-                        <input type="range" min="0" max="1" step="0.1" value={volume} onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} className="w-20 h-1 bg-white/30 rounded-lg" />
+                        <input type="range" min="0" max="1" step="0.1" value={volume} onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} className="w-20 h-1 bg-white/30 rounded-lg accent-primary" />
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleDownload} className="flex-1"><Download className="w-4 h-4 mr-2" /> Download</Button>
-                    <Button onClick={handleReset} variant="outline" className="flex-1"><RefreshCw className="w-4 h-4 mr-2" /> New Video</Button>
+                  <div className="flex gap-2 w-full max-w-[440px]">
+                    <Button onClick={handleDownload} className="flex-1 gap-1.5"><Download className="w-4 h-4" /> Download</Button>
+
+                    <div className="relative flex-1">
+                      <Button
+                        onClick={handleOpenSharePopover}
+                        variant="secondary"
+                        className="w-full gap-1.5"
+                        disabled={isCreatingShareLink}
+                      >
+                        {isCreatingShareLink ? (
+                          <><Loader2 className="w-4 h-4 animate-spin" /> Preparing link...</>
+                        ) : (
+                          <><Share2 className="w-4 h-4" /> Share Asset</>
+                        )}
+                      </Button>
+                      {showSharePopover && shareUrl && (
+                        <div className="absolute bottom-full mb-2 left-0 right-0 bg-background border border-border rounded-lg shadow-lg p-2 space-y-1 z-10">
+                          {Object.entries(
+                            getShareLinks(shareUrl, `Check out this video I made: ${prompt}`)
+                          ).map(([platformName, url]) => (
+                            <a
+                              key={platformName}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setShowSharePopover(false)}
+                              className="block w-full text-left text-sm px-3 py-2 rounded-md capitalize transition-colors hover:bg-primary hover:text-primary-foreground"
+                            >
+                              {platformName}
+                            </a>
+                          ))}
+                          <button
+                            onClick={handleCopyLink}
+                            className="block w-full text-left text-sm px-3 py-2 rounded-md transition-colors hover:bg-primary hover:text-primary-foreground"
+                          >
+                            Copy link
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button onClick={handleReset} variant="outline" className="px-3"><RefreshCw className="w-4 h-4" /></Button>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-[400px] border rounded-lg bg-muted/20">
-                  <div className="text-center space-y-2">
-                    <Video className="w-12 h-12 text-muted-foreground mx-auto" />
-                    <p className="text-muted-foreground px-4">
-                      Enter a creative prompt scenario to render video motion assets.
-                    </p>
-                  </div>
+                <div className="border-2 border-dashed border-border/80 rounded-xl flex flex-col items-center justify-center bg-background/40 p-6 w-full max-w-[380px] aspect-square">
+                  <Film className="w-12 h-12 text-muted-foreground mb-3 stroke-[1.5]" />
+                  <p className="text-xs text-muted-foreground text-center font-medium px-4">
+                    Enter a creative scenario and render to review your studio cinematic footage timeline.
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -429,27 +766,35 @@ export default function VideoStudio() {
         </div>
       </div>
 
+      {/* Camera Control Modal Config */}
       {showCameraModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full">
-            <div className="p-6 border-b"><h2 className="text-xl font-semibold">Camera Control</h2></div>
-            <div className="p-6 space-y-6">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-xl border border-border/70 shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-5 border-b bg-muted/20">
+              <h2 className="text-md font-semibold flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-primary" /> Camera Direction Configurations
+              </h2>
+            </div>
+            <div className="p-6 space-y-5">
               <div className="space-y-2">
-                <Label>Pan: {pan.toFixed(1)}</Label>
-                <input type="range" min="-10" max="10" step="0.1" value={pan} onChange={(e) => setPan(parseFloat(e.target.value))} className="w-full" />
+                <div className="flex justify-between items-center"><Label>Horizontal Pan Sizing</Label><span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground font-bold">{pan.toFixed(1)}</span></div>
+                <input type="range" min="-10" max="10" step="0.1" value={pan} onChange={(e) => setPan(parseFloat(e.target.value))} className="w-full accent-primary" />
+                <div className="flex justify-between text-[10px] text-muted-foreground"><span>← Pan Left</span><span>Center</span><span>Pan Right →</span></div>
               </div>
               <div className="space-y-2">
-                <Label>Zoom: {zoom.toFixed(1)}</Label>
-                <input type="range" min="0.5" max="3" step="0.1" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} className="w-full" />
+                <div className="flex justify-between items-center"><Label>Focal Zoom Scale</Label><span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground font-bold">{zoom.toFixed(1) || '1.0'}x</span></div>
+                <input type="range" min="0.5" max="3" step="0.1" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} className="w-full accent-primary" />
+                <div className="flex justify-between text-[10px] text-muted-foreground"><span>Zoom Out</span><span>1.0x (Normal)</span><span>Zoom In</span></div>
               </div>
               <div className="space-y-2">
-                <Label>Motion Strength: {motionStrength}</Label>
-                <input type="range" min="1" max="10" step="1" value={motionStrength} onChange={(e) => setMotionStrength(parseInt(e.target.value))} className="w-full" />
+                <div className="flex justify-between items-center"><Label>Timeline Motion Strength</Label><span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground font-bold">{motionStrength}</span></div>
+                <input type="range" min="1" max="10" step="1" value={motionStrength} onChange={(e) => setMotionStrength(parseInt(e.target.value))} className="w-full accent-primary" />
+                <div className="flex justify-between text-[10px] text-muted-foreground"><span>Subtle Motion</span><span>Intense Motion</span></div>
               </div>
             </div>
-            <div className="p-6 border-t flex gap-2 justify-end">
-              <Button onClick={() => setShowCameraModal(false)} variant="outline">Close</Button>
-              <Button onClick={() => { setShowCameraModal(false); handleGenerateClick(); }}><Sparkles className="w-4 h-4 mr-2" /> Generate</Button>
+            <div className="p-4 border-t bg-muted/20 flex gap-2 justify-end">
+              <Button onClick={() => setShowCameraModal(false)} variant="outline" size="sm">Cancel Layout</Button>
+              <Button size="sm" onClick={() => { setShowCameraModal(false); handleGenerateClick(); }}><Sparkles className="w-3.5 h-3.5 mr-1.5" /> Confirm Direction</Button>
             </div>
           </div>
         </div>
@@ -462,9 +807,9 @@ export default function VideoStudio() {
           setShowConfirmDialog(false);
           submitGeneration();
         }}
-        title="Confirm video generation"
-        description="Complex camera projection trajectories and high-fidelity video processing models can take up to 3-5 minutes to bake. Please leave this dashboard active until it finishes."
-        confirmLabel="Continue Generation"
+        title="Confirm Custom Studio Generation"
+        description="Complex camera projection trajectories and high-fidelity video processing models can take up to 5-10 minutes to compile. Please leave this studio viewport session active."
+        confirmLabel="Generate Video"
       />
     </div>
   );
